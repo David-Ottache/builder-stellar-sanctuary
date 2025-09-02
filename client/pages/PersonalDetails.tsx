@@ -8,7 +8,7 @@ export default function PersonalDetails() {
   const { onboarding, setOnboarding } = useAppStore();
   const [first, setFirst] = useState(onboarding.firstName || "");
   const [last, setLast] = useState(onboarding.lastName || "");
-  const [gender, setGender] = useState(onboarding.gender || "");
+  const [gender, setGender] = useState<import("@/lib/store").Gender>(onboarding.gender || "");
   const [location, setLocation] = useState(onboarding.location || "");
   const nav = useNavigate();
 
