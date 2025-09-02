@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/app/Layout";
 import MapView from "@/components/app/MapView";
 import LocationInputs from "@/components/app/LocationInputs";
@@ -9,6 +10,7 @@ export default function Index() {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [vehicle, setVehicle] = useState<VehicleId>("go");
+  const navigate = useNavigate();
 
   return (
     <Layout className="relative">
@@ -37,7 +39,7 @@ export default function Index() {
           <VehicleSelector selected={vehicle} onSelect={setVehicle} />
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Button variant="outline" className="h-12 rounded-xl">Schedule</Button>
-            <Button className="h-12 rounded-xl" onClick={()=>window.location.assign('/search')}>Request VoltGo</Button>
+            <Button className="h-12 rounded-xl" onClick={()=>navigate('/search')}>Request VoltGo</Button>
           </div>
         </div>
       </div>
