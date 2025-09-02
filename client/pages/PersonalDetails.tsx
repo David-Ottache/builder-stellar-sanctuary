@@ -13,7 +13,7 @@ export default function PersonalDetails() {
   const nav = useNavigate();
 
   return (
-    <Layout>
+    <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <h1 className="text-3xl font-extrabold">Personal Details</h1>
         <p className="mt-1 text-sm text-neutral-600">Your Details Are Safe With Us, Only Your First Name And Vehicle Info Are Shared With Clients.</p>
