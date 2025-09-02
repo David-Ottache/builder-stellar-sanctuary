@@ -12,6 +12,19 @@ import Trips from "./pages/Trips";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import FigmaApp from "./pages/FigmaApp";
+import Splash from "./pages/Splash";
+import Welcome from "./pages/Welcome";
+import Login from "./pages/Login";
+import RegisterName from "./pages/RegisterName";
+import RegisterContact from "./pages/RegisterContact";
+import Otp from "./pages/Otp";
+import VehicleChoice from "./pages/VehicleChoice";
+import PersonalDetails from "./pages/PersonalDetails";
+import Documents from "./pages/Documents";
+import DriverDetails from "./pages/DriverDetails";
+import Search from "./pages/Search";
+import TripSummary from "./pages/TripSummary";
+import { AppStoreProvider } from "./lib/store";
 
 const queryClient = new QueryClient();
 
@@ -20,17 +33,31 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/app" element={<FigmaApp />} />
-          <Route path="/trips" element={<Trips />} />
-          <Route path="/wallet" element={<Wallet />} />
-          <Route path="/profile" element={<Profile />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AppStoreProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/splash" element={<Splash />} />
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register/name" element={<RegisterName />} />
+            <Route path="/register/contact" element={<RegisterContact />} />
+            <Route path="/otp" element={<Otp />} />
+            <Route path="/vehicle" element={<VehicleChoice />} />
+            <Route path="/register/details" element={<PersonalDetails />} />
+            <Route path="/register/documents" element={<Documents />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/driver/:id" element={<DriverDetails />} />
+            <Route path="/trip/summary" element={<TripSummary />} />
+            <Route path="/app" element={<FigmaApp />} />
+            <Route path="/trips" element={<Trips />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/profile" element={<Profile />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AppStoreProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
