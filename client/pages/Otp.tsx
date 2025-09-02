@@ -8,7 +8,7 @@ export default function Otp() {
   const nav = useNavigate();
   const canSubmit = code.every(Boolean);
   return (
-    <Layout>
+    <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <div className="text-xs font-semibold text-neutral-700">OTP VERIFICATION</div>
         <h1 className="mt-1 text-2xl font-extrabold">Please Enter\nOTP Verification</h1>
