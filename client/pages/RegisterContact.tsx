@@ -12,7 +12,7 @@ export default function RegisterContact() {
   const nav = useNavigate();
 
   return (
-    <Layout>
+    <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <h1 className="text-3xl font-extrabold leading-tight">Drive With\nCronos</h1>
         <p className="mt-1 text-sm text-neutral-600">Your Contact Information And Location</p>
