@@ -11,7 +11,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   return (
-    <Layout>
+    <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <h1 className="mb-6 text-2xl font-bold">Welcome Back</h1>
         <div className="space-y-3">
