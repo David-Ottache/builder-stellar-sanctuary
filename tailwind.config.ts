@@ -85,6 +85,14 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      boxShadow: {
+        soft: "0 10px 30px rgba(0,0,0,0.08)",
+        elevated: "0 20px 40px rgba(0,0,0,0.12)",
+      },
+      backgroundImage: {
+        "brand-mesh":
+          "radial-gradient(ellipse at 20% 10%, rgba(16,185,129,0.10), transparent 50%), radial-gradient(ellipse at 80% 30%, rgba(16,185,129,0.12), transparent 55%)",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
