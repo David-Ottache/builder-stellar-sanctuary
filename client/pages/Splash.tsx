@@ -10,7 +10,7 @@ export default function Splash() {
   }, [navigate]);
 
   return (
-    <Layout className="flex items-center justify-center">
+    <Layout className="flex items-center justify-center" hideTopBar hideBottomNav>
       <div className="flex h-[70vh] w-full items-center justify-center">
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-white shadow-elevated">
           <span className="text-3xl font-extrabold">R</span>
