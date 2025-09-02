@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 export default function Welcome() {
   return (
-    <Layout className="flex items-center justify-center">
+    <Layout className="flex items-center justify-center" hideTopBar hideBottomNav>
       <div className="w-full px-6 text-center">
         <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
           <div className="h-8 w-8 rounded bg-primary" />
