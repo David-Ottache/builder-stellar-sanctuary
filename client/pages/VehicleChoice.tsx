@@ -7,7 +7,7 @@ export default function VehicleChoice() {
   const [choice, setChoice] = useState<"car" | "bike" | null>("car");
   const nav = useNavigate();
   return (
-    <Layout>
+    <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <h1 className="text-3xl font-extrabold leading-tight">Choose Your\nPrefered Vehicle</h1>
         <div className="mt-6 space-y-3">
