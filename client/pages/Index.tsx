@@ -37,7 +37,7 @@ export default function Index() {
           <VehicleSelector selected={vehicle} onSelect={setVehicle} />
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Button variant="outline" className="h-12 rounded-xl">Schedule</Button>
-            <Button className="h-12 rounded-xl">Request VoltGo</Button>
+            <Button className="h-12 rounded-xl" onClick={()=>window.location.assign('/search')}>Request VoltGo</Button>
           </div>
         </div>
       </div>
