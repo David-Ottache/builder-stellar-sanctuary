@@ -21,7 +21,7 @@ export default function Documents() {
   const nav = useNavigate();
 
   return (
-    <Layout>
+    <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <h1 className="text-3xl font-extrabold">Almost There!</h1>
         <p className="mt-1 text-sm text-neutral-600">This Is What Is Needed To Set Up An Account</p>
