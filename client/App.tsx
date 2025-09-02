@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import Trips from "./pages/Trips";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
+import FigmaApp from "./pages/FigmaApp";
 
 const queryClient = new QueryClient();
 
