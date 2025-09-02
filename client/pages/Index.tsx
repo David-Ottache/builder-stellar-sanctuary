@@ -1,62 +1,46 @@
-import { DemoResponse } from "@shared/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Layout from "@/components/app/Layout";
+import MapView from "@/components/app/MapView";
+import LocationInputs from "@/components/app/LocationInputs";
+import VehicleSelector, { type VehicleId } from "@/components/app/VehicleSelector";
+import { Button } from "@/components/ui/button";
 
 export default function Index() {
-  const [exampleFromServer, setExampleFromServer] = useState("");
-  // Fetch users on component mount
-  useEffect(() => {
-    fetchDemo();
-  }, []);
-
-  // Example of how to fetch data from the server (if needed)
-  const fetchDemo = async () => {
-    try {
-      const response = await fetch("/api/demo");
-      const data = (await response.json()) as DemoResponse;
-      setExampleFromServer(data.message);
-    } catch (error) {
-      console.error("Error fetching hello:", error);
-    }
-  };
+  const [pickup, setPickup] = useState("");
+  const [destination, setDestination] = useState("");
+  const [vehicle, setVehicle] = useState<VehicleId>("go");
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-      <div className="text-center">
-        {/* TODO: FUSION_GENERATION_APP_PLACEHOLDER replace everything here with the actual app! */}
-        <h1 className="text-2xl font-semibold text-slate-800 flex items-center justify-center gap-3">
-          <svg
-            className="animate-spin h-8 w-8 text-slate-400"
-            viewBox="0 0 50 50"
-          >
-            <circle
-              className="opacity-30"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-            />
-            <circle
-              className="text-slate-600"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-              strokeDasharray="100"
-              strokeDashoffset="75"
-            />
-          </svg>
-          Generating your app...
-        </h1>
-        <p className="mt-4 text-slate-600 max-w-md">
-          Watch the chat on the left for updates that might need your attention
-          to finish generating
-        </p>
-        <p className="mt-4 hidden max-w-md">{exampleFromServer}</p>
+    <Layout className="relative">
+      <MapView />
+
+      <div className="pointer-events-none absolute inset-x-4 top-4 z-20">
+        <LocationInputs
+          pickup={pickup}
+          destination={destination}
+          setPickup={setPickup}
+          setDestination={setDestination}
+          onSwap={() => {
+            setPickup(destination);
+            setDestination(pickup);
+          }}
+          className="pointer-events-auto"
+        />
       </div>
-    </div>
+
+      <div className="absolute bottom-[5.5rem] left-0 right-0 z-20">
+        <div className="mx-4 rounded-t-3xl border-t bg-white/95 p-4 pb-4 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-white/75">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-sm font-semibold text-neutral-600">Choose your ride</div>
+            <div className="text-xs text-neutral-500">Upfront pricing</div>
+          </div>
+          <VehicleSelector selected={vehicle} onSelect={setVehicle} />
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <Button variant="outline" className="h-12 rounded-xl">Schedule</Button>
+            <Button className="h-12 rounded-xl">Request VoltGo</Button>
+          </div>
+        </div>
+      </div>
+    </Layout>
   );
 }
