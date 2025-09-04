@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import TopBar from "./TopBar";
 import BottomNav from "./BottomNav";
+import SOS from "./SOS";
 import { ReactNode } from "react";
 
 interface Props {
@@ -22,8 +23,7 @@ export default function Layout({ children, className, hideTopBar, hideBottomNav 
           <>
             <BottomNav />
             {/* Floating SOS */}
-            {/* eslint-disable-next-line react/jsx-no-useless-fragment */}
-            <></>
+            <SOS />
           </>
         )}
       </div>
