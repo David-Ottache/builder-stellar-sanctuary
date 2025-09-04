@@ -34,6 +34,13 @@ export interface TripDetails {
   driverId: string | null;
 }
 
+export interface EmergencyContact {
+  id: string;
+  name: string;
+  phone: string;
+  relationship?: string;
+}
+
 interface StoreState {
   user: UserProfile | null;
   setUser: (u: UserProfile | null) => void;
@@ -45,6 +52,11 @@ interface StoreState {
   trip: TripDetails | null;
   startTrip: (t: Omit<TripDetails, "fee"> & { fee?: number }) => void;
   endTrip: () => void;
+  contacts: EmergencyContact[];
+  addContact: (c: Omit<EmergencyContact, "id">) => void;
+  removeContact: (id: string) => void;
+  sendSOS: (message?: string) => number;
+  verifyDriver: (codeOrId: string) => DriverInfo | null;
 }
 
 const AppStore = createContext<StoreState | null>(null);
@@ -90,6 +102,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [onboarding, setOnboardingState] = useState<Partial<UserProfile>>({ countryCode: "+234" });
   const [selectedDriverId, selectDriver] = useState<string | null>(null);
   const [trip, setTrip] = useState<TripDetails | null>(null);
+  const [contacts, setContacts] = useState<EmergencyContact[]>(() => {
+    try {
+      const raw = localStorage.getItem("safety.contacts");
+      return raw ? (JSON.parse(raw) as EmergencyContact[]) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const drivers = useMemo(() => MOCK_DRIVERS, []);
 
@@ -104,6 +124,35 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   const endTrip = () => setTrip(null);
 
+  const addContact: StoreState["addContact"] = (c) => {
+    const id = `c_${Date.now()}`;
+    setContacts((prev) => [...prev, { id, ...c }]);
+  };
+  const removeContact: StoreState["removeContact"] = (id) =>
+    setContacts((prev) => prev.filter((c) => c.id !== id));
+
+  const sendSOS: StoreState["sendSOS"] = (message) => {
+    const count = contacts.length;
+    // Here you would integrate SMS/Push provider. For now we just log.
+    console.warn("SOS sent to contacts", { count, message });
+    return count;
+  };
+
+  const verifyDriver: StoreState["verifyDriver"] = (codeOrId) => {
+    if (!codeOrId) return null;
+    const normalized = codeOrId.trim();
+    const matchId = normalized.match(/d\d+/i)?.[0]?.toLowerCase();
+    const id = matchId || normalized.toLowerCase();
+    const found = drivers.find((d) => d.id.toLowerCase() === id);
+    return found || null;
+  };
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem("safety.contacts", JSON.stringify(contacts));
+    } catch {}
+  }, [contacts]);
+
   const value: StoreState = {
     user,
     setUser,
@@ -115,6 +164,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     trip,
     startTrip,
     endTrip,
+    contacts,
+    addContact,
+    removeContact,
+    sendSOS,
+    verifyDriver,
   };
 
   return <AppStore.Provider value={value}>{children}</AppStore.Provider>;
