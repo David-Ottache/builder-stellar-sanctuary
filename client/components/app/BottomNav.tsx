@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Clock, Wallet, User } from "lucide-react";
+import { Home, Clock, Wallet, User, Scan } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 const items = [
   { to: "/", label: "Home", Icon: Home },
   { to: "/trips", label: "Trips", Icon: Clock },
+  { to: "/verify", label: "Verify", Icon: Scan },
   { to: "/wallet", label: "Wallet", Icon: Wallet },
   { to: "/profile", label: "Profile", Icon: User },
 ];
