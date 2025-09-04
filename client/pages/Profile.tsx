@@ -14,6 +14,7 @@ export default function Profile() {
             <div className="text-sm text-neutral-600">Email</div>
             <div className="mt-1 font-semibold">alex@example.com</div>
           </div>
+          <a href="/safety" className="block rounded-2xl border bg-white p-4 text-center font-semibold shadow-sm">Safety & Emergency Contacts</a>
         </div>
       </div>
     </Layout>
