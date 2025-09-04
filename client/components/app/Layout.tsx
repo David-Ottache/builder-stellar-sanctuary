@@ -18,7 +18,14 @@ export default function Layout({ children, className, hideTopBar, hideBottomNav 
           <TopBar className="bg-gradient-to-b from-white/90 to-transparent backdrop-blur" />
         )}
         <main className={cn(hideTopBar ? "pt-4" : "pt-14", hideBottomNav ? "pb-4" : "pb-24", className)}>{children}</main>
-        {!hideBottomNav && <BottomNav />}
+        {!hideBottomNav && (
+          <>
+            <BottomNav />
+            {/* Floating SOS */}
+            {/* eslint-disable-next-line react/jsx-no-useless-fragment */}
+            <></>
+          </>
+        )}
       </div>
     </div>
   );
