@@ -49,6 +49,8 @@ const App = () => (
             <Route path="/register/details" element={<PersonalDetails />} />
             <Route path="/register/documents" element={<Documents />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/verify" element={<Verify />} />
+            <Route path="/safety" element={<Safety />} />
             <Route path="/driver/:id" element={<DriverDetails />} />
             <Route path="/trip/summary" element={<TripSummary />} />
             <Route path="/app" element={<FigmaApp />} />
