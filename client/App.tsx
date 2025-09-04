@@ -24,6 +24,8 @@ import Documents from "./pages/Documents";
 import DriverDetails from "./pages/DriverDetails";
 import Search from "./pages/Search";
 import TripSummary from "./pages/TripSummary";
+import Verify from "./pages/Verify";
+import Safety from "./pages/Safety";
 import { AppStoreProvider } from "./lib/store";
 
 const queryClient = new QueryClient();
