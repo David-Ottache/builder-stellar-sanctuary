@@ -5,12 +5,15 @@ import MapView from "@/components/app/MapView";
 import LocationInputs from "@/components/app/LocationInputs";
 import VehicleSelector, { type VehicleId } from "@/components/app/VehicleSelector";
 import { Button } from "@/components/ui/button";
+import { useAppStore } from "@/lib/store";
+import { toast } from "sonner";
 
 export default function Index() {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [vehicle, setVehicle] = useState<VehicleId>("go");
   const navigate = useNavigate();
+  const { setPendingTrip } = useAppStore();
 
   return (
     <Layout className="relative">
@@ -39,7 +42,26 @@ export default function Index() {
           <VehicleSelector selected={vehicle} onSelect={setVehicle} />
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Button variant="outline" className="h-12 rounded-xl">Schedule</Button>
-            <Button className="h-12 rounded-xl" onClick={()=>navigate('/search')}>Request VoltGo</Button>
+            <Button className="h-12 rounded-xl" onClick={()=>{
+              if (!destination) { toast.error('Please enter a destination'); return; }
+              if (!navigator.geolocation) {
+                setPendingTrip({ pickup: 'Unknown location', destination });
+                navigate('/verify');
+                return;
+              }
+              navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                  const { latitude: lat, longitude: lng } = pos.coords;
+                  setPendingTrip({ pickup: 'Current location', destination, pickupCoords: { lat, lng } });
+                  navigate('/verify');
+                },
+                () => {
+                  setPendingTrip({ pickup: 'Current location', destination });
+                  navigate('/verify');
+                },
+                { enableHighAccuracy: true, timeout: 5000 }
+              );
+            }}>Start Trip</Button>
           </div>
         </div>
       </div>
