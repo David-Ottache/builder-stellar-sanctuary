@@ -34,6 +34,9 @@ export interface TripDetails {
   driverId: string | null;
 }
 
+export interface Coords { lat: number; lng: number }
+export interface PendingTrip { pickup: string; destination: string; pickupCoords?: Coords | null }
+
 export interface EmergencyContact {
   id: string;
   name: string;
@@ -52,6 +55,8 @@ interface StoreState {
   trip: TripDetails | null;
   startTrip: (t: Omit<TripDetails, "fee"> & { fee?: number }) => void;
   endTrip: () => void;
+  pendingTrip: PendingTrip | null;
+  setPendingTrip: (p: PendingTrip | null) => void;
   contacts: EmergencyContact[];
   addContact: (c: Omit<EmergencyContact, "id">) => void;
   removeContact: (id: string) => void;
@@ -110,6 +115,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       return [];
     }
   });
+  const [pendingTrip, setPendingTrip] = useState<PendingTrip | null>(() => {
+    try {
+      const raw = sessionStorage.getItem("ride.pending");
+      return raw ? (JSON.parse(raw) as PendingTrip) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const drivers = useMemo(() => MOCK_DRIVERS, []);
 
@@ -153,6 +166,13 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [contacts]);
 
+  React.useEffect(() => {
+    try {
+      if (pendingTrip) sessionStorage.setItem("ride.pending", JSON.stringify(pendingTrip));
+      else sessionStorage.removeItem("ride.pending");
+    } catch {}
+  }, [pendingTrip]);
+
   const value: StoreState = {
     user,
     setUser,
@@ -164,6 +184,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     trip,
     startTrip,
     endTrip,
+    pendingTrip,
+    setPendingTrip,
     contacts,
     addContact,
     removeContact,
