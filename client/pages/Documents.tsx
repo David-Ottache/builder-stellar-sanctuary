@@ -14,7 +14,7 @@ function toDataUrl(file: File): Promise<string> {
 }
 
 export default function Documents() {
-  const { onboarding, setOnboarding } = useAppStore();
+  const { onboarding, setOnboarding, mergeOnboardingToDriver } = useAppStore();
   const [license, setLicense] = useState(onboarding.driverLicenseNumber || "");
   const [profilePhoto, setProfilePhoto] = useState<string | undefined>(onboarding.profilePhoto);
   const [licensePhoto, setLicensePhoto] = useState<string | undefined>(onboarding.driverLicensePhoto);
@@ -51,7 +51,7 @@ export default function Documents() {
             </label>
             {licensePhoto && <img src={licensePhoto} alt="License preview" className="mt-2 h-16 w-24 rounded object-cover" />}
           </div>
-          <Button className="h-12 w-full rounded-full" onClick={()=>{ setOnboarding({ driverLicenseNumber: license, profilePhoto, driverLicensePhoto: licensePhoto }); nav("/wallet"); }}>Next</Button>
+          <Button className="h-12 w-full rounded-full" onClick={()=>{ const updates = { driverLicenseNumber: license, profilePhoto, driverLicensePhoto: licensePhoto }; setOnboarding(updates); mergeOnboardingToDriver(updates); nav("/wallet"); }}>Next</Button>
           <div className="text-center text-sm">Already Have An Account? <Link to="/login" className="font-semibold">Sign In</Link></div>
         </div>
       </div>
