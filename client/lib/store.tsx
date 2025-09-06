@@ -29,6 +29,7 @@ export interface DriverInfo {
   // optional fields coming from onboarding
   driverLicenseNumber?: string;
   driverLicensePhoto?: string;
+  vehicleType?: string;
 }
 
 export interface TripDetails {
