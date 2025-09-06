@@ -52,6 +52,7 @@ interface StoreState {
   drivers: DriverInfo[];
   selectedDriverId: string | null;
   selectDriver: (id: string | null) => void;
+  mergeOnboardingToDriver: (updates?: Partial<UserProfile>) => void;
   trip: TripDetails | null;
   startTrip: (t: Omit<TripDetails, "fee"> & { fee?: number }) => void;
   endTrip: () => void;
