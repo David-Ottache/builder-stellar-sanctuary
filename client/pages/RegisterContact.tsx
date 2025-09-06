@@ -15,30 +15,31 @@ export default function RegisterContact() {
   const registerDriver = async () => {
     try {
       setLoading(true);
-      // const response = await fetch("http://localhost:5000/api/drivers/register", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     email,
-      //     phone,
-      //     countryCode,
-      //   }),
-      // });
-      alert("the register button has been clicked")
-      // Use relative API path so it works in production and preview environments
-      const response = await fetch("/api/demo", { method: "GET" });
+
+      const payload = {
+        firstName: onboarding.firstName || undefined,
+        lastName: onboarding.lastName || undefined,
+        email,
+        phone,
+        countryCode: onboarding.countryCode || "+234",
+      };
+
+      const response = await fetch("/api/drivers/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
       if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
+        const errText = await response.text().catch(() => "");
+        throw new Error(`Server error ${response.status} ${errText}`);
       }
+
       const data = await response.json();
-      // show friendly message if demo returns something useful
-      if (typeof data === "object") {
-        alert(data.message || JSON.stringify(data));
-      } else {
-        alert(String(data));
-      }
+      alert(data.message || "Registered");
+
+      // save onboarding details
+      setOnboarding({ email, phone });
 
       // navigate to OTP
       nav("/otp");
