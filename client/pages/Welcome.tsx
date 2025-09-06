@@ -10,7 +10,8 @@ export default function Welcome() {
           <div className="h-8 w-8 rounded bg-primary" />
         </div>
         <h1 className="text-3xl font-extrabold">Welcome</h1>
-        <p className="mt-2 text-sm text-neutral-600">Drive With Us\nEarn For You</p>
+        <p className="mt-2 text-sm text-neutral-600">Drive With Us</p>
+        <p className="mt-2 text-sm text-neutral-600">Earn For You</p>
         <div className="mt-8 space-y-3">
           <Link to="/login" className="block">
             <Button className="h-12 w-full rounded-full">Sign In</Button>
