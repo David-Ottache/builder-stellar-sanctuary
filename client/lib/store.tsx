@@ -125,10 +125,30 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  const drivers = useMemo(() => MOCK_DRIVERS, []);
+  const [drivers, setDrivers] = useState<DriverInfo[]>(MOCK_DRIVERS);
 
   const setOnboarding = (updates: Partial<UserProfile>) =>
     setOnboardingState((prev) => ({ ...prev, ...updates }));
+
+  const mergeOnboardingToDriver: StoreState['mergeOnboardingToDriver'] = (updates) => {
+    const payload = updates ? updates : onboarding;
+    if (!payload) return;
+    if (!selectedDriverId) return;
+
+    setDrivers((prev) =>
+      prev.map((d) => {
+        if (d.id !== selectedDriverId) return d;
+        const nameParts = [payload.firstName ?? '', payload.lastName ?? ''].map(s => s.trim()).filter(Boolean);
+        const newName = nameParts.length ? nameParts.join(' ') : d.name;
+        const newAvatar = (payload.profilePhoto as string) || d.avatar;
+        return {
+          ...d,
+          name: newName,
+          avatar: newAvatar,
+        };
+      }),
+    );
+  };
 
   const startTrip: StoreState["startTrip"] = ({ pickup, destination, driverId, fee }) => {
     const driver = drivers.find((d) => d.id === driverId) || drivers[0];
