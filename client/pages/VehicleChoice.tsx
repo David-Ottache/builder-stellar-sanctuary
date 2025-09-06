@@ -2,6 +2,7 @@ import Layout from "@/components/app/Layout";
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
+import { useAppStore } from "@/lib/store";
 
 export default function VehicleChoice() {
   const [choice, setChoice] = useState<"car" | "bike" | null>("car");
