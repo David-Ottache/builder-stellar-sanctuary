@@ -12,43 +12,10 @@ export default function RegisterContact() {
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
 
-  const registerDriver = async () => {
-    try {
-      setLoading(true);
-
-      const payload = {
-        firstName: onboarding.firstName || undefined,
-        lastName: onboarding.lastName || undefined,
-        email,
-        phone,
-        countryCode: onboarding.countryCode || "+234",
-      };
-
-      const response = await fetch("/api/drivers/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errText = await response.text().catch(() => "");
-        throw new Error(`Server error ${response.status} ${errText}`);
-      }
-
-      const data = await response.json();
-      alert(data.message || "Registered");
-
-      // save onboarding details
-      setOnboarding({ email, phone });
-
-      // navigate to OTP
-      nav("/otp");
-    } catch (err) {
-      console.error(err);
-      alert("Registration failed, please try again.");
-    } finally {
-      setLoading(false);
-    }
+  // Save contact info to onboarding and proceed to vehicle choice
+  const continueToVehicle = () => {
+    setOnboarding({ email, phone });
+    nav("/vehicle");
   };
 
   return (
