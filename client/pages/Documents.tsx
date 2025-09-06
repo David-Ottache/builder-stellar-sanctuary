@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
 import { useState } from "react";
+import Swal from 'sweetalert2';
 
 function toDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
