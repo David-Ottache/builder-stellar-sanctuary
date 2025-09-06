@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { useState } from "react";
 
 export default function PersonalDetails() {
-  const { onboarding, setOnboarding } = useAppStore();
+  const { onboarding, setOnboarding, mergeOnboardingToDriver } = useAppStore();
   const [first, setFirst] = useState(onboarding.firstName || "");
   const [last, setLast] = useState(onboarding.lastName || "");
   const [gender, setGender] = useState<import("@/lib/store").Gender>(onboarding.gender || "");
@@ -27,7 +27,7 @@ export default function PersonalDetails() {
             <option>Other</option>
           </select>
           <input value={location} onChange={(e)=>setLocation(e.target.value)} placeholder="Location" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
-          <Button className="h-12 w-full rounded-full" onClick={()=>{ setOnboarding({ firstName:first, lastName:last, gender, location }); nav("/register/documents"); }}>Next</Button>
+          <Button className="h-12 w-full rounded-full" onClick={()=>{ const updates = { firstName: first, lastName: last, gender, location }; setOnboarding(updates); mergeOnboardingToDriver(updates); nav("/register/documents"); }}>Next</Button>
           <div className="text-center text-sm">Already Have An Account? <Link to="/login" className="font-semibold">Sign In</Link></div>
         </div>
       </div>
