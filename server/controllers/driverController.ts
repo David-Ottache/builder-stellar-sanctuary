@@ -47,9 +47,11 @@ export const registerDriver: RequestHandler = async (req, res) => {
 
       const db = getFirestore();
       if (db) {
-        const docRef = await db.collection("drivers").add({
-          ...driver,
-        });
+        // remove undefined values to avoid Firestore errors
+        const docData = Object.fromEntries(
+          Object.entries(driver).filter(([, v]) => v !== undefined),
+        );
+        const docRef = await db.collection("drivers").add(docData);
         console.log("Driver persisted to Firestore with id", docRef.id);
       } else {
         console.log("Firestore not available; skipping persistence");
