@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { createDriver } from "../models/driver";
 import { sendSMS } from "../utils/sms";
+import { initializeFirebaseAdmin, getFirestore, isInitialized } from "../config/firebaseAdmin";
 
 export const registerDriver: RequestHandler = async (req, res) => {
   try {
@@ -14,6 +15,26 @@ export const registerDriver: RequestHandler = async (req, res) => {
       phone,
       countryCode,
     });
+
+    // Persist to Firestore if available
+    try {
+      // ensure initialized
+      if (!isInitialized()) {
+        initializeFirebaseAdmin();
+      }
+      const db = getFirestore();
+      if (db) {
+        const docRef = await db.collection("drivers").add({
+          ...driver,
+          createdAt: new Date().toISOString(),
+        });
+        console.log("Driver persisted to Firestore with id", docRef.id);
+      } else {
+        console.log("Firestore not available; skipping persistence");
+      }
+    } catch (e) {
+      console.warn("Failed to persist driver to Firestore:", (e as Error).message || e);
+    }
 
     // Send a welcome SMS (non-blocking)
     sendSMS(
