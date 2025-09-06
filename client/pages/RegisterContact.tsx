@@ -9,6 +9,7 @@ export default function RegisterContact() {
   const [email, setEmail] = useState(onboarding.email || "");
   const [phone, setPhone] = useState(onboarding.phone || "");
   const [agree, setAgree] = useState(false);
+  const [loading, setLoading] = useState(false);
   const nav = useNavigate();
 
   const registerDriver = async () => {
