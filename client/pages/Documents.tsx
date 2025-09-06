@@ -84,12 +84,18 @@ export default function Documents() {
               if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
                 console.warn('Failed registering driver', err);
+                await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'Could not register your account. Please try again.' });
               } else {
                 const data = await res.json();
                 console.log('Driver registered', data);
+                await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been added to our database.' });
+                // navigate to home after user closes alert
+                try { nav('/'); } catch(e) { console.error('Navigation failed', e); }
+                return; // avoid nav('/wallet') in finally
               }
             } catch (e) {
               console.error('Error registering driver', e);
+              await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'An error occurred. Please try again.' });
             } finally {
               setLoading(false);
               try { nav('/wallet'); } catch(e) { console.error('Navigation failed', e); }
