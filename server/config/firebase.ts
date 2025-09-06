@@ -1,15 +1,12 @@
 /**
  * Firebase configuration helper.
  *
- * This file only gathers configuration from environment variables and
- * exposes a structured config object. It does NOT import or initialize
- * the firebase or firebase-admin SDKs to avoid introducing a runtime
- * dependency at this point. To initialize Firebase in the server, call
- * `getFirebaseConfig()` and pass the returned values to your firebase
- * initializer (for example, firebase-admin.initializeApp(...)).
+ * This file gathers configuration from environment variables and
+ * exposes a structured config object for both Firebase Admin SDK
+ * (server-side) and Firebase JS SDK (client-side).
  *
- * Secrets should be provided via environment variables or a secure
- * secret manager. Avoid committing service account JSON to the repo.
+ * Admin SDK: uses service account or private key + client email.
+ * Client SDK: uses web API key + app info.
  */
 
 export interface FirebaseServiceAccount {
@@ -31,8 +28,14 @@ export interface FirebaseConfig {
   storageBucket?: string;
   clientEmail?: string;
   privateKey?: string; // raw value, may include literal \n
-  // full service account object if provided via JSON string in env
   serviceAccount?: FirebaseServiceAccount;
+
+  // --- Client SDK fields ---
+  apiKey?: string;
+  authDomain?: string;
+  messagingSenderId?: string;
+  appId?: string;
+  measurementId?: string;
 }
 
 export function getFirebaseConfig(): FirebaseConfig {
@@ -48,7 +51,7 @@ export function getFirebaseConfig(): FirebaseConfig {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-  // Some deploy environments require escaping newlines in private keys.
+  // Fix escaped newlines in private key
   if (privateKey && privateKey.indexOf("\\n") !== -1) {
     privateKey = privateKey.replace(/\\n/g, "\n");
   }
@@ -58,7 +61,6 @@ export function getFirebaseConfig(): FirebaseConfig {
   if (raw) {
     try {
       serviceAccount = JSON.parse(raw) as FirebaseServiceAccount;
-      // If service account contains a private_key with escaped newlines, fix it.
       if (
         serviceAccount.private_key &&
         serviceAccount.private_key.indexOf("\\n") !== -1
@@ -69,13 +71,19 @@ export function getFirebaseConfig(): FirebaseConfig {
         );
       }
     } catch (e) {
-      // ignore parse errors; serviceAccount remains undefined
       console.warn(
         "Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:",
         (e as Error).message,
       );
     }
   }
+
+  // Client-side Firebase SDK config
+  const apiKey = process.env.FIREBASE_API_KEY;
+  const authDomain = process.env.FIREBASE_AUTH_DOMAIN;
+  const messagingSenderId = process.env.FIREBASE_MESSAGING_SENDER_ID;
+  const appId = process.env.FIREBASE_APP_ID;
+  const measurementId = process.env.FIREBASE_MEASUREMENT_ID;
 
   return {
     projectId,
@@ -84,6 +92,11 @@ export function getFirebaseConfig(): FirebaseConfig {
     clientEmail,
     privateKey,
     serviceAccount,
+    apiKey,
+    authDomain,
+    messagingSenderId,
+    appId,
+    measurementId,
   };
 }
 
@@ -91,6 +104,7 @@ export function isFirebaseConfigured(): boolean {
   const cfg = getFirebaseConfig();
   return !!(
     cfg.serviceAccount ||
-    (cfg.projectId && (cfg.clientEmail || cfg.privateKey))
+    (cfg.projectId && (cfg.clientEmail || cfg.privateKey)) ||
+    cfg.apiKey // allow detection if only client SDK is provided
   );
 }
