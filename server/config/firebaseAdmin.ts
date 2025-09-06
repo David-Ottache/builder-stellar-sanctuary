@@ -17,23 +17,32 @@ export async function initializeFirebaseAdmin(): Promise<{ app: any | null; init
     const firebaseAdminModule = await import("firebase-admin");
     admin = firebaseAdminModule?.default || firebaseAdminModule;
 
-    if (cfg.serviceAccount) {
-      adminApp = admin.initializeApp({
-        credential: admin.credential.cert(cfg.serviceAccount as any),
-        storageBucket: cfg.storageBucket,
-        databaseURL: cfg.databaseURL,
-      });
-    } else {
-      adminApp = admin.initializeApp({
-        credential: admin.credential.cert({
+    // If an app already exists, reuse it to avoid initializeApp conflicts
+    const existingApps = typeof admin.getApps === "function" ? admin.getApps() : admin.apps || [];
+    if (existingApps && existingApps.length > 0) {
+      try {
+        adminApp = typeof admin.getApp === "function" ? admin.getApp() : admin.app();
+      } catch (e) {
+        // fallback
+        adminApp = admin.app();
+      }
+      console.log("ℹ️ Reusing existing Firebase admin app");
+      return { app: adminApp, initialized: true };
+    }
+
+    const credential = cfg.serviceAccount
+      ? admin.credential.cert(cfg.serviceAccount as any)
+      : admin.credential.cert({
           projectId: cfg.projectId,
           clientEmail: cfg.clientEmail,
           privateKey: cfg.privateKey,
-        }),
-        storageBucket: cfg.storageBucket,
-        databaseURL: cfg.databaseURL,
-      });
-    }
+        });
+
+    adminApp = admin.initializeApp({
+      credential,
+      storageBucket: cfg.storageBucket,
+      databaseURL: cfg.databaseURL,
+    });
 
     console.log("✅ Firebase admin initialized");
     return { app: adminApp, initialized: true };
@@ -50,32 +59,33 @@ export function getAdmin(): any | null {
 }
 
 export function getFirestore(): any | null {
-  if (!adminApp) {
-    // initialization might be async; caller should call initializeFirebaseAdmin() first
+  // Prefer using admin.firestore() when available
+  if (!admin) {
     console.warn("getFirestore called before firebase-admin initialization");
     return null;
   }
   try {
-    return adminApp.firestore();
+    return typeof admin.firestore === "function" ? admin.firestore() : adminApp?.firestore?.();
   } catch (err) {
-    console.warn("Failed getting firestore() from adminApp", err);
+    console.warn("Failed getting firestore() from admin or adminApp", err);
     return null;
   }
 }
 
 export function getAuth(): any | null {
-  if (!adminApp) {
+  if (!admin) {
     console.warn("getAuth called before firebase-admin initialization");
     return null;
   }
   try {
-    return adminApp.auth();
+    return typeof admin.auth === "function" ? admin.auth() : adminApp?.auth?.();
   } catch (err) {
-    console.warn("Failed getting auth() from adminApp", err);
+    console.warn("Failed getting auth() from admin or adminApp", err);
     return null;
   }
 }
 
 export function isInitialized(): boolean {
-  return !!adminApp;
+  const apps = admin && (typeof admin.getApps === "function" ? admin.getApps() : admin.apps || []);
+  return !!(adminApp || (apps && apps.length > 0));
 }
