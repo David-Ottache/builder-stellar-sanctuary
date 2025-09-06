@@ -25,6 +25,9 @@ export interface DriverInfo {
   price: number;
   passengers: number;
   avatar: string;
+  // optional fields coming from onboarding
+  driverLicenseNumber?: string;
+  driverLicensePhoto?: string;
 }
 
 export interface TripDetails {
