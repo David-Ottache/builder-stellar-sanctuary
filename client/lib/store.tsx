@@ -147,12 +147,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         const newAvatar = (payload.profilePhoto as string) || d.avatar;
         const newLicenseNumber = (payload.driverLicenseNumber as string) || d.driverLicenseNumber;
         const newLicensePhoto = (payload.driverLicensePhoto as string) || d.driverLicensePhoto;
+        const newVehicleType = (payload.vehicleType as string) || (d as any).vehicleType;
         return {
           ...d,
           name: newName,
           avatar: newAvatar,
           driverLicenseNumber: newLicenseNumber,
           driverLicensePhoto: newLicensePhoto,
+          vehicleType: newVehicleType,
         };
       }),
     );
