@@ -3,7 +3,7 @@ import { getFirebaseConfig } from "./firebase";
 let admin: any = null;
 let adminApp: any = null;
 
-export function initializeFirebaseAdmin(): { app: any | null; initialized: boolean } {
+export async function initializeFirebaseAdmin(): Promise<{ app: any | null; initialized: boolean }> {
   if (adminApp) return { app: adminApp, initialized: true };
 
   const cfg = getFirebaseConfig();
@@ -13,10 +13,9 @@ export function initializeFirebaseAdmin(): { app: any | null; initialized: boole
   }
 
   try {
-    // dynamic require to avoid build-time dependency
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const firebaseAdmin = require("firebase-admin");
-    admin = firebaseAdmin;
+    // dynamic import to support ESM firebase-admin builds
+    const firebaseAdminModule = await import("firebase-admin");
+    admin = firebaseAdminModule?.default || firebaseAdminModule;
 
     if (cfg.serviceAccount) {
       adminApp = admin.initializeApp({
@@ -52,8 +51,9 @@ export function getAdmin(): any | null {
 
 export function getFirestore(): any | null {
   if (!adminApp) {
-    const init = initializeFirebaseAdmin();
-    if (!init.initialized) return null;
+    // initialization might be async; caller should call initializeFirebaseAdmin() first
+    console.warn("getFirestore called before firebase-admin initialization");
+    return null;
   }
   try {
     return adminApp.firestore();
@@ -65,8 +65,8 @@ export function getFirestore(): any | null {
 
 export function getAuth(): any | null {
   if (!adminApp) {
-    const init = initializeFirebaseAdmin();
-    if (!init.initialized) return null;
+    console.warn("getAuth called before firebase-admin initialization");
+    return null;
   }
   try {
     return adminApp.auth();
