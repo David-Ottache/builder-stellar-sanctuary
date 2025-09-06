@@ -66,10 +66,10 @@ export default function RegisterContact() {
           </label>
           <Button
             className="h-12 w-full rounded-full"
-            disabled={!agree || loading}
-            onClick={registerDriver}
+            disabled={!agree}
+            onClick={continueToVehicle}
           >
-            {loading ? "Registering..." : "Register As A Driver"}
+            Continue
           </Button>
           <div className="text-center text-sm">
             Already Have An Account?{" "}
