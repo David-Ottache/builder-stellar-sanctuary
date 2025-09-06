@@ -1,5 +1,5 @@
 import admin from "firebase-admin";
-import { getFirebaseConfig } from "./config/firebase";
+import { getFirebaseConfig } from "/config/firebase";
 
 const cfg = getFirebaseConfig();
 
