@@ -74,6 +74,7 @@ export default function Documents() {
                 driverLicenseNumber: license ?? onboarding.driverLicenseNumber ?? undefined,
                 driverLicensePhoto: licensePhoto ?? onboarding.driverLicensePhoto ?? undefined,
                 vehicleType: onboarding.vehicleType ?? undefined,
+                password: onboarding.password ?? undefined,
               };
               console.log('Register payload', payload);
               const res = await fetch('/api/drivers/register', {
