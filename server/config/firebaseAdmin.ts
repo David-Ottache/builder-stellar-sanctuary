@@ -3,11 +3,16 @@ import { getFirebaseConfig, isFirebaseConfigured } from "./firebase";
 let adminApp: any | null = null;
 let admin: any | null = null;
 
-export function initializeFirebaseAdmin(): { app: any | null; initialized: boolean } {
+export function initializeFirebaseAdmin(): {
+  app: any | null;
+  initialized: boolean;
+} {
   if (adminApp) return { app: adminApp, initialized: true };
 
   if (!isFirebaseConfigured()) {
-    console.warn("Firebase not configured via env vars; skipping initialization.");
+    console.warn(
+      "Firebase not configured via env vars; skipping initialization.",
+    );
     return { app: null, initialized: false };
   }
 

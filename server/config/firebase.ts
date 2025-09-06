@@ -36,15 +36,21 @@ export interface FirebaseConfig {
 }
 
 export function getFirebaseConfig(): FirebaseConfig {
-  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const databaseURL = process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
-  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  const projectId =
+    process.env.FIREBASE_PROJECT_ID ||
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const databaseURL =
+    process.env.FIREBASE_DATABASE_URL ||
+    process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+  const storageBucket =
+    process.env.FIREBASE_STORAGE_BUCKET ||
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   // Some deploy environments require escaping newlines in private keys.
-  if (privateKey && privateKey.indexOf('\\n') !== -1) {
-    privateKey = privateKey.replace(/\\n/g, '\n');
+  if (privateKey && privateKey.indexOf("\\n") !== -1) {
+    privateKey = privateKey.replace(/\\n/g, "\n");
   }
 
   let serviceAccount: FirebaseServiceAccount | undefined;
@@ -53,12 +59,21 @@ export function getFirebaseConfig(): FirebaseConfig {
     try {
       serviceAccount = JSON.parse(raw) as FirebaseServiceAccount;
       // If service account contains a private_key with escaped newlines, fix it.
-      if (serviceAccount.private_key && serviceAccount.private_key.indexOf('\\n') !== -1) {
-        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+      if (
+        serviceAccount.private_key &&
+        serviceAccount.private_key.indexOf("\\n") !== -1
+      ) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(
+          /\\n/g,
+          "\n",
+        );
       }
     } catch (e) {
       // ignore parse errors; serviceAccount remains undefined
-      console.warn('Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', (e as Error).message);
+      console.warn(
+        "Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:",
+        (e as Error).message,
+      );
     }
   }
 
@@ -74,5 +89,8 @@ export function getFirebaseConfig(): FirebaseConfig {
 
 export function isFirebaseConfigured(): boolean {
   const cfg = getFirebaseConfig();
-  return !!(cfg.serviceAccount || (cfg.projectId && (cfg.clientEmail || cfg.privateKey)));
+  return !!(
+    cfg.serviceAccount ||
+    (cfg.projectId && (cfg.clientEmail || cfg.privateKey))
+  );
 }

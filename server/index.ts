@@ -14,7 +14,9 @@ export function createServer() {
     if (init.initialized) {
       console.log("Firebase admin initialized at server startup");
     } else {
-      console.log("Firebase admin not initialized (not configured or missing dependency)");
+      console.log(
+        "Firebase admin not initialized (not configured or missing dependency)",
+      );
     }
   } catch (err) {
     console.warn("Error initializing firebase-admin:", err);
