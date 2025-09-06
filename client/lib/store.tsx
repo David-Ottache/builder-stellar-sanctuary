@@ -144,10 +144,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         const nameParts = [payload.firstName ?? '', payload.lastName ?? ''].map(s => s.trim()).filter(Boolean);
         const newName = nameParts.length ? nameParts.join(' ') : d.name;
         const newAvatar = (payload.profilePhoto as string) || d.avatar;
+        const newLicenseNumber = (payload.driverLicenseNumber as string) || d.driverLicenseNumber;
+        const newLicensePhoto = (payload.driverLicensePhoto as string) || d.driverLicensePhoto;
         return {
           ...d,
           name: newName,
           avatar: newAvatar,
+          driverLicenseNumber: newLicenseNumber,
+          driverLicensePhoto: newLicensePhoto,
         };
       }),
     );
