@@ -11,6 +11,10 @@ export interface DriverRecord {
   driverLicenseNumber?: string;
   driverLicensePhoto?: string;
   vehicleType?: string;
+  // server side fields
+  passwordHash?: string;
+  otpCode?: string;
+  otpExpires?: string;
   createdAt: string;
 }
 
@@ -26,6 +30,9 @@ export function createDriver(input: {
   driverLicenseNumber?: string;
   driverLicensePhoto?: string;
   vehicleType?: string;
+  passwordHash?: string;
+  otpCode?: string;
+  otpExpires?: string;
 }): DriverRecord {
   const id = `d${Math.floor(Math.random() * 100000)}`;
   const record: DriverRecord = {
@@ -41,12 +48,15 @@ export function createDriver(input: {
     driverLicenseNumber: input.driverLicenseNumber,
     driverLicensePhoto: input.driverLicensePhoto,
     vehicleType: input.vehicleType,
+    passwordHash: input.passwordHash,
+    otpCode: input.otpCode,
+    otpExpires: input.otpExpires,
     createdAt: new Date().toISOString(),
   };
   // NOTE: This is an in-memory placeholder. Replace with DB persistence.
   // Log only defined properties to avoid noisy undefined values in logs
   try {
-    const logged = Object.fromEntries(Object.entries(record).filter(([, v]) => v !== undefined));
+    const logged = Object.fromEntries(Object.entries(record).filter(([, v]) => v !== undefined && v !== record.passwordHash && v !== record.otpCode));
     console.debug("createDriver", logged);
   } catch {
     console.debug("createDriver", record);
