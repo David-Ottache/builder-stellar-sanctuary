@@ -18,10 +18,14 @@ export const registerDriver: RequestHandler = async (req, res) => {
 
     // Persist to Firestore if available
     try {
-      // ensure initialized
+      // ensure initialized (await initialization to avoid race conditions)
       if (!isInitialized()) {
-        initializeFirebaseAdmin();
+        const init = await initializeFirebaseAdmin();
+        if (!init.initialized) {
+          console.log("Firestore not available after initialization attempt; skipping persistence");
+        }
       }
+
       const db = getFirestore();
       if (db) {
         const docRef = await db.collection("drivers").add({
