@@ -44,6 +44,12 @@ export function createDriver(input: {
     createdAt: new Date().toISOString(),
   };
   // NOTE: This is an in-memory placeholder. Replace with DB persistence.
-  console.debug("createDriver", record);
+  // Log only defined properties to avoid noisy undefined values in logs
+  try {
+    const logged = Object.fromEntries(Object.entries(record).filter(([, v]) => v !== undefined));
+    console.debug("createDriver", logged);
+  } catch {
+    console.debug("createDriver", record);
+  }
   return record;
 }
