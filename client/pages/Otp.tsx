@@ -11,7 +11,7 @@ export default function Otp() {
     <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <div className="text-xs font-semibold text-neutral-700">OTP VERIFICATION</div>
-        <h1 className="mt-1 text-2xl font-extrabold">Please Enter\nOTP Verification</h1>
+        <h1 className="mt-1 text-2xl font-extrabold">Please Enter OTP Verification</h1>
         <p className="mt-1 text-sm text-neutral-600">Please Input The OTP Code That Was Sent To The Number You Provided</p>
         <div className="mt-5 flex justify-between gap-3">
           {code.map((v,i)=> (
