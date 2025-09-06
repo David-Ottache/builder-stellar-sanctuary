@@ -11,6 +11,41 @@ export default function RegisterContact() {
   const [agree, setAgree] = useState(false);
   const nav = useNavigate();
 
+  const registerDriver = async () => {
+    try {
+      setLoading(true);
+      // const response = await fetch("http://localhost:5000/api/drivers/register", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     email,
+      //     phone,
+      //     countryCode,
+      //   }),
+      // });
+      alert("the register button has been clicked")
+      // if (!response.ok) {
+      //   throw new Error("Failed to register driver");
+      // }
+
+      // const data = await response.json();
+      // console.log("Driver registered:", data);
+
+      // // save in store
+      // setOnboarding({ email, phone, countryCode });
+
+      // navigate to OTP
+      nav("/otp");
+    } catch (err) {
+      console.error(err);
+      alert("Registration failed, please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
@@ -27,7 +62,11 @@ export default function RegisterContact() {
             <input value={phone} onChange={(e)=>setPhone(e.target.value)} placeholder="Mobile Number" className="flex-1 rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
           </div>
           <label className="flex items-start gap-2 text-xs text-neutral-600"><input type="checkbox" checked={agree} onChange={(e)=>setAgree(e.target.checked)} className="mt-1"/> By Logging In, You Agree To Our (Terms Of Service) And (Privacy Policy). We May Collect And Use Your Data To Improve Your Experience, Provide Personalized Content, And Ensure Security. Continued Use Of The App Constitutes Acceptance Of Any Updates To These Terms.</label>
-          <Button className="h-12 w-full rounded-full" disabled={!agree} onClick={()=>{ setOnboarding({ email, phone }); nav("/otp"); }}>Register As A Driver</Button>
+          <Button  className="h-12 w-full rounded-full"
+            disabled={!agree || loading}
+            onClick={registerDriver}
+          >
+            {loading ? "Registering..." : "Register As A Driver"}</Button>
           <div className="text-center text-sm">Already Have An Account? <Link to="/login" className="font-semibold">Sign In</Link></div>
         </div>
       </div>
