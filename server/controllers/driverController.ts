@@ -5,7 +5,20 @@ import { initializeFirebaseAdmin, getFirestore, isInitialized } from "../config/
 
 export const registerDriver: RequestHandler = async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, countryCode } = req.body || {};
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      countryCode,
+      gender,
+      location,
+      profilePhoto,
+      driverLicenseNumber,
+      driverLicensePhoto,
+      vehicleType,
+    } = req.body || {};
+
     if (!phone) return res.status(400).json({ error: "Phone is required" });
 
     const driver = createDriver({
@@ -14,6 +27,12 @@ export const registerDriver: RequestHandler = async (req, res) => {
       email,
       phone,
       countryCode,
+      gender,
+      location,
+      profilePhoto,
+      driverLicenseNumber,
+      driverLicensePhoto,
+      vehicleType,
     });
 
     // Persist to Firestore if available
@@ -30,7 +49,6 @@ export const registerDriver: RequestHandler = async (req, res) => {
       if (db) {
         const docRef = await db.collection("drivers").add({
           ...driver,
-          createdAt: new Date().toISOString(),
         });
         console.log("Driver persisted to Firestore with id", docRef.id);
       } else {
