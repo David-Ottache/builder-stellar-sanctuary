@@ -19,6 +19,7 @@ export default function Documents() {
   const [profilePhoto, setProfilePhoto] = useState<string | undefined>(onboarding.profilePhoto);
   const [licensePhoto, setLicensePhoto] = useState<string | undefined>(onboarding.driverLicensePhoto);
   const nav = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   return (
     <Layout hideTopBar hideBottomNav>
@@ -51,13 +52,16 @@ export default function Documents() {
             </label>
             {licensePhoto && <img src={licensePhoto} alt="License preview" className="mt-2 h-16 w-24 rounded object-cover" />}
           </div>
-          <Button className="h-12 w-full rounded-full" onClick={async ()=>{
+          <Button className="h-12 w-full rounded-full" disabled={loading} onClick={async ()=>{
+            console.log('Documents Next clicked');
+            setLoading(true);
             const updates = { driverLicenseNumber: license, profilePhoto, driverLicensePhoto: licensePhoto };
             setOnboarding(updates);
             mergeOnboardingToDriver(updates);
 
             try {
               const payload = { ...onboarding, ...updates };
+              console.log('Register payload', payload);
               const res = await fetch('/api/drivers/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -72,9 +76,10 @@ export default function Documents() {
               }
             } catch (e) {
               console.error('Error registering driver', e);
+            } finally {
+              setLoading(false);
+              try { nav('/wallet'); } catch(e) { console.error('Navigation failed', e); }
             }
-
-            nav('/wallet');
           }}>Next</Button>
           <div className="text-center text-sm">Already Have An Account? <Link to="/login" className="font-semibold">Sign In</Link></div>
         </div>
