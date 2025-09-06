@@ -27,20 +27,18 @@ export default function RegisterContact() {
       //   }),
       // });
       alert("the register button has been clicked")
-      const response = await fetch("http://localhost:5000/api/demo", {
-        method: "GET",
-      })
+      // Use relative API path so it works in production and preview environments
+      const response = await fetch("/api/demo", { method: "GET" });
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
       const data = await response.json();
-      alert(data)
-      // if (!response.ok) {
-      //   throw new Error("Failed to register driver");
-      // }
-
-      // const data = await response.json();
-      // console.log("Driver registered:", data);
-
-      // // save in store
-      // setOnboarding({ email, phone, countryCode });
+      // show friendly message if demo returns something useful
+      if (typeof data === "object") {
+        alert(data.message || JSON.stringify(data));
+      } else {
+        alert(String(data));
+      }
 
       // navigate to OTP
       nav("/otp");
