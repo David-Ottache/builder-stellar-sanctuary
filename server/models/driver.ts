@@ -1,15 +1,19 @@
 export interface DriverRecord {
   id: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   phone: string;
   countryCode?: string;
   createdAt: string;
 }
 
-export function createDriver(input: { email?: string; phone: string; countryCode?: string }): DriverRecord {
+export function createDriver(input: { firstName?: string; lastName?: string; email?: string; phone: string; countryCode?: string }): DriverRecord {
   const id = `d${Math.floor(Math.random() * 100000)}`;
   const record: DriverRecord = {
     id,
+    firstName: input.firstName,
+    lastName: input.lastName,
     email: input.email,
     phone: input.phone,
     countryCode: input.countryCode,
