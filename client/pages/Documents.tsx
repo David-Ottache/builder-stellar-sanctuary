@@ -51,7 +51,31 @@ export default function Documents() {
             </label>
             {licensePhoto && <img src={licensePhoto} alt="License preview" className="mt-2 h-16 w-24 rounded object-cover" />}
           </div>
-          <Button className="h-12 w-full rounded-full" onClick={()=>{ const updates = { driverLicenseNumber: license, profilePhoto, driverLicensePhoto: licensePhoto }; setOnboarding(updates); mergeOnboardingToDriver(updates); nav("/wallet"); }}>Next</Button>
+          <Button className="h-12 w-full rounded-full" onClick={async ()=>{
+            const updates = { driverLicenseNumber: license, profilePhoto, driverLicensePhoto: licensePhoto };
+            setOnboarding(updates);
+            mergeOnboardingToDriver(updates);
+
+            try {
+              const payload = { ...onboarding, ...updates };
+              const res = await fetch('/api/drivers/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+              });
+              if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                console.warn('Failed registering driver', err);
+              } else {
+                const data = await res.json();
+                console.log('Driver registered', data);
+              }
+            } catch (e) {
+              console.error('Error registering driver', e);
+            }
+
+            nav('/wallet');
+          }}>Next</Button>
           <div className="text-center text-sm">Already Have An Account? <Link to="/login" className="font-semibold">Sign In</Link></div>
         </div>
       </div>
