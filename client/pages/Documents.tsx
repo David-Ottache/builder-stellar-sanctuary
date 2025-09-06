@@ -60,7 +60,20 @@ export default function Documents() {
             mergeOnboardingToDriver(updates);
 
             try {
-              const payload = { ...onboarding, ...updates };
+              // Build explicit payload from onboarding and current local values to avoid stale/undefined fields
+              const payload = {
+                firstName: onboarding.firstName ?? undefined,
+                lastName: onboarding.lastName ?? undefined,
+                email: onboarding.email ?? undefined,
+                phone: onboarding.phone ?? undefined,
+                countryCode: onboarding.countryCode ?? undefined,
+                gender: onboarding.gender ?? undefined,
+                location: onboarding.location ?? undefined,
+                profilePhoto: profilePhoto ?? onboarding.profilePhoto ?? undefined,
+                driverLicenseNumber: license ?? onboarding.driverLicenseNumber ?? undefined,
+                driverLicensePhoto: licensePhoto ?? onboarding.driverLicensePhoto ?? undefined,
+                vehicleType: onboarding.vehicleType ?? undefined,
+              };
               console.log('Register payload', payload);
               const res = await fetch('/api/drivers/register', {
                 method: 'POST',
