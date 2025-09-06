@@ -14,6 +14,7 @@ export interface UserProfile {
   driverLicenseNumber?: string;
   driverLicensePhoto?: string; // data URL
   vehicleType?: string;
+  password?: string;
 }
 
 export interface DriverInfo {
