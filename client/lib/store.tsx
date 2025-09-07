@@ -267,6 +267,27 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [user]);
 
+  // fetch contacts from server when user is present
+  React.useEffect(() => {
+    (async () => {
+      try {
+        if (!user) return;
+        const origin = window.location.origin;
+        const primary = `${origin}/api/users/${user.id}/contacts`;
+        const fallback = `${origin}/.netlify/functions/api/users/${user.id}/contacts`;
+        let res: Response | null = null;
+        try { res = await fetch(primary); } catch (e) { try { res = await fetch(fallback); } catch { res = null; } }
+        if (!res || !res.ok) return;
+        const data = await res.json().catch(()=>null);
+        if (data?.contacts) {
+          setContacts(data.contacts.map((c: any) => ({ id: c.id, name: c.name, phone: c.phone, relationship: c.relationship })) as EmergencyContact[]);
+        }
+      } catch (e) {
+        console.warn('Failed fetching contacts for user', e);
+      }
+    })();
+  }, [user]);
+
   const value: StoreState = {
     user,
     setUser,
