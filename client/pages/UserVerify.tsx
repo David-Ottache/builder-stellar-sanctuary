@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 export default function UserVerify() {
-  const { pendingTrip, selectDriver } = useAppStore();
+  const { pendingTrip, selectDriver, upsertDriver } = useAppStore();
   const [code, setCode] = useState("");
   const [result, setResult] = useState<any | null>(null);
   const navigate = useNavigate();
