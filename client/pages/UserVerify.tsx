@@ -135,6 +135,45 @@ export default function UserVerify() {
               <Button variant="secondary" className="rounded-full" onClick={()=>{ setCode("d2"); check("d2"); }}>Simulate Scan (Akondu)</Button>
             </div>
           </div>
+
+          <div className="mt-3 flex gap-2 items-center">
+            <label className="flex-1 inline-flex items-center gap-2 rounded-xl border bg-neutral-100 px-3 py-2">
+              <input type="file" accept="image/*" className="hidden" onChange={async (e)=>{
+                const f = e.target.files?.[0];
+                if (!f) return;
+                setLoading(true);
+                try {
+                  // Prefer native BarcodeDetector if available
+                  if ((window as any).BarcodeDetector) {
+                    const bitmap = await createImageBitmap(f);
+                    const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
+                    const bars = await detector.detect(bitmap).catch(()=>[]);
+                    try { bitmap.close(); } catch {}
+                    if (bars && bars.length) {
+                      check(bars[0].rawValue || bars[0].raw || '');
+                      return;
+                    }
+                  }
+                  // fallback to server decode
+                  const form = new FormData(); form.append('file', f);
+                  const res = await fetch('https://api.qrserver.com/v1/read-qr-code/', { method: 'POST', body: form });
+                  const data = await res.json().catch(()=>null);
+                  const code = data?.[0]?.symbol?.[0]?.data;
+                  if (code) check(code);
+                  else setResult(null);
+                } catch (err) {
+                  console.warn('file scan failed', err);
+                  setResult(null);
+                } finally { setLoading(false); }
+              }} />
+              <span className="text-sm text-neutral-600">Upload QR image</span>
+            </label>
+
+            <div className="flex gap-2">
+              <CameraButton />
+            </div>
+          </div>
+
           <div className="mt-4 flex gap-2">
             <input value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Enter user ID e.g. d1 or QR text" className="flex-1 rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
             <Button onClick={()=>check(code)} disabled={loading}>{loading ? 'Checking...' : 'Check'}</Button>
