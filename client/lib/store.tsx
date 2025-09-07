@@ -13,6 +13,8 @@ export interface UserProfile {
   profilePhoto?: string; // data URL
   driverLicenseNumber?: string;
   driverLicensePhoto?: string; // data URL
+  identificationNumber?: string;
+  identificationPhoto?: string; // data URL
   vehicleType?: string;
   password?: string;
 }
