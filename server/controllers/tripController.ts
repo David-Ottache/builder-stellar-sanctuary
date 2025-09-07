@@ -46,9 +46,15 @@ export const listTrips: RequestHandler = async (req, res) => {
     }
     const db = getFirestore();
     if (!db) return res.status(503).json({ error: 'database not available' });
-    const q = await db.collection('trips').where('userId', '==', userId).orderBy('startedAt', 'desc').limit(100).get();
-    const trips = q.docs.map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
-    return res.json({ trips });
+    try {
+      const q = await db.collection('trips').where('userId', '==', userId).orderBy('startedAt', 'desc').limit(100).get();
+      const trips = q.docs.map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
+      return res.json({ trips });
+    } catch (err:any) {
+      console.warn('listTrips query failed', err?.message || err);
+      if (String(err?.message || '').includes('requires an index')) return res.json({ trips: [] });
+      throw err;
+    }
   } catch (e) {
     console.error('listTrips error', e);
     return res.status(500).json({ error: 'Internal error' });
