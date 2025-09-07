@@ -63,7 +63,7 @@ export default function UserDetails() {
     </Layout>
   );
 
-  const displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || user.phone || 'User';
+  const displayName = (user.name && String(user.name).trim()) || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || user.phone || 'User';
 
   return (
     <Layout>
