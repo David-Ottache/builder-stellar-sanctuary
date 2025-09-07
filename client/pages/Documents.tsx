@@ -100,7 +100,7 @@ export default function Documents() {
             } finally {
               setLoading(false);
               if (!redirected) {
-                try { nav('/wallet'); } catch(e) { console.error('Navigation failed', e); }
+                try { nav('/'); } catch(e) { console.error('Navigation failed', e); }
               }
             }
           }}>Next</Button>
