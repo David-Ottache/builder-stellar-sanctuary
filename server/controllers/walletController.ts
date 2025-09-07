@@ -79,6 +79,27 @@ export const topUp: RequestHandler = async (req, res) => {
   }
 };
 
+export const requestFunds: RequestHandler = async (req, res) => {
+  try {
+    const { fromId, toId, amount, note } = req.body || {};
+    const a = Number(amount || 0);
+    if (!fromId || !toId) return res.status(400).json({ error: 'fromId and toId required' });
+    if (!a || a <= 0) return res.status(400).json({ error: 'amount must be a positive number' });
+    if (!isInitialized()) {
+      const init = await initializeFirebaseAdmin();
+      if (!init.initialized) return res.status(503).json({ error: 'database not available' });
+    }
+    const db = getFirestore();
+    if (!db) return res.status(503).json({ error: 'database not available' });
+    const reqRef = db.collection('walletRequests').doc();
+    await reqRef.set({ from: fromId, to: toId, amount: a, note: note || null, status: 'pending', ts: new Date().toISOString() });
+    return res.json({ message: 'request created', id: reqRef.id });
+  } catch (e) {
+    console.error('requestFunds error', e);
+    return res.status(500).json({ error: 'Internal error' });
+  }
+};
+
 export const getTransactions: RequestHandler = async (req, res) => {
   try {
     const userId = req.params.userId;
