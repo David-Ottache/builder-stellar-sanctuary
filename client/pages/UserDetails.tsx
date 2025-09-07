@@ -41,7 +41,7 @@ export default function UserDetails() {
         for (const url of candidates) {
           try {
             console.debug('Attempting fetch', url);
-            const res = await fetch(url).catch((e)=>{ console.debug('fetch error', url, e); return null; });
+            const res = await safeFetch(url);
             if (!res || !res.ok) continue;
             const data = await res.json().catch(()=>null);
             if (!data) continue;
