@@ -29,7 +29,7 @@ export const loginDriver: RequestHandler = async (req, res) => {
     const hash = data.passwordHash;
     if (!hash) {
       console.warn('loginDriver: user found but no passwordHash stored for email', email);
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(400).json({ error: 'no_password', message: 'Account exists but no password set' });
     }
 
     const ok = await bcrypt.compare(password, hash);
