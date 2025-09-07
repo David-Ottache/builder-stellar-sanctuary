@@ -389,6 +389,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     sendSOS,
     verifyDriver,
     trips,
+    setTrips: _setTrips,
   };
 
   return <AppStore.Provider value={value}>{children}</AppStore.Provider>;
