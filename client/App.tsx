@@ -17,7 +17,7 @@ import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
 import RegisterName from "./pages/RegisterName";
 import RegisterContact from "./pages/RegisterContact";
-import Otp from "./pages/Otp";
+import UserOtp from "./pages/UserOtp";
 import VehicleChoice from "./pages/VehicleChoice";
 import PersonalDetails from "./pages/PersonalDetails";
 import Documents from "./pages/Documents";
@@ -44,7 +44,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register/name" element={<RegisterName />} />
             <Route path="/register/contact" element={<RegisterContact />} />
-            <Route path="/otp" element={<Otp />} />
+            <Route path="/user/otp" element={<UserOtp />} />
             <Route path="/vehicle" element={<VehicleChoice />} />
             <Route path="/register/details" element={<PersonalDetails />} />
             <Route path="/register/documents" element={<Documents />} />
