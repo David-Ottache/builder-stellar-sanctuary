@@ -100,6 +100,37 @@ export const requestFunds: RequestHandler = async (req, res) => {
   }
 };
 
+export const deductFunds: RequestHandler = async (req, res) => {
+  try {
+    const { userId, amount } = req.body || {};
+    const a = Number(amount || 0);
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    if (!a || a <= 0) return res.status(400).json({ error: 'amount must be positive' });
+    if (!isInitialized()) {
+      const init = await initializeFirebaseAdmin();
+      if (!init.initialized) return res.status(503).json({ error: 'database not available' });
+    }
+    const db = getFirestore();
+    if (!db) return res.status(503).json({ error: 'database not available' });
+    const userRef = db.collection('users').doc(userId);
+    await db.runTransaction(async (t: any) => {
+      const doc = await t.get(userRef);
+      if (!doc.exists) throw new Error('user not found');
+      const data: any = doc.data();
+      const bal = Number(data.walletBalance ?? 0);
+      if (bal < a) throw new Error('insufficient funds');
+      t.update(userRef, { walletBalance: bal - a });
+      const txRef = db.collection('walletTransactions').doc();
+      t.set(txRef, { from: userId, amount: a, ts: new Date().toISOString(), type: 'deduct' });
+    });
+    return res.json({ message: 'deducted' });
+  } catch (e: any) {
+    if (String(e.message).includes('insufficient')) return res.status(400).json({ error: 'insufficient_funds' });
+    console.error('deductFunds error', e);
+    return res.status(500).json({ error: 'Internal error' });
+  }
+};
+
 export const getTransactions: RequestHandler = async (req, res) => {
   try {
     const userId = req.params.userId;
