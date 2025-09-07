@@ -9,7 +9,7 @@ interface Props {
 const items = [
   { to: "/", label: "Home", Icon: Home },
   { to: "/trips", label: "Trips", Icon: Clock },
-  { to: "/verify", label: "Verify", Icon: Scan },
+  { to: "/user/verify", label: "Verify", Icon: Scan },
   { to: "/wallet", label: "Wallet", Icon: Wallet },
   { to: "/profile", label: "Profile", Icon: User },
 ];

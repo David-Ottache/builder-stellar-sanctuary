@@ -24,7 +24,7 @@ import Documents from "./pages/Documents";
 import DriverDetails from "./pages/DriverDetails";
 import Search from "./pages/Search";
 import TripSummary from "./pages/TripSummary";
-import Verify from "./pages/Verify";
+import UserVerify from "./pages/UserVerify";
 import Safety from "./pages/Safety";
 import { AppStoreProvider } from "./lib/store";
 
@@ -49,7 +49,7 @@ const App = () => (
             <Route path="/register/details" element={<PersonalDetails />} />
             <Route path="/register/documents" element={<Documents />} />
             <Route path="/search" element={<Search />} />
-            <Route path="/verify" element={<Verify />} />
+            <Route path="/user/verify" element={<UserVerify />} />
             <Route path="/safety" element={<Safety />} />
             <Route path="/driver/:id" element={<DriverDetails />} />
             <Route path="/trip/summary" element={<TripSummary />} />
