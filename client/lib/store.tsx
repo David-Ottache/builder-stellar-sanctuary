@@ -110,7 +110,14 @@ const MOCK_DRIVERS: DriverInfo[] = [
 ];
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    try {
+      const raw = sessionStorage.getItem('session.user');
+      return raw ? (JSON.parse(raw) as UserProfile) : null;
+    } catch {
+      return null;
+    }
+  });
   const [onboarding, setOnboardingState] = useState<Partial<UserProfile>>({ countryCode: "+234" });
   const [selectedDriverId, selectDriver] = useState<string | null>(null);
   const [trip, setTrip] = useState<TripDetails | null>(null);
