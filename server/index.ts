@@ -77,9 +77,9 @@ export function createServer() {
   app.post("/api/drivers/verify", verifyDriverOtp);
 
   // Contacts (per-user emergency contacts)
-  app.post('/api/users/:id/contacts', require('./controllers/contactsController').addContact);
-  app.get('/api/users/:id/contacts', require('./controllers/contactsController').listContacts);
-  app.delete('/api/users/:id/contacts/:contactId', require('./controllers/contactsController').deleteContact);
+  app.post('/api/users/:id/contacts', contactsController.addContact as any);
+  app.get('/api/users/:id/contacts', contactsController.listContacts as any);
+  app.delete('/api/users/:id/contacts/:contactId', contactsController.deleteContact as any);
 
   return app;
 }
