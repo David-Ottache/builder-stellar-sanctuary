@@ -78,7 +78,7 @@ export default function UserVerify() {
               </div>
             </div>
             <div className="mt-3 text-sm text-green-700">User verified • ID matched</div>
-            <Button className="mt-3 w-full rounded-full" onClick={()=>{ selectDriver(result.id); navigate(`/user/${result.id}`); }}>Continue</Button>
+            <Button className="mt-3 w-full rounded-full" onClick={()=>{ upsertDriver({ id: result.id, name: result.name, avatar: result.avatar, rides: result.rides, rating: result.rating }); selectDriver(result.id); navigate(`/user/${result.id}`); }}>Continue</Button>
           </div>
         ) : (
           <div className="mt-4 rounded-2xl border bg-white p-4 text-sm text-red-600">No user found for provided code.</div>
