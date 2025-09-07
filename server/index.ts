@@ -64,6 +64,7 @@ export function createServer() {
   app.post('/api/users/login', loginUser);
   app.post('/api/users/set-password', setUserPassword);
   app.post("/api/users/verify", verifyUserOtp);
+  app.get('/api/users/:id', registerUser && require('./controllers/userController').getUser);
 
   // Driver routes
   app.post("/api/drivers/register", registerDriver);
