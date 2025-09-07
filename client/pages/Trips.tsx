@@ -35,6 +35,31 @@ export default function Trips() {
     })();
   }, [user]);
 
+  const endTrip = async (tripId: string) => {
+    if (!tripId) return;
+    const ok = window.confirm('Are you sure you want to end this trip?');
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/trips/${tripId}/end`, { method: 'POST' });
+      if (!res.ok) {
+        const d = await res.json().catch(()=>({}));
+        alert(d.error || 'Failed ending trip');
+        return;
+      }
+      const data = await res.json().catch(()=>null);
+      if (!data?.trip) {
+        alert('Failed updating trip');
+        return;
+      }
+      // update local trips
+      setTrips((prev)=> prev.map(t=> t.id === tripId ? data.trip : t));
+      alert('Trip ended');
+    } catch (e) {
+      console.warn('endTrip failed', e);
+      alert('Failed ending trip');
+    }
+  };
+
   return (
     <Layout>
       <div className="px-4 pt-6">
@@ -54,6 +79,11 @@ export default function Trips() {
                   <div className="font-bold">N{(t.fee || 0).toLocaleString()}</div>
                 </div>
                 {t.distanceKm != null && <div className="mt-2 text-xs text-neutral-500">Distance: {t.distanceKm.toFixed(2)} km • Type: {t.vehicle}</div>}
+                {t.status !== 'completed' && (
+                  <div className="mt-3 flex gap-2">
+                    <button className="flex-1 rounded-xl bg-red-500 px-3 py-2 text-white" onClick={()=>endTrip(t.id)}>End Trip</button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
