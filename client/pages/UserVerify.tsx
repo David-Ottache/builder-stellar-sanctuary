@@ -5,10 +5,41 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 export default function UserVerify() {
-  const { verifyDriver, pendingTrip, selectDriver } = useAppStore();
+  const { pendingTrip, selectDriver } = useAppStore();
   const [code, setCode] = useState("");
-  const [result, setResult] = useState(() => verifyDriver("d1"));
+  const [result, setResult] = useState<any | null>(null);
   const navigate = useNavigate();
+
+  const check = async (c: string) => {
+    if (!c) return setResult(null);
+    const origin = window.location.origin;
+    const tryUrls = [
+      `${origin}/api/users/${c}`,
+      `${origin}/.netlify/functions/api/users/${c}`,
+      `${origin}/api/drivers/${c}`,
+      `${origin}/.netlify/functions/api/drivers/${c}`,
+    ];
+    for (const url of tryUrls) {
+      try {
+        const res = await fetch(url);
+        if (!res || !res.ok) continue;
+        const data = await res.json().catch(()=>null);
+        if (data?.user) {
+          const u = data.user;
+          setResult({ id: u.id, name: `${u.firstName||''} ${u.lastName||''}`.trim() || u.email || u.phone, avatar: u.profilePhoto || 'https://i.pravatar.cc/80', rides: 0, rating: 0 });
+          return;
+        }
+        if (data?.driver) {
+          const d = data.driver;
+          setResult({ id: d.id, name: `${d.firstName||''} ${d.lastName||''}`.trim() || d.email || d.phone, avatar: d.profilePhoto || 'https://i.pravatar.cc/80', rides: d.rides || 0, rating: d.rating || 0 });
+          return;
+        }
+      } catch (e) {
+        console.warn('check url failed', url, e);
+      }
+    }
+    setResult(null);
+  };
 
   return (
     <Layout>
@@ -28,12 +59,12 @@ export default function UserVerify() {
           <div className="relative mx-auto h-44 w-full max-w-xs rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50">
             <div className="absolute inset-6 rounded border-2 border-primary/70" />
             <div className="absolute inset-0 flex items-end justify-center p-3">
-              <Button variant="secondary" className="rounded-full" onClick={()=>{ setCode("d2"); setResult(verifyDriver("d2")); }}>Simulate Scan (Akondu)</Button>
+              <Button variant="secondary" className="rounded-full" onClick={()=>{ setCode("d2"); check("d2"); }}>Simulate Scan (Akondu)</Button>
             </div>
           </div>
           <div className="mt-4 flex gap-2">
             <input value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Enter user ID e.g. d1 or QR text" className="flex-1 rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
-            <Button onClick={()=>setResult(verifyDriver(code))}>Check</Button>
+            <Button onClick={()=>check(code)}>Check</Button>
           </div>
         </div>
 
