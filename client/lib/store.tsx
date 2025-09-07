@@ -44,7 +44,7 @@ export interface TripDetails {
 }
 
 export interface Coords { lat: number; lng: number }
-export interface PendingTrip { pickup: string; destination: string; pickupCoords?: Coords | null }
+export interface PendingTrip { pickup: string; destination: string; pickupCoords?: Coords | null; destinationCoords?: Coords | null }
 
 export interface EmergencyContact {
   id: string;
