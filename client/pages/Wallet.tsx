@@ -135,18 +135,30 @@ export default function Wallet() {
         </div>
         <div className="mt-4 rounded-2xl border bg-white p-2">
           {transactions.length === 0 && <div className="p-4 text-sm text-neutral-500">No recent transactions</div>}
-          {transactions.map((t)=> (
-            <div key={t.id} className="flex items-center gap-3 rounded-xl p-2">
-              <div className="h-9 w-9 rounded-full bg-neutral-100 flex items-center justify-center">{t.type === 'topup' ? 'T' : t.from ? 'D' : 'C'}</div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold">{t.type === 'topup' ? 'Top Up' : t.from ? `From ${t.from}` : `To ${t.to}`}</div>
-                <div className="text-xs text-neutral-600">{new Date(t.ts).toLocaleString()}</div>
+          {transactions.map((t)=> {
+            const isTopUp = t.type === 'topup';
+            const isIncoming = t.to === appUser?.id;
+            const isOutgoing = t.from === appUser?.id;
+            let title = '';
+            if (isTopUp) title = 'Top Up';
+            else if (t.type === 'deduct') title = 'Payment';
+            else if (t.from && t.to) title = 'Transfer';
+            else if (isIncoming) title = `From ${t.from || ''}`;
+            else if (isOutgoing) title = `To ${t.to || ''}`;
+            else title = t.type || 'Transaction';
+            return (
+              <div key={t.id} className="flex items-center gap-3 rounded-xl p-2">
+                <div className="h-9 w-9 rounded-full bg-neutral-100 flex items-center justify-center">{isTopUp ? 'T' : isIncoming ? '+' : '-'}</div>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold">{title}</div>
+                  <div className="text-xs text-neutral-600">{t.tripId ? `Trip ${t.tripId} • ` : ''}{new Date(t.ts).toLocaleString()}</div>
+                </div>
+                <div className={isIncoming ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
+                  {(isIncoming ? '+' : '-') }₦{(t.amount || 0).toLocaleString()}.00
+                </div>
               </div>
-              <div className={t.to === appUser?.id ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
-                {(t.to === appUser?.id ? '+' : '-') }₦{(t.amount || 0).toLocaleString()}.00
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </Layout>
