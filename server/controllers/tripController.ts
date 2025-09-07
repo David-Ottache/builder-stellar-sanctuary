@@ -170,16 +170,14 @@ export const endTrip: RequestHandler = async (req, res) => {
         commissionTx = ctx;
       }
 
-      const updatedDoc = await t.get(docRef);
-      const result = { alreadyCompleted: false, trip: { id: updatedDoc.id, ...(updatedDoc.data() as any) }, payout: payoutTx, commission: commissionTx };
-
-      // create notifications outside transaction (best-effort)
+      // Construct updated trip without performing additional reads (reads-before-writes enforced by Firestore)
+      const updatedTrip = { id: doc.id, ...(tripData as any), status: 'completed', endedAt } as any;
+      const result = { alreadyCompleted: false, trip: updatedTrip, payout: payoutTx, commission: commissionTx };
       return result;
     });
 
     // best-effort notifications (outside transaction)
     try {
-      const notifCol = db.collection('notifications');
       const ts = new Date().toISOString();
       // notify driver
       if (result.payout && result.trip.driverId) {
@@ -195,9 +193,6 @@ export const endTrip: RequestHandler = async (req, res) => {
 
     if (result && result.alreadyCompleted) return res.json({ trip: result.trip });
     return res.json({ trip: result.trip, payout: result.payout, commission: result.commission });
-
-    if (result && result.alreadyCompleted) return res.json({ trip: result.trip });
-    return res.json({ trip: result.trip, payout: result.payout });
   } catch (e) {
     console.error('endTrip error', e);
     res.status(500).json({ error: 'Internal error' });
