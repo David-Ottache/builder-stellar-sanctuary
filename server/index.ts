@@ -50,6 +50,10 @@ export function createServer() {
   // Login
   app.post('/api/drivers/login', loginDriver);
 
+  // Set password for existing account
+  const { setDriverPassword } = await import('./controllers/setPasswordHandler');
+  app.post('/api/drivers/set-password', setDriverPassword);
+
   // Verify OTP
   app.post("/api/drivers/verify", verifyDriverOtp);
 
