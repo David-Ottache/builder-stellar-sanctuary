@@ -25,22 +25,42 @@ export default function UserDetails() {
       }
 
       const origin = window.location.origin;
-      const primary = `${origin}/api/users/${id}`;
-      const fallback = `${origin}/.netlify/functions/api/users/${id}`;
+      const candidates = [
+        `/api/users/${id}`,
+        `${origin}/api/users/${id}`,
+        `/api/drivers/${id}`,
+        `${origin}/api/drivers/${id}`,
+        `/.netlify/functions/api/users/${id}`,
+        `${origin}/.netlify/functions/api/users/${id}`,
+        `/.netlify/functions/api/drivers/${id}`,
+        `${origin}/.netlify/functions/api/drivers/${id}`,
+      ];
+
       try {
-        let res = await fetch(primary).catch(()=>null);
-        if (!res || !res.ok) {
-          res = await fetch(fallback).catch(()=>null);
+        let found = null as any;
+        for (const url of candidates) {
+          try {
+            console.debug('Attempting fetch', url);
+            const res = await fetch(url).catch((e)=>{ console.debug('fetch error', url, e); return null; });
+            if (!res || !res.ok) continue;
+            const data = await res.json().catch(()=>null);
+            if (!data) continue;
+            found = data.user ?? data.driver ?? null;
+            if (found) {
+              setUser(found);
+              break;
+            }
+          } catch (inner) {
+            console.warn('fetch candidate failed', url, inner);
+            continue;
+          }
         }
-        if (!res || !res.ok) {
+        if (!found) {
+          console.warn('No user/driver found at any candidate URL');
           setUser(null);
-          setLoading(false);
-          return;
         }
-        const data = await res.json().catch(()=>null);
-        setUser(data?.user ?? data?.driver ?? null);
       } catch (e) {
-        console.error('Failed fetching user', e);
+        console.error('Failed fetching user (outer)', e);
         setUser(null);
       } finally {
         setLoading(false);
