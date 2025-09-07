@@ -46,6 +46,10 @@ export function createServer() {
   // Driver registration
   app.post("/api/drivers/register", registerDriver);
 
+  // Login
+  const { loginDriver } = await import('./controllers/loginHandler');
+  app.post('/api/drivers/login', loginDriver);
+
   // Verify OTP
   app.post("/api/drivers/verify", verifyDriverOtp);
 
