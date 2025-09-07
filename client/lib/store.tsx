@@ -182,10 +182,53 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   const addContact: StoreState["addContact"] = (c) => {
     const id = `c_${Date.now()}`;
+    // optimistic update
     setContacts((prev) => [...prev, { id, ...c }]);
+
+    // persist to server if user available
+    (async () => {
+      try {
+        if (!user) return;
+        const origin = window.location.origin;
+        const primary = `${origin}/api/users/${user.id}/contacts`;
+        const fallback = `${origin}/.netlify/functions/api/users/${user.id}/contacts`;
+        let res: Response | null = null;
+        try {
+          res = await fetch(primary, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c) });
+        } catch (e) {
+          try { res = await fetch(fallback, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c) }); } catch { res = null; }
+        }
+        if (!res) return console.warn('Could not persist contact to server');
+        if (!res.ok) return console.warn('Server failed persisting contact', await res.text().catch(()=>''));
+        const data = await res.json().catch(()=>null);
+        const serverId = data?.id;
+        if (serverId) {
+          setContacts((prev) => prev.map(item => item.id === id ? { id: serverId, ...(data.contact || item) } : item));
+        }
+      } catch (e) {
+        console.warn('addContact persistence error', e);
+      }
+    })();
   };
-  const removeContact: StoreState["removeContact"] = (id) =>
+  const removeContact: StoreState["removeContact"] = (id) => {
+    // optimistic
     setContacts((prev) => prev.filter((c) => c.id !== id));
+    (async () => {
+      try {
+        if (!user) return;
+        const origin = window.location.origin;
+        const primary = `${origin}/api/users/${user.id}/contacts/${id}`;
+        const fallback = `${origin}/.netlify/functions/api/users/${user.id}/contacts/${id}`;
+        try {
+          await fetch(primary, { method: 'DELETE' }).catch(async () => { await fetch(fallback, { method: 'DELETE' }).catch(()=>null); });
+        } catch (e) {
+          console.warn('removeContact persistence error', e);
+        }
+      } catch (e) {
+        console.warn('removeContact error', e);
+      }
+    })();
+  };
 
   const sendSOS: StoreState["sendSOS"] = (message) => {
     const count = contacts.length;
