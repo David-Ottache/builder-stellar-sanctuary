@@ -47,7 +47,6 @@ export function createServer() {
   app.post("/api/drivers/register", registerDriver);
 
   // Verify OTP
-  const { verifyDriverOtp } = await import("./routes/verifyOtp");
   app.post("/api/drivers/verify", verifyDriverOtp);
 
   return app;
