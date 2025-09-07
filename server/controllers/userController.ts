@@ -90,6 +90,7 @@ export const registerUser: RequestHandler = async (req, res) => {
       lastName: user.lastName,
       phone: user.phone,
       countryCode: user.countryCode,
+      walletBalance: 10000,
     };
 
     res.status(201).json({ message: "User registered", user: safe });
