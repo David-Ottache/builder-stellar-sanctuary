@@ -13,6 +13,7 @@ import { verifyUserOtp } from "./routes/verifyUserOtp";
 import { initializeFirebaseAdmin, isInitialized } from "./config/firebaseAdmin";
 import * as contactsController from "./controllers/contactsController";
 import { getUser } from "./controllers/userController";
+import { getDriver } from "./controllers/driverController";
 
 export function createServer() {
   const app = express();
