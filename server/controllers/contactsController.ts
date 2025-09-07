@@ -36,8 +36,14 @@ export const listContacts: RequestHandler = async (req, res) => {
     const db = await ensureDb();
     if (!db) return res.status(503).json({ error: 'database not available' });
 
-    const q = await db.collection('contacts').where('userId', '==', userId).orderBy('createdAt', 'desc').get();
-    const contacts = q.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
+    const q = await db.collection('contacts').where('userId', '==', userId).get();
+    const contacts = q.docs
+      .map(d => ({ id: d.id, ...(d.data() as any) }))
+      .sort((a: any, b: any) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tb - ta; // desc
+      });
     return res.json({ contacts });
   } catch (e) {
     console.error('listContacts error', e);
