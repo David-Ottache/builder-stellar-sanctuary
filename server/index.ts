@@ -101,5 +101,9 @@ export async function createServer() {
   app.get('/api/trips/:userId', tripController.listTrips as any);
   app.get('/api/trips/driver/:driverId', tripController.listTripsByDriver as any);
 
+  // Lookup endpoint: search both drivers and users by id (document id or stored 'id' field)
+  const lookupController = await import('./controllers/lookupController');
+  app.get('/api/lookup/:id', lookupController.lookupById as any);
+
   return app;
 }
