@@ -117,7 +117,13 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
       const raw = sessionStorage.getItem('session.user');
-      return raw ? (JSON.parse(raw) as UserProfile) : null;
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as any;
+      if (parsed && (parsed.walletBalance === undefined || parsed.walletBalance === null)) {
+        parsed.walletBalance = 10000;
+        try { sessionStorage.setItem('session.user', JSON.stringify(parsed)); } catch {}
+      }
+      return parsed as UserProfile;
     } catch {
       return null;
     }
