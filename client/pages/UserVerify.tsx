@@ -13,27 +13,46 @@ export default function UserVerify() {
   const navigate = useNavigate();
 
   const check = async (c: string) => {
-    const value = (c || '').trim();
+    let value = (c || '').trim();
     if (!value) return setResult(null);
+    // if value is a URL, try to extract code query param or last path segment
+    try {
+      if (value.startsWith('http://') || value.startsWith('https://') || value.includes('/user/')) {
+        try {
+          const u = new URL(value, window.location.origin);
+          const code = u.searchParams.get('code');
+          if (code) value = code;
+          else {
+            const parts = u.pathname.split('/').filter(Boolean);
+            if (parts.length) value = parts[parts.length-1];
+          }
+        } catch(e) {
+          // fallback: take last segment after slash
+          const parts = value.split('/').filter(Boolean);
+          if (parts.length) value = parts[parts.length-1];
+        }
+      }
+    } catch (e) {}
+
     setLoading(true);
     const origin = window.location.origin;
 
     const candidates = [
       // Single lookup endpoint that queries both collections server-side
-      `/api/lookup/${value}`,
-      `${origin}/api/lookup/${value}`,
-      `/.netlify/functions/api/lookup/${value}`,
-      `${origin}/.netlify/functions/api/lookup/${value}`,
+      `/api/lookup/${encodeURIComponent(value)}`,
+      `${origin}/api/lookup/${encodeURIComponent(value)}`,
+      `/.netlify/functions/api/lookup/${encodeURIComponent(value)}`,
+      `${origin}/.netlify/functions/api/lookup/${encodeURIComponent(value)}`,
       // Fallback to driver endpoints
-      `/api/drivers/${value}`,
-      `${origin}/api/drivers/${value}`,
-      `/.netlify/functions/api/drivers/${value}`,
-      `${origin}/.netlify/functions/api/drivers/${value}`,
+      `/api/drivers/${encodeURIComponent(value)}`,
+      `${origin}/api/drivers/${encodeURIComponent(value)}`,
+      `/.netlify/functions/api/drivers/${encodeURIComponent(value)}`,
+      `${origin}/.netlify/functions/api/drivers/${encodeURIComponent(value)}`,
       // then user endpoints
-      `/api/users/${value}`,
-      `${origin}/api/users/${value}`,
-      `/.netlify/functions/api/users/${value}`,
-      `${origin}/.netlify/functions/api/users/${value}`,
+      `/api/users/${encodeURIComponent(value)}`,
+      `${origin}/api/users/${encodeURIComponent(value)}`,
+      `/.netlify/functions/api/users/${encodeURIComponent(value)}`,
+      `${origin}/.netlify/functions/api/users/${encodeURIComponent(value)}`,
     ];
 
     try {
