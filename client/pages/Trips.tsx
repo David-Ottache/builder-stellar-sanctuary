@@ -1,8 +1,22 @@
 import Layout from "@/components/app/Layout";
 import { useAppStore } from "@/lib/store";
+import { useEffect } from "react";
 
 export default function Trips() {
-  const { trips } = useAppStore();
+  const { trips, setTrips, user } = useAppStore();
+
+  useEffect(()=>{
+    (async ()=>{
+      try {
+        if (!user) return;
+        const res = await fetch(`/api/trips/${user.id}`);
+        if (!res.ok) return;
+        const data = await res.json().catch(()=>null);
+        if (data?.trips) setTrips(data.trips);
+      } catch (e) { console.warn('failed fetching trips', e); }
+    })();
+  }, [user]);
+
   return (
     <Layout>
       <div className="px-4 pt-6">
