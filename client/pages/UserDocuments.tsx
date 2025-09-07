@@ -73,7 +73,7 @@ export default function UserDocuments() {
                 identificationPhoto: idPhoto ?? onboarding.identificationPhoto ?? undefined,
                 password: onboarding.password ?? undefined,
               };
-              const res = await fetch('/api/drivers/register', {
+              const res = await fetch('/api/users/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
