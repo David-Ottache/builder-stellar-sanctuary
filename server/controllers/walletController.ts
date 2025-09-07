@@ -142,15 +142,23 @@ export const getTransactions: RequestHandler = async (req, res) => {
     const db = getFirestore();
     if (!db) return res.status(503).json({ error: 'database not available' });
     try {
-      const q = await db.collection('walletTransactions').where('to', '==', userId).orderBy('ts', 'desc').limit(50).get();
-      const tx = q.docs.map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
-      return res.json({ transactions: tx });
+      // Fetch both incoming (to) and outgoing (from) transactions to show full history
+      const toQ = await db.collection('walletTransactions').where('to', '==', userId).limit(200).get().catch(()=>({ docs: [] } as any));
+      const fromQ = await db.collection('walletTransactions').where('from', '==', userId).limit(200).get().catch(()=>({ docs: [] } as any));
+      const toTx = (toQ.docs || []).map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
+      const fromTx = (fromQ.docs || []).map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
+      const tx = [...toTx, ...fromTx];
+      // Sort by timestamp descending
+      tx.sort((a:any,b:any)=> {
+        const ta = a.ts ? new Date(a.ts).getTime() : 0;
+        const tb = b.ts ? new Date(b.ts).getTime() : 0;
+        return tb - ta;
+      });
+      // limit to 200
+      return res.json({ transactions: tx.slice(0,200) });
     } catch (err:any) {
       console.warn('getTransactions query failed', err?.message || err);
-      if (String(err?.message || '').includes('requires an index')) {
-        return res.json({ transactions: [] });
-      }
-      throw err;
+      return res.json({ transactions: [] });
     }
   } catch (e) {
     console.error('getTransactions error', e);
