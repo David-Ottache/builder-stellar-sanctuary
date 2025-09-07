@@ -11,6 +11,7 @@ import { loginUser } from "./controllers/userLoginHandler";
 import { setUserPassword } from "./controllers/setUserPasswordHandler";
 import { verifyUserOtp } from "./routes/verifyUserOtp";
 import { initializeFirebaseAdmin, isInitialized } from "./config/firebaseAdmin";
+import * as contactsController from "./controllers/contactsController";
 
 export function createServer() {
   const app = express();
