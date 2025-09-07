@@ -137,6 +137,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [onboarding, setOnboardingState] = useState<Partial<UserProfile>>({ countryCode: "+234" });
   const [selectedDriverId, selectDriver] = useState<string | null>(null);
   const [trip, setTrip] = useState<TripDetails | null>(null);
+  const [trips, setTrips] = useState<TripDetails[]>(() => {
+    try { const raw = localStorage.getItem('trips.history'); return raw ? (JSON.parse(raw) as TripDetails[]) : []; } catch { return []; }
+  });
   const [contacts, setContacts] = useState<EmergencyContact[]>(() => {
     try {
       const raw = localStorage.getItem("safety.contacts");
@@ -210,10 +213,24 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const startTrip: StoreState["startTrip"] = ({ pickup, destination, driverId, fee }) => {
     const driver = drivers.find((d) => d.id === driverId) || drivers[0];
     const computedFee = fee ?? driver.price;
-    setTrip({ pickup, destination, fee: computedFee, driverId: driver.id });
+    const id = `t_${Date.now()}`;
+    const startedAt = new Date().toISOString();
+    const vehicle = pendingTrip?.vehicle;
+    const distanceKm = pendingTrip && pendingTrip.pickupCoords && pendingTrip.destinationCoords ? (
+      // import haversine dynamically to avoid circular import; simple calculation using existing helper
+      (function(){ try { return require('../lib/utils').haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords); } catch { return undefined; } })()
+    ) : undefined;
+    const record: TripDetails = { id, pickup, destination, fee: computedFee, driverId: driver.id, status: 'ongoing', startedAt, vehicle, distanceKm };
+    setTrip(record);
+    setTrips((prev)=> [record, ...prev]);
   };
 
-  const endTrip = () => setTrip(null);
+  const endTrip = () => {
+    if (!trip) return;
+    const endedAt = new Date().toISOString();
+    setTrips((prev)=> prev.map(t=> t.id === trip.id ? { ...t, status: 'completed', endedAt } : t));
+    setTrip(null);
+  };
 
   const addContact: StoreState["addContact"] = (c) => {
     const id = `c_${Date.now()}`;
@@ -294,6 +311,10 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [pendingTrip]);
 
+  React.useEffect(()=>{
+    try { localStorage.setItem('trips.history', JSON.stringify(trips)); } catch {}
+  }, [trips]);
+
   // persist session user
   React.useEffect(() => {
     try {
@@ -343,6 +364,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     removeContact,
     sendSOS,
     verifyDriver,
+    trips,
   };
 
   return <AppStore.Provider value={value}>{children}</AppStore.Provider>;
