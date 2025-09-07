@@ -319,6 +319,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     drivers,
     selectedDriverId,
     selectDriver,
+    upsertDriver,
     mergeOnboardingToDriver,
     trip,
     startTrip,
