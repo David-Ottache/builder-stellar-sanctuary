@@ -75,5 +75,10 @@ export function createServer() {
   // Verify OTP
   app.post("/api/drivers/verify", verifyDriverOtp);
 
+  // Contacts (per-user emergency contacts)
+  app.post('/api/users/:id/contacts', require('./controllers/contactsController').addContact);
+  app.get('/api/users/:id/contacts', require('./controllers/contactsController').listContacts);
+  app.delete('/api/users/:id/contacts/:contactId', require('./controllers/contactsController').deleteContact);
+
   return app;
 }
