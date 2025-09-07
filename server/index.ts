@@ -87,5 +87,11 @@ export function createServer() {
   app.get('/api/users/:id/contacts', contactsController.listContacts as any);
   app.delete('/api/users/:id/contacts/:contactId', contactsController.deleteContact as any);
 
+  // Wallet routes
+  const { transferFunds, topUp, getTransactions } = await import('./controllers/walletController');
+  app.post('/api/wallet/transfer', transferFunds as any);
+  app.post('/api/wallet/topup', topUp as any);
+  app.get('/api/wallet/transactions/:userId', getTransactions as any);
+
   return app;
 }
