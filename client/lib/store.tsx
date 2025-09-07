@@ -147,6 +147,28 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const setOnboarding = (updates: Partial<UserProfile>) =>
     setOnboardingState((prev) => ({ ...prev, ...updates }));
 
+  const upsertDriver: StoreState['upsertDriver'] = (d) => {
+    setDrivers((prev) => {
+      const exists = prev.find((p) => p.id === d.id);
+      if (exists) {
+        return prev.map((p) => (p.id === d.id ? { ...p, ...d } as DriverInfo : p));
+      }
+      // fill missing fields with defaults
+      const newDriver: DriverInfo = {
+        id: d.id,
+        name: (d.name as string) || 'Unknown',
+        rating: (d.rating as number) || 0,
+        rides: (d.rides as number) || 0,
+        etaMin: (d.etaMin as number) || 0,
+        distanceKm: (d.distanceKm as number) || 0,
+        price: (d.price as number) || 0,
+        passengers: (d.passengers as number) || 1,
+        avatar: d.avatar || 'https://i.pravatar.cc/80',
+      };
+      return [newDriver, ...prev];
+    });
+  };
+
   const mergeOnboardingToDriver: StoreState['mergeOnboardingToDriver'] = (updates) => {
     const payload = updates ? updates : onboarding;
     if (!payload) return;
