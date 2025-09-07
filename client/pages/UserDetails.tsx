@@ -64,12 +64,15 @@ export default function UserDetails() {
   );
 
   const displayName = (user.name && String(user.name).trim()) || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || user.phone || 'User';
+  const avatar = (user.avatar || user.profilePhoto || user.photo || 'https://i.pravatar.cc/80');
+  const rides = user.rides ?? 0;
+  const rating = user.rating ?? 0;
 
   return (
     <Layout>
       <div className="px-4 pt-6">
         <div className="flex items-center gap-3">
-          <img src={user.profilePhoto || 'https://i.pravatar.cc/80'} className="h-16 w-16 rounded-full object-cover" alt={displayName} />
+          <img src={avatar} className="h-16 w-16 rounded-full object-cover" alt={displayName} />
           <div>
             <div className="text-xl font-bold">{displayName}</div>
             <div className="text-sm text-neutral-600">{user.email || user.phone}</div>
@@ -79,8 +82,8 @@ export default function UserDetails() {
         <div className="mt-4 rounded-2xl border bg-white p-4">
           <div className="font-semibold">Trip Details</div>
           <div className="mt-2 text-sm text-neutral-700">
-            <div>Pick Up Location: Current location</div>
-            <div>Destination: TBD</div>
+            <div>Pick Up Location: {pendingTrip?.pickup ?? 'Current location'}</div>
+            <div>Destination: {pendingTrip?.destination ?? 'TBD'}</div>
           </div>
         </div>
 
@@ -93,7 +96,7 @@ export default function UserDetails() {
         </div>
 
         <div className="mt-4 flex gap-3">
-          <Button className="h-12 flex-1 rounded-full" onClick={() => { if(!selectedDriverId) selectDriver(user.id); startTrip({ pickup: 'Current location', destination: 'TBD', driverId: user.id, fee: 0 }); navigate('/trip/summary'); }}>Request</Button>
+          <Button className="h-12 flex-1 rounded-full" onClick={() => { if(!selectedDriverId) selectDriver(user.id); startTrip({ pickup: pendingTrip?.pickup ?? 'Current location', destination: pendingTrip?.destination ?? 'TBD', driverId: user.id, fee: 0 }); navigate('/trip/summary'); }}>Request</Button>
         </div>
       </div>
     </Layout>
