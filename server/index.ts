@@ -16,7 +16,7 @@ import { getUser } from "./controllers/userController";
 import { getDriver } from "./controllers/driverController";
 import * as walletController from "./controllers/walletController";
 
-export function createServer() {
+export async function createServer() {
   const app = express();
 
   // Try to initialize firebase-admin (no-op if not configured or dependency missing)
