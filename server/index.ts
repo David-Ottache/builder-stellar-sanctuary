@@ -95,5 +95,10 @@ export function createServer() {
   app.post('/api/wallet/deduct', walletController.deductFunds as any);
   app.get('/api/wallet/transactions/:userId', walletController.getTransactions as any);
 
+  // Trip routes
+  const tripController = await import('./controllers/tripController');
+  app.post('/api/trips', tripController.createTrip as any);
+  app.get('/api/trips/:userId', tripController.listTrips as any);
+
   return app;
 }
