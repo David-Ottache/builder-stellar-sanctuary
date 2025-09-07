@@ -6,6 +6,10 @@ import { registerDriver } from "./controllers/driverController";
 import { verifyDriverOtp } from "./routes/verifyOtp";
 import { loginDriver } from "./controllers/loginHandler";
 import { setDriverPassword } from "./controllers/setPasswordHandler";
+import { registerUser } from "./controllers/userController";
+import { loginUser } from "./controllers/userLoginHandler";
+import { setUserPassword } from "./controllers/setUserPasswordHandler";
+import { verifyUserOtp } from "./routes/verifyUserOtp";
 import { initializeFirebaseAdmin, isInitialized } from "./config/firebaseAdmin";
 
 export function createServer() {
@@ -48,6 +52,20 @@ export function createServer() {
   // Driver registration
   app.post("/api/drivers/register", registerDriver);
 
+  // Login
+  app.post('/api/drivers/login', loginDriver);
+
+  // Set password for existing account
+  app.post('/api/drivers/set-password', setDriverPassword);
+
+  // User routes
+  app.post("/api/users/register", registerUser);
+  app.post('/api/users/login', loginUser);
+  app.post('/api/users/set-password', setUserPassword);
+  app.post("/api/users/verify", verifyUserOtp);
+
+  // Driver routes
+  app.post("/api/drivers/register", registerDriver);
   // Login
   app.post('/api/drivers/login', loginDriver);
 
