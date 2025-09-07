@@ -46,18 +46,18 @@ export default function Index() {
               if (!destination) { toast.error('Please enter a destination'); return; }
               if (!navigator.geolocation) {
                 setPendingTrip({ pickup: 'Unknown location', destination });
-                navigate('/verify');
+                navigate('/user/verify');
                 return;
               }
               navigator.geolocation.getCurrentPosition(
                 (pos) => {
                   const { latitude: lat, longitude: lng } = pos.coords;
                   setPendingTrip({ pickup: 'Current location', destination, pickupCoords: { lat, lng } });
-                  navigate('/verify');
+                  navigate('/user/verify');
                 },
                 () => {
                   setPendingTrip({ pickup: 'Current location', destination });
-                  navigate('/verify');
+                  navigate('/user/verify');
                 },
                 { enableHighAccuracy: true, timeout: 5000 }
               );
