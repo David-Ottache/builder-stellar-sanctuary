@@ -89,9 +89,9 @@ export default function Documents() {
               } else {
                 const data = await res.json();
                 console.log('Driver registered', data);
-                await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'A verification code has been sent to your phone.' });
-                // navigate to OTP page after user closes alert
-                try { nav('/otp'); } catch(e) { console.error('Navigation failed', e); }
+                await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been created. Please log in with your email and password.' });
+                // navigate to login page after user closes alert
+                try { nav('/login'); } catch(e) { console.error('Navigation failed', e); }
                 return; // avoid nav('/wallet') in finally
               }
             } catch (e) {
