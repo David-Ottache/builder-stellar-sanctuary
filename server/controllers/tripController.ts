@@ -99,14 +99,62 @@ export const endTrip: RequestHandler = async (req, res) => {
     const db = getFirestore();
     if (!db) return res.status(503).json({ error: 'database not available' });
 
-    const docRef = db.collection('trips').doc(id);
-    const doc = await docRef.get();
-    if (!doc.exists) return res.status(404).json({ error: 'Trip not found' });
+    // run as transaction to update trip and credit driver atomically
+    const result = await db.runTransaction(async (t: any) => {
+      const docRef = db.collection('trips').doc(id);
+      const doc = await t.get(docRef);
+      if (!doc.exists) throw new Error('Trip not found');
+      const tripData: any = doc.data();
+      if (tripData.status === 'completed') {
+        return { alreadyCompleted: true, trip: { id: doc.id, ...tripData } };
+      }
+      const endedAt = new Date().toISOString();
+      t.update(docRef, { status: 'completed', endedAt });
 
-    const endedAt = new Date().toISOString();
-    await docRef.update({ status: 'completed', endedAt });
-    const updated = await docRef.get();
-    return res.json({ trip: { id: updated.id, ...(updated.data() as any) } });
+      const fee = Number(tripData.fee || 0);
+      const driverId = tripData.driverId;
+      let payoutTx: any = null;
+
+      if (driverId && fee > 0) {
+        // attempt to credit driver in drivers collection
+        const driverRef = db.collection('drivers').doc(driverId);
+        const driverDoc = await t.get(driverRef);
+        if (driverDoc.exists) {
+          const d = driverDoc.data() as any;
+          const prev = Number(d.walletBalance ?? 0);
+          t.update(driverRef, { walletBalance: prev + fee });
+          const txRef = db.collection('walletTransactions').doc();
+          const tx = { to: driverId, amount: fee, ts: new Date().toISOString(), type: 'trip_payout', tripId: id } as any;
+          t.set(txRef, tx);
+          payoutTx = tx;
+        } else {
+          // fallback: try users collection (in case drivers stored as users)
+          const userRef = db.collection('users').doc(driverId);
+          const userDoc = await t.get(userRef);
+          if (userDoc.exists) {
+            const u = userDoc.data() as any;
+            const prev = Number(u.walletBalance ?? 0);
+            t.update(userRef, { walletBalance: prev + fee });
+            const txRef = db.collection('walletTransactions').doc();
+            const tx = { to: driverId, amount: fee, ts: new Date().toISOString(), type: 'trip_payout', tripId: id } as any;
+            t.set(txRef, tx);
+            payoutTx = tx;
+          } else {
+            // Neither driver nor user record found; still record a payout tx for bookkeeping
+            const txRef = db.collection('walletTransactions').doc();
+            const tx = { to: driverId, amount: fee, ts: new Date().toISOString(), type: 'trip_payout', tripId: id, note: 'driver record missing' } as any;
+            t.set(txRef, tx);
+            payoutTx = tx;
+          }
+        }
+      }
+
+      const updatedDoc = await t.get(docRef);
+      return { alreadyCompleted: false, trip: { id: updatedDoc.id, ...(updatedDoc.data() as any) }, payout: payoutTx };
+    });
+
+    if (result && result.alreadyCompleted) return res.json({ trip: result.trip });
+    return res.json({ trip: result.trip, payout: result.payout });
   } catch (e) {
     console.error('endTrip error', e);
     res.status(500).json({ error: 'Internal error' });
