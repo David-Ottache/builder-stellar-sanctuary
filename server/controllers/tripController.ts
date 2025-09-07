@@ -74,13 +74,13 @@ export const listTripsByDriver: RequestHandler = async (req, res) => {
     const db = getFirestore();
     if (!db) return res.status(503).json({ error: 'database not available' });
     try {
-      const q = await db.collection('trips').where('driverId', '==', driverId).orderBy('startedAt', 'desc').limit(100).get();
+      const q = await db.collection('trips').where('driverId', '==', driverId).limit(500).get();
       const trips = q.docs.map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
+      trips.sort((a:any,b:any)=> (b.startedAt ? new Date(b.startedAt).getTime() : 0) - (a.startedAt ? new Date(a.startedAt).getTime() : 0));
       return res.json({ trips });
     } catch (err:any) {
       console.warn('listTripsByDriver query failed', err?.message || err);
-      if (String(err?.message || '').includes('requires an index')) return res.json({ trips: [] });
-      throw err;
+      return res.json({ trips: [] });
     }
   } catch (e) {
     console.error('listTripsByDriver error', e);
