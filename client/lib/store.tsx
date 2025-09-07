@@ -143,6 +143,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [trips, setTrips] = useState<TripDetails[]>(() => {
     try { const raw = localStorage.getItem('trips.history'); return raw ? (JSON.parse(raw) as TripDetails[]) : []; } catch { return []; }
   });
+  const _setTrips = (updates: TripDetails[]) => setTrips(updates);
   const [contacts, setContacts] = useState<EmergencyContact[]>(() => {
     try {
       const raw = localStorage.getItem("safety.contacts");
