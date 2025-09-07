@@ -19,7 +19,7 @@ export default function Index() {
   const { setPendingTrip } = useAppStore();
 
   // attempt to read current position early so we can show pricing
-  React.useEffect(()=>{
+  useEffect(()=>{
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition((pos)=>{
       setPickupCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
