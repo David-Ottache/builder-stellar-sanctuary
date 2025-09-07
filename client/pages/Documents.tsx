@@ -90,7 +90,41 @@ export default function Documents() {
               } else {
                 const data = await res.json();
                 console.log('Driver registered', data);
-                await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been created. Please log in with your email and password.' });
+                // generate QR code image for driver id and trigger download
+                try {
+                  const driverId = data?.driver?.id || data?.id || null;
+                  if (driverId) {
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(driverId)}`;
+                    try {
+                      const qrRes = await fetch(qrUrl);
+                      if (qrRes && qrRes.ok) {
+                        const blob = await qrRes.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `driver_${driverId}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                        console.log('QR downloaded for', driverId);
+                        await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been created and your QR has been downloaded.' });
+                      } else {
+                        console.warn('QR generation failed', qrRes && qrRes.status);
+                        await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been created. Could not generate QR automatically.' });
+                      }
+                    } catch (e) {
+                      console.warn('Failed fetching QR image', e);
+                      await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been created. Could not generate QR automatically.' });
+                    }
+                  } else {
+                    await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been created. Please log in with your email and password.' });
+                  }
+                } catch (e) {
+                  console.warn('QR generation flow failed', e);
+                  await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been created. Please log in with your email and password.' });
+                }
+
                 // navigate to login page after user closes alert
                 try { nav('/login'); redirected = true; } catch(e) { console.error('Navigation failed', e); }
               }
