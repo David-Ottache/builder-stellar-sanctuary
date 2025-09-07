@@ -3,7 +3,7 @@ import Layout from "@/components/app/Layout";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { safeFetch } from "@/lib/utils";
+import { safeFetch, haversineKm } from "@/lib/utils";
 import Swal from 'sweetalert2';
 
 export default function UserDetails() {
