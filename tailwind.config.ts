@@ -91,7 +91,7 @@ export default {
       },
       backgroundImage: {
         "brand-mesh":
-          "radial-gradient(ellipse at 20% 10%, rgba(16,185,129,0.10), transparent 50%), radial-gradient(ellipse at 80% 30%, rgba(16,185,129,0.12), transparent 55%)",
+          "radial-gradient(ellipse at 20% 10%, rgba(250,204,21,0.10), transparent 50%), radial-gradient(ellipse at 80% 30%, rgba(250,204,21,0.12), transparent 55%)",
       },
     },
   },
