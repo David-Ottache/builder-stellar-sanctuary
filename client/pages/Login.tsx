@@ -7,6 +7,7 @@ import { useAppStore } from "@/lib/store";
 import Swal from 'sweetalert2';
 
 export default function Login() {
+  const [role, setRole] = useState<'driver'|'user'>('driver');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { setUser } = useAppStore();
@@ -14,7 +15,8 @@ export default function Login() {
 
   const doLogin = async () => {
     try {
-      const res = await fetch('/api/drivers/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      const endpoint = role === 'driver' ? '/api/drivers/login' : '/api/users/login';
+      const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         // if account exists but no password set, prompt to choose password
@@ -28,8 +30,8 @@ export default function Login() {
             showCancelButton: true,
           }) as any;
           if (newPassword) {
-            // call set-password endpoint
-            const r = await fetch('/api/drivers/set-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: newPassword }) });
+            const pwEndpoint = role === 'driver' ? '/api/drivers/set-password' : '/api/users/set-password';
+            const r = await fetch(pwEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: newPassword }) });
             if (r.ok) {
               await Swal.fire({ icon: 'success', title: 'Password set', text: 'You can now log in with your password.' });
             } else {
@@ -46,6 +48,7 @@ export default function Login() {
       const user = data.user;
       await Swal.fire({ icon: 'success', title: `Welcome ${user.firstName || ''}`, text: 'You are now logged in.' });
       setUser(user);
+      // navigate to appropriate home
       navigate('/');
     } catch (e) {
       console.error('Login error', e);
@@ -57,6 +60,10 @@ export default function Login() {
     <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <h1 className="mb-6 text-2xl font-bold">Welcome Back</h1>
+        <div className="mb-4 flex gap-2">
+          <button onClick={()=>setRole('driver')} className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${role==='driver' ? 'bg-primary text-white' : 'border bg-neutral-100'}`}>Driver</button>
+          <button onClick={()=>setRole('user')} className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${role==='user' ? 'bg-primary text-white' : 'border bg-neutral-100'}`}>User</button>
+        </div>
         <div className="space-y-3">
           <input value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
           <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
@@ -65,7 +72,7 @@ export default function Login() {
             <Link to="#" className="font-semibold">FORGOT PASSWORD?</Link>
           </div>
           <Button className="h-12 w-full rounded-full" onClick={doLogin}>Login</Button>
-          <div className="text-center text-sm">Dont Have An Account? <Link to="/register/name" className="font-semibold">Sign Up</Link></div>
+          <div className="text-center text-sm">Dont Have An Account? <Link to={role==='driver' ? "/register/name" : "/user/register/name"} className="font-semibold">Sign Up</Link></div>
         </div>
       </div>
     </Layout>
