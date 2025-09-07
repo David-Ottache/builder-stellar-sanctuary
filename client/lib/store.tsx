@@ -213,6 +213,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [pendingTrip]);
 
+  // persist session user
+  React.useEffect(() => {
+    try {
+      if (user) sessionStorage.setItem('session.user', JSON.stringify(user));
+      else sessionStorage.removeItem('session.user');
+    } catch {}
+  }, [user]);
+
   const value: StoreState = {
     user,
     setUser,
