@@ -26,7 +26,7 @@ export default function SOS() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => {
-              const n = sendSOS("SOS from VoltGo user");
+              const n = sendSOS("SOS from reCab user");
               toast.success(`SOS sent to ${n} contact(s)`);
               setOpen(false);
             }}>Send</AlertDialogAction>
