@@ -19,15 +19,24 @@ export const loginDriver: RequestHandler = async (req, res) => {
     if (!db) return res.status(503).json({ error: 'database not available' });
 
     const q = await db.collection('drivers').where('email', '==', email).limit(1).get();
-    if (q.empty) return res.status(400).json({ error: 'Invalid credentials' });
+    if (q.empty) {
+      console.warn('loginDriver: no user found for email', email);
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
 
     const doc = q.docs[0];
     const data: any = doc.data();
     const hash = data.passwordHash;
-    if (!hash) return res.status(400).json({ error: 'Invalid credentials' });
+    if (!hash) {
+      console.warn('loginDriver: user found but no passwordHash stored for email', email);
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
 
     const ok = await bcrypt.compare(password, hash);
-    if (!ok) return res.status(400).json({ error: 'Invalid credentials' });
+    if (!ok) {
+      console.warn('loginDriver: password mismatch for email', email);
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
 
     // build safe metadata
     const safe = {
