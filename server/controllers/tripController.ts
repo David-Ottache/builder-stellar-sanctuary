@@ -157,7 +157,6 @@ export const endTrip: RequestHandler = async (req, res) => {
           payoutTx = tx;
         }
 
-        const commission = Math.round((fee * commissionRate));
         if (platformDoc && platformDoc.exists) {
           const p = platformDoc.data() as any;
           const prev = Number(p.balance ?? 0);
