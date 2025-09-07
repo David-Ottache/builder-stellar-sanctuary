@@ -91,6 +91,7 @@ export function createServer() {
   const { transferFunds, topUp, getTransactions } = await import('./controllers/walletController');
   app.post('/api/wallet/transfer', transferFunds as any);
   app.post('/api/wallet/topup', topUp as any);
+  app.post('/api/wallet/request', requestFunds as any);
   app.get('/api/wallet/transactions/:userId', getTransactions as any);
 
   return app;
