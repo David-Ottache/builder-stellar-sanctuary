@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export default function UserDetails() {
   const { id } = useParams();
-  const { startTrip, selectedDriverId, selectDriver } = useAppStore();
+  const { startTrip, selectedDriverId, selectDriver, drivers } = useAppStore();
   const [method, setMethod] = useState<'wallet' | 'card'>('wallet');
   const navigate = useNavigate();
   const [user, setUser] = useState<any | null>(null);
