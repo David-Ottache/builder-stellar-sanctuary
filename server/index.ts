@@ -79,6 +79,9 @@ export function createServer() {
   // Verify OTP
   app.post("/api/drivers/verify", verifyDriverOtp);
 
+  // Get driver
+  app.get('/api/drivers/:id', getDriver as any);
+
   // Contacts (per-user emergency contacts)
   app.post('/api/users/:id/contacts', contactsController.addContact as any);
   app.get('/api/users/:id/contacts', contactsController.listContacts as any);
