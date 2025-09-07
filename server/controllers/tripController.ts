@@ -54,3 +54,22 @@ export const listTrips: RequestHandler = async (req, res) => {
     return res.status(500).json({ error: 'Internal error' });
   }
 };
+
+export const listTripsByDriver: RequestHandler = async (req, res) => {
+  try {
+    const { driverId } = req.params;
+    if (!driverId) return res.status(400).json({ error: 'driverId required' });
+    if (!isInitialized()) {
+      const init = await initializeFirebaseAdmin();
+      if (!init.initialized) return res.status(503).json({ error: 'database not available' });
+    }
+    const db = getFirestore();
+    if (!db) return res.status(503).json({ error: 'database not available' });
+    const q = await db.collection('trips').where('driverId', '==', driverId).orderBy('startedAt', 'desc').limit(100).get();
+    const trips = q.docs.map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
+    return res.json({ trips });
+  } catch (e) {
+    console.error('listTripsByDriver error', e);
+    return res.status(500).json({ error: 'Internal error' });
+  }
+};
