@@ -119,9 +119,15 @@ export default function UserDetails() {
 
         <div className="mt-4 flex gap-3">
           <Button className="h-12 flex-1 rounded-full" onClick={async () => {
-            // determine fee from driver data
-            const driverPrice = Number(user.price ?? (drivers.find((d:any)=>d.id===user.id)?.price) ?? 0);
-            const fee = driverPrice;
+              // determine fee using pending trip coords and vehicle type
+            const rates: Record<string, number> = { go: 100, comfort: 400, xl: 600 };
+            const vehicleId = (pendingTrip?.vehicle as string) || 'go';
+            let distance = 0;
+            if (pendingTrip?.pickupCoords && pendingTrip?.destinationCoords) {
+              try { distance = haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords); } catch (e) { distance = 0; }
+            }
+            const rate = rates[vehicleId] ?? 100;
+            const fee = Math.round(rate * distance);
 
             if (!selectedDriverId) selectDriver(user.id);
 
