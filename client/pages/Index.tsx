@@ -76,7 +76,7 @@ export default function Index() {
             <div className="text-sm font-semibold text-neutral-600">Choose your ride</div>
             <div className="text-xs text-neutral-500">Upfront pricing</div>
           </div>
-          <VehicleSelector selected={vehicle} onSelect={setVehicle} distanceKm={destinationCoords && pickup ? undefined : undefined} />
+          <VehicleSelector selected={vehicle} onSelect={setVehicle} distanceKm={distanceKm ?? 0} />
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Button variant="outline" className="h-12 rounded-xl">Schedule</Button>
             <Button className="h-12 rounded-xl" onClick={handleStart}>Start Trip</Button>
