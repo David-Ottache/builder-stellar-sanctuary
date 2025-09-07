@@ -74,19 +74,35 @@ export default function UserDocuments() {
                 password: onboarding.password ?? undefined,
               };
               console.log('User register payload', payload);
-              const res = await fetch('/api/users/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-              });
+              let res: Response | null = null;
+              try {
+                res = await fetch('/api/users/register', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload),
+                });
+              } catch (err) {
+                console.warn('Primary fetch failed, attempting fallback', err);
+                try {
+                  // Netlify dev or production may host the express app under /.netlify/functions/api
+                  res = await fetch('/.netlify/functions/api/users/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                  });
+                } catch (err2) {
+                  console.error('Fallback fetch failed', err2);
+                  throw err2;
+                }
+              }
 
-              const text = await res.text().catch(() => '');
+              const text = await res!.text().catch(() => '');
               let data: any = {};
               try { data = text ? JSON.parse(text) : {}; } catch { data = { text }; }
 
-              if (!res.ok) {
+              if (!res!.ok) {
                 const errMsg = data.error || data.message || data.text || 'Could not register your account. Please try again.';
-                console.warn('User register failed', res.status, errMsg);
+                console.warn('User register failed', res!.status, errMsg);
                 await Swal.fire({ icon: 'error', title: 'Registration failed', text: errMsg });
               } else {
                 const successMsg = data.message || 'Your account has been created. Please log in with your email and password.';
