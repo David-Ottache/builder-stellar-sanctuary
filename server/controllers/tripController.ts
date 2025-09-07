@@ -174,8 +174,30 @@ export const endTrip: RequestHandler = async (req, res) => {
       }
 
       const updatedDoc = await t.get(docRef);
-      return { alreadyCompleted: false, trip: { id: updatedDoc.id, ...(updatedDoc.data() as any) }, payout: payoutTx };
+      const result = { alreadyCompleted: false, trip: { id: updatedDoc.id, ...(updatedDoc.data() as any) }, payout: payoutTx, commission: commissionTx };
+
+      // create notifications outside transaction (best-effort)
+      return result;
     });
+
+    // best-effort notifications (outside transaction)
+    try {
+      const notifCol = db.collection('notifications');
+      const ts = new Date().toISOString();
+      // notify driver
+      if (result.payout && result.trip.driverId) {
+        await db.collection('notifications').add({ userId: result.trip.driverId, title: 'Trip completed', body: `You received ₦${result.payout.amount.toLocaleString()}`, ts, read: false });
+      }
+      // notify passenger/user
+      if (result.trip.userId) {
+        await db.collection('notifications').add({ userId: result.trip.userId, title: 'Trip completed', body: `Your trip ${result.trip.id} completed. Total: ₦${result.trip.fee?.toLocaleString() || 0}`, ts, read: false });
+      }
+    } catch (e) {
+      console.warn('Failed creating notifications', e);
+    }
+
+    if (result && result.alreadyCompleted) return res.json({ trip: result.trip });
+    return res.json({ trip: result.trip, payout: result.payout, commission: result.commission });
 
     if (result && result.alreadyCompleted) return res.json({ trip: result.trip });
     return res.json({ trip: result.trip, payout: result.payout });
