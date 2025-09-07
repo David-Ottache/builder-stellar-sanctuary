@@ -29,6 +29,7 @@ import DriverDetails from "./pages/DriverDetails";
 import Search from "./pages/Search";
 import TripSummary from "./pages/TripSummary";
 import UserVerify from "./pages/UserVerify";
+import UserDetails from "./pages/UserDetails";
 import Safety from "./pages/Safety";
 import { AppStoreProvider } from "./lib/store";
 
