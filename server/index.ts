@@ -41,6 +41,13 @@ export async function createServer() {
 
   // Middleware
   app.use(cors());
+  // simple request logger for /api calls
+  app.use((req, _res, next) => {
+    try {
+      if (req.path && req.path.startsWith('/api')) console.debug('incoming api request', req.method, req.path);
+    } catch (e) {}
+    next();
+  });
   // Allow large JSON payloads (base64 images from client) — increase limit as needed
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
