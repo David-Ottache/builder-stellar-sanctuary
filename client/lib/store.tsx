@@ -81,6 +81,7 @@ interface StoreState {
   sendSOS: (message?: string) => number;
   verifyDriver: (codeOrId: string) => DriverInfo | null;
   trips: TripDetails[];
+  setTrips: (t: TripDetails[]) => void;
 }
 
 const AppStore = createContext<StoreState | null>(null);
