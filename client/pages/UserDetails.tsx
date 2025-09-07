@@ -140,6 +140,19 @@ export default function UserDetails() {
               const wallet = Number(appUser.walletBalance ?? appUser.wallet ?? appUser.balance ?? 0);
               if (wallet >= fee) {
                 const newBalance = wallet - fee;
+                // persist deduction to server
+                try {
+                  const res = await fetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: appUser.id, amount: fee }) });
+                  if (!res.ok) {
+                    const d = await res.json().catch(()=>({}));
+                    await Swal.fire({ icon: 'error', title: 'Payment failed', text: d.error || 'Could not deduct from wallet' });
+                    return;
+                  }
+                } catch (e) {
+                  console.warn('wallet deduct failed', e);
+                  await Swal.fire({ icon: 'error', title: 'Payment failed', text: 'Could not reach server' });
+                  return;
+                }
                 // update app store user (persists to sessionStorage)
                 try { setAppUser({ ...appUser, walletBalance: newBalance }); } catch (e) { console.warn('Failed updating wallet in store', e); }
 
