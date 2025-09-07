@@ -33,7 +33,7 @@ export default function Index() {
     if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
 
     if (!navigator.geolocation) {
-      setPendingTrip({ pickup: 'Unknown location', destination, destinationCoords });
+      setPendingTrip({ pickup: 'Unknown location', destination, destinationCoords, vehicle });
       navigate('/user/verify');
       return;
     }
