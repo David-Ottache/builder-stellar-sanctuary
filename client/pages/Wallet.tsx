@@ -8,11 +8,26 @@ export default function Wallet() {
   const { user: appUser, setUser } = useAppStore();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [displayBalance, setDisplayBalance] = useState<number>(appUser?.walletBalance ?? 0);
 
   useEffect(()=>{
     (async ()=>{
       if (!appUser) return;
       try {
+        // If driver, fetch driver document to get driver wallet balance
+        if (appUser.role === 'driver') {
+          try {
+            const r = await fetch(`/api/drivers/${appUser.id}`);
+            if (r.ok) {
+              const d = await r.json().catch(()=>null);
+              const bal = Number(d?.driver?.walletBalance ?? d?.driver?.balance ?? d?.driver?.wallet ?? 0);
+              setDisplayBalance(bal);
+            }
+          } catch(e) { console.warn('failed fetching driver data', e); }
+        } else {
+          setDisplayBalance(Number(appUser.walletBalance ?? appUser.wallet ?? appUser.balance ?? 0));
+        }
+
         const res = await fetch(`/api/wallet/transactions/${appUser.id}`);
         if (!res.ok) return;
         const data = await res.json().catch(()=>null);
