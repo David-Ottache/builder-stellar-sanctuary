@@ -73,6 +73,7 @@ export const registerDriver: RequestHandler = async (req, res) => {
         );
         const docRef = await db.collection("drivers").add(docData);
         console.log("Driver persisted to Firestore with id", docRef.id);
+        return res.status(201).json({ message: "Driver registered", driver: { id: docRef.id, firstName: driver.firstName, lastName: driver.lastName, phone: driver.phone, countryCode: driver.countryCode } });
       } else {
         console.log("Firestore not available; skipping persistence");
       }
@@ -100,5 +101,40 @@ export const registerDriver: RequestHandler = async (req, res) => {
   } catch (err) {
     console.error("registerDriver error", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getDriver: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'id required' });
+
+    if (!isInitialized()) {
+      const init = await initializeFirebaseAdmin();
+      if (!init.initialized) {
+        return res.status(503).json({ error: 'database not available' });
+      }
+    }
+
+    const db = getFirestore();
+    if (!db) return res.status(503).json({ error: 'database not available' });
+
+    const docRef = db.collection('drivers').doc(id);
+    const doc = await docRef.get();
+    if (doc.exists) {
+      const data: any = doc.data();
+      return res.json({ driver: { id: doc.id, ...data } });
+    }
+
+    const q = await db.collection('drivers').where('id', '==', id).limit(1).get();
+    if (!q.empty) {
+      const d = q.docs[0];
+      return res.json({ driver: { id: d.id, ...(d.data() as any) } });
+    }
+
+    return res.status(404).json({ error: 'Driver not found' });
+  } catch (e) {
+    console.error('getDriver error', e);
+    res.status(500).json({ error: 'Internal error' });
   }
 };
