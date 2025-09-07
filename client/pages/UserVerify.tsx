@@ -12,6 +12,102 @@ export default function UserVerify() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Camera / scanning state
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  useEffect(()=>{
+    return () => {
+      // cleanup on unmount
+      try {
+        if (streamRef.current) streamRef.current.getTracks().forEach(t=>t.stop());
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      } catch(e){}
+    };
+  }, []);
+
+  const startCamera = async () => {
+    setCameraError(null);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError('Camera not supported');
+      return;
+    }
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      streamRef.current = s;
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+        await videoRef.current.play();
+      }
+      setScanning(true);
+      const detector = (window as any).BarcodeDetector ? new (window as any).BarcodeDetector({ formats: ['qr_code'] }) : null;
+
+      const scanLoop = async () => {
+        try {
+          if (!videoRef.current) return;
+          if (detector) {
+            // create ImageBitmap from current video frame
+            let bitmap: ImageBitmap | null = null;
+            try {
+              bitmap = await createImageBitmap(videoRef.current);
+              const bars = await detector.detect(bitmap).catch(()=>[]);
+              try { bitmap.close(); } catch {}
+              if (bars && bars.length) {
+                const raw = bars[0].rawValue || bars[0].raw || '';
+                stopCamera();
+                check(raw);
+                return;
+              }
+            } catch (e) {
+              try { if (bitmap) bitmap.close(); } catch {}
+            }
+          }
+        } catch (e) {
+          console.warn('scan loop error', e);
+        }
+        rafRef.current = requestAnimationFrame(scanLoop);
+      };
+      rafRef.current = requestAnimationFrame(scanLoop);
+    } catch (e:any) {
+      console.warn('startCamera failed', e);
+      setCameraError(String(e?.message || e));
+    }
+  };
+
+  const stopCamera = () => {
+    try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t=>t.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) {
+        try { videoRef.current.pause(); } catch {}
+        try { videoRef.current.srcObject = null; } catch {}
+      }
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    } catch (e) { console.warn('stopCamera failed', e); }
+    setScanning(false);
+  };
+
+  function CameraButton() {
+    return (
+      <div className="flex items-center gap-2">
+        {scanning ? (
+          <>
+            <button className="rounded-xl px-3 py-2 bg-red-500 text-white" onClick={()=>stopCamera()}>Stop Camera</button>
+            <video ref={videoRef} className="w-32 h-20 rounded border" playsInline muted />
+          </>
+        ) : (
+          <button className="rounded-xl px-3 py-2 border bg-white" onClick={()=>startCamera()}>Use Camera</button>
+        )}
+        {cameraError && <div className="text-xs text-red-600">{cameraError}</div>}
+      </div>
+    );
+  }
+
   const check = async (c: string) => {
     let value = (c || '').trim();
     if (!value) return setResult(null);
