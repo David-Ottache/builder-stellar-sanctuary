@@ -1,11 +1,18 @@
 import { cn } from "@/lib/utils";
 import { Zap } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+import { Zap } from "lucide-react";
+import { useAppStore } from "@/lib/store";
+
 interface Props {
   className?: string;
 }
 
 export default function TopBar({ className }: Props) {
+  const { user } = useAppStore();
+  const avatar = user?.profilePhoto || user?.email ? `https://ui-avatars.com/api/?name=${encodeURIComponent((user.firstName || '') + ' ' + (user.lastName || ''))}&background=0D8ABC&color=fff` : 'https://i.pravatar.cc/80?img=15';
+
   return (
     <div
       className={cn(
@@ -22,7 +29,7 @@ export default function TopBar({ className }: Props) {
       <div className="pointer-events-auto flex items-center gap-3 text-sm">
         <div className="h-9 w-9 overflow-hidden rounded-full ring-2 ring-primary/30">
           <img
-            src="https://i.pravatar.cc/80?img=15"
+            src={avatar}
             alt="Profile"
             className="h-full w-full object-cover"
           />
