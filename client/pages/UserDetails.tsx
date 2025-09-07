@@ -4,10 +4,11 @@ import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { safeFetch } from "@/lib/utils";
+import Swal from 'sweetalert2';
 
 export default function UserDetails() {
   const { id } = useParams();
-  const { startTrip, selectedDriverId, selectDriver, drivers, pendingTrip } = useAppStore();
+  const { startTrip, selectedDriverId, selectDriver, drivers, pendingTrip, user: appUser, setUser: setAppUser } = useAppStore();
   const [method, setMethod] = useState<'wallet' | 'card'>('wallet');
   const navigate = useNavigate();
   const [user, setUser] = useState<any | null>(null);
@@ -117,7 +118,37 @@ export default function UserDetails() {
         </div>
 
         <div className="mt-4 flex gap-3">
-          <Button className="h-12 flex-1 rounded-full" onClick={() => { if(!selectedDriverId) selectDriver(user.id); startTrip({ pickup: pendingTrip?.pickup ?? 'Current location', destination: pendingTrip?.destination ?? 'TBD', driverId: user.id, fee: 0 }); navigate('/trip/summary'); }}>Request</Button>
+          <Button className="h-12 flex-1 rounded-full" onClick={async () => {
+            // determine fee from driver data
+            const driverPrice = Number(user.price ?? (drivers.find((d:any)=>d.id===user.id)?.price) ?? 0);
+            const fee = driverPrice;
+
+            if (!selectedDriverId) selectDriver(user.id);
+
+            if (method === 'wallet') {
+              if (!appUser) {
+                await Swal.fire({ icon: 'error', title: 'Not signed in', text: 'Please sign in to use wallet payments.' });
+                return;
+              }
+
+              const wallet = Number(appUser.walletBalance ?? appUser.wallet ?? appUser.balance ?? 0);
+              if (wallet >= fee) {
+                const newBalance = wallet - fee;
+                // update app store user (persists to sessionStorage)
+                try { setAppUser({ ...appUser, walletBalance: newBalance }); } catch (e) { console.warn('Failed updating wallet in store', e); }
+
+                // start the trip with computed fee
+                startTrip({ pickup: pendingTrip?.pickup ?? 'Current location', destination: pendingTrip?.destination ?? 'TBD', driverId: user.id, fee });
+                navigate('/trip/summary');
+              } else {
+                await Swal.fire({ icon: 'error', title: 'Insufficient funds', text: 'You have insufficient funds in your wallet. Please top up or choose another payment method.' });
+              }
+            } else {
+              // card payment - proceed without wallet deduction
+              startTrip({ pickup: pendingTrip?.pickup ?? 'Current location', destination: pendingTrip?.destination ?? 'TBD', driverId: user.id, fee });
+              navigate('/trip/summary');
+            }
+          }}>Request</Button>
         </div>
       </div>
     </Layout>
