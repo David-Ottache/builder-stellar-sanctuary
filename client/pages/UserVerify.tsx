@@ -3,42 +3,61 @@ import { useAppStore } from "@/lib/store";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { safeFetch } from "@/lib/utils";
 
 export default function UserVerify() {
   const { pendingTrip, selectDriver, upsertDriver } = useAppStore();
   const [code, setCode] = useState("");
   const [result, setResult] = useState<any | null>(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const check = async (c: string) => {
-    if (!c) return setResult(null);
+    const value = (c || '').trim();
+    if (!value) return setResult(null);
+    setLoading(true);
     const origin = window.location.origin;
-    const tryUrls = [
-      `${origin}/api/users/${c}`,
-      `${origin}/.netlify/functions/api/users/${c}`,
-      `${origin}/api/drivers/${c}`,
-      `${origin}/.netlify/functions/api/drivers/${c}`,
+
+    const candidates = [
+      // Prefer driver endpoints first
+      `/api/drivers/${value}`,
+      `${origin}/api/drivers/${value}`,
+      `/.netlify/functions/api/drivers/${value}`,
+      `${origin}/.netlify/functions/api/drivers/${value}`,
+      // then user endpoints
+      `/api/users/${value}`,
+      `${origin}/api/users/${value}`,
+      `/.netlify/functions/api/users/${value}`,
+      `${origin}/.netlify/functions/api/users/${value}`,
     ];
-    for (const url of tryUrls) {
-      try {
-        const res = await fetch(url);
-        if (!res || !res.ok) continue;
-        const data = await res.json().catch(()=>null);
-        if (data?.user) {
-          const u = data.user;
-          setResult({ id: u.id, name: `${u.firstName||''} ${u.lastName||''}`.trim() || u.email || u.phone, avatar: u.profilePhoto || 'https://i.pravatar.cc/80', rides: 0, rating: 0 });
-          return;
+
+    try {
+      for (const url of candidates) {
+        try {
+          const res = await safeFetch(url);
+          if (!res || !res.ok) continue;
+          const data = await res.json().catch(() => null);
+          if (!data) continue;
+          if (data.user) {
+            const u = data.user;
+            setResult({ id: u.id, name: `${u.firstName||''} ${u.lastName||''}`.trim() || u.email || u.phone, avatar: u.profilePhoto || 'https://i.pravatar.cc/80', rides: u.rides || 0, rating: u.rating || 0 });
+            return;
+          }
+          if (data.driver) {
+            const d = data.driver;
+            setResult({ id: d.id, name: `${d.firstName||''} ${d.lastName||''}`.trim() || d.email || d.phone, avatar: d.profilePhoto || 'https://i.pravatar.cc/80', rides: d.rides || 0, rating: d.rating || 0 });
+            return;
+          }
+        } catch (e) {
+          console.warn('check url failed', url, e);
+          continue;
         }
-        if (data?.driver) {
-          const d = data.driver;
-          setResult({ id: d.id, name: `${d.firstName||''} ${d.lastName||''}`.trim() || d.email || d.phone, avatar: d.profilePhoto || 'https://i.pravatar.cc/80', rides: d.rides || 0, rating: d.rating || 0 });
-          return;
-        }
-      } catch (e) {
-        console.warn('check url failed', url, e);
       }
+
+      setResult(null);
+    } finally {
+      setLoading(false);
     }
-    setResult(null);
   };
 
   return (
@@ -64,7 +83,7 @@ export default function UserVerify() {
           </div>
           <div className="mt-4 flex gap-2">
             <input value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Enter user ID e.g. d1 or QR text" className="flex-1 rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
-            <Button onClick={()=>check(code)}>Check</Button>
+            <Button onClick={()=>check(code)} disabled={loading}>{loading ? 'Checking...' : 'Check'}</Button>
           </div>
         </div>
 
@@ -78,7 +97,11 @@ export default function UserVerify() {
               </div>
             </div>
             <div className="mt-3 text-sm text-green-700">User verified • ID matched</div>
-            <Button className="mt-3 w-full rounded-full" onClick={()=>{ upsertDriver({ id: result.id, name: result.name, avatar: result.avatar, rides: result.rides, rating: result.rating }); selectDriver(result.id); navigate(`/user/${result.id}`); }}>Continue</Button>
+            <Button className="mt-3 w-full rounded-full" onClick={()=>{
+              upsertDriver({ id: result.id, name: result.name, avatar: result.avatar, rides: result.rides, rating: result.rating });
+              selectDriver(result.id);
+              navigate(`/user/${result.id}`);
+            }}>Continue</Button>
           </div>
         ) : (
           <div className="mt-4 rounded-2xl border bg-white p-4 text-sm text-red-600">No user found for provided code.</div>
