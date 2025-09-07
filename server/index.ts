@@ -5,6 +5,7 @@ import { handleDemo } from "./routes/demo";
 import { registerDriver } from "./controllers/driverController";
 import { verifyDriverOtp } from "./routes/verifyOtp";
 import { loginDriver } from "./controllers/loginHandler";
+import { setDriverPassword } from "./controllers/setPasswordHandler";
 import { initializeFirebaseAdmin, isInitialized } from "./config/firebaseAdmin";
 
 export function createServer() {
