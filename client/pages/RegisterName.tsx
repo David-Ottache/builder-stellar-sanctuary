@@ -6,6 +6,7 @@ import { useState } from "react";
 
 export default function RegisterName() {
   const { onboarding, setOnboarding } = useAppStore();
+  const [role, setRole] = useState<'driver'|'user'>(onboarding.role as any || 'driver');
   const [first, setFirst] = useState(onboarding.firstName || "");
   const [last, setLast] = useState(onboarding.lastName || "");
   const [password, setPassword] = useState(onboarding.password || "");
@@ -14,12 +15,16 @@ export default function RegisterName() {
     <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <h1 className="text-3xl font-extrabold leading-tight">Lets Get Started</h1>
-        <p className="mt-1 text-sm text-neutral-600">Become A Driver</p>
+        <p className="mt-1 text-sm text-neutral-600">Become A {role === 'driver' ? 'Driver' : 'User'}</p>
+        <div className="mt-4 mb-4 flex gap-2">
+          <button onClick={()=>setRole('driver')} className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${role==='driver' ? 'bg-primary text-white' : 'border bg-neutral-100'}`}>Driver</button>
+          <button onClick={()=>setRole('user')} className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${role==='user' ? 'bg-primary text-white' : 'border bg-neutral-100'}`}>User</button>
+        </div>
         <div className="mt-6 space-y-3">
           <input value={first} onChange={(e)=>setFirst(e.target.value)} placeholder="First Name" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
           <input value={last} onChange={(e)=>setLast(e.target.value)} placeholder="Last Name" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
           <input value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password" type="password" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
-          <Button className="h-12 w-full rounded-full" onClick={()=>{ setOnboarding({ firstName:first, lastName:last, password }); nav("/register/contact"); }}>Next</Button>
+          <Button className="h-12 w-full rounded-full" onClick={()=>{ setOnboarding({ firstName:first, lastName:last, password, role } as any); nav(role === 'driver' ? "/register/contact" : "/user/register/contact"); }}>Next</Button>
           <div className="text-center text-sm">Already Have An Account? <Link to="/login" className="font-semibold">Sign In</Link></div>
         </div>
       </div>
