@@ -140,12 +140,37 @@ export default function UserDetails() {
               const wallet = Number(appUser.walletBalance ?? appUser.wallet ?? appUser.balance ?? 0);
               if (wallet >= fee) {
                 const newBalance = wallet - fee;
+                // fetch latest balance from server to avoid stale client state
+                try {
+                  const uRes = await safeFetch(`/api/users/${appUser.id}`);
+                  const uData = uRes && uRes.ok ? await uRes.json().catch(()=>null) : null;
+                  const serverBal = Number(uData?.user?.walletBalance ?? appUser.walletBalance ?? 0);
+                  if (serverBal < fee) {
+                    const result = await Swal.fire({
+                      icon: 'error',
+                      title: 'Insufficient funds',
+                      html: `Your current wallet balance is ₦${serverBal.toLocaleString()}. The trip requires ₦${fee.toLocaleString()}. Would you like to top up?`,
+                      showCancelButton: true,
+                      confirmButtonText: 'Top Up',
+                    });
+                    if (result.isConfirmed) navigate('/wallet');
+                    return;
+                  }
+                } catch (e) {
+                  console.warn('failed fetching latest balance', e);
+                  await Swal.fire({ icon: 'warning', title: 'Could not verify balance', text: 'Proceeding to attempt deduction with current balance.' });
+                }
+
                 // persist deduction to server
                 try {
                   const res = await fetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: appUser.id, amount: fee }) });
                   if (!res.ok) {
                     const d = await res.json().catch(()=>({}));
-                    await Swal.fire({ icon: 'error', title: 'Payment failed', text: d.error || 'Could not deduct from wallet' });
+                    if (d.error === 'insufficient_funds') {
+                      await Swal.fire({ icon: 'error', title: 'Insufficient funds', text: 'Your wallet has insufficient funds. Please top up or choose another payment method.' });
+                    } else {
+                      await Swal.fire({ icon: 'error', title: 'Payment failed', text: d.error || 'Could not deduct from wallet' });
+                    }
                     return;
                   }
                 } catch (e) {
@@ -153,6 +178,7 @@ export default function UserDetails() {
                   await Swal.fire({ icon: 'error', title: 'Payment failed', text: 'Could not reach server' });
                   return;
                 }
+
                 // update app store user (persists to sessionStorage)
                 try { setAppUser({ ...appUser, walletBalance: newBalance }); } catch (e) { console.warn('Failed updating wallet in store', e); }
 
