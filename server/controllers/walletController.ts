@@ -31,7 +31,7 @@ export const transferFunds: RequestHandler = async (req, res) => {
       t.update(fromRef, { walletBalance: fromBal - a });
       t.update(toRef, { walletBalance: toBal + a });
       // optionally record transaction
-      const tx = { from: fromId, to: toId, amount: a, ts: new Date().toISOString() };
+      const tx = { from: fromId, to: toId, amount: a, ts: new Date().toISOString(), type: 'transfer' };
       const txRef = db.collection('walletTransactions').doc();
       t.set(txRef, tx);
     });
