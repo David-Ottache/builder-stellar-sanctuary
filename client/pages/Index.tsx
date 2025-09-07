@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/app/Layout";
 import MapView from "@/components/app/MapView";
@@ -7,7 +7,6 @@ import VehicleSelector, { type VehicleId } from "@/components/app/VehicleSelecto
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
-import { useState } from "react";
 import { haversineKm } from "@/lib/utils";
 
 export default function Index() {
