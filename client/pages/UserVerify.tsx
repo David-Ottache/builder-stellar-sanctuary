@@ -19,7 +19,12 @@ export default function UserVerify() {
     const origin = window.location.origin;
 
     const candidates = [
-      // Prefer driver endpoints first
+      // Single lookup endpoint that queries both collections server-side
+      `/api/lookup/${value}`,
+      `${origin}/api/lookup/${value}`,
+      `/.netlify/functions/api/lookup/${value}`,
+      `${origin}/.netlify/functions/api/lookup/${value}`,
+      // Fallback to driver endpoints
       `/api/drivers/${value}`,
       `${origin}/api/drivers/${value}`,
       `/.netlify/functions/api/drivers/${value}`,
