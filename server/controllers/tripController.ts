@@ -114,38 +114,62 @@ export const endTrip: RequestHandler = async (req, res) => {
       const fee = Number(tripData.fee || 0);
       const driverId = tripData.driverId;
       let payoutTx: any = null;
+      let commissionTx: any = null;
+
+      // Commission rate (fraction). Make configurable via env var COMMISSION_RATE (e.g., 0.2 for 20%)
+      const commissionRate = Number(process.env.COMMISSION_RATE ?? 0.2);
 
       if (driverId && fee > 0) {
-        // attempt to credit driver in drivers collection
+        const commission = Math.round((fee * commissionRate));
+        const driverShare = Math.max(0, fee - commission);
+
+        // credit driver share to drivers collection if present, else users
         const driverRef = db.collection('drivers').doc(driverId);
         const driverDoc = await t.get(driverRef);
         if (driverDoc.exists) {
           const d = driverDoc.data() as any;
           const prev = Number(d.walletBalance ?? 0);
-          t.update(driverRef, { walletBalance: prev + fee });
+          t.update(driverRef, { walletBalance: prev + driverShare });
           const txRef = db.collection('walletTransactions').doc();
-          const tx = { to: driverId, amount: fee, ts: new Date().toISOString(), type: 'trip_payout', tripId: id } as any;
+          const tx = { to: driverId, amount: driverShare, ts: new Date().toISOString(), type: 'trip_payout', tripId: id } as any;
           t.set(txRef, tx);
           payoutTx = tx;
         } else {
-          // fallback: try users collection (in case drivers stored as users)
+          // fallback to users collection
           const userRef = db.collection('users').doc(driverId);
           const userDoc = await t.get(userRef);
           if (userDoc.exists) {
             const u = userDoc.data() as any;
             const prev = Number(u.walletBalance ?? 0);
-            t.update(userRef, { walletBalance: prev + fee });
+            t.update(userRef, { walletBalance: prev + driverShare });
             const txRef = db.collection('walletTransactions').doc();
-            const tx = { to: driverId, amount: fee, ts: new Date().toISOString(), type: 'trip_payout', tripId: id } as any;
+            const tx = { to: driverId, amount: driverShare, ts: new Date().toISOString(), type: 'trip_payout', tripId: id } as any;
             t.set(txRef, tx);
             payoutTx = tx;
           } else {
-            // Neither driver nor user record found; still record a payout tx for bookkeeping
+            // driver record missing, still record payout tx for bookkeeping
             const txRef = db.collection('walletTransactions').doc();
-            const tx = { to: driverId, amount: fee, ts: new Date().toISOString(), type: 'trip_payout', tripId: id, note: 'driver record missing' } as any;
+            const tx = { to: driverId, amount: driverShare, ts: new Date().toISOString(), type: 'trip_payout', tripId: id, note: 'driver record missing' } as any;
             t.set(txRef, tx);
             payoutTx = tx;
           }
+        }
+
+        // credit platform commission to platform wallet
+        if (commission > 0) {
+          const platformRef = db.collection('wallets').doc('platform');
+          const platformDoc = await t.get(platformRef);
+          if (platformDoc.exists) {
+            const p = platformDoc.data() as any;
+            const prev = Number(p.balance ?? 0);
+            t.update(platformRef, { balance: prev + commission });
+          } else {
+            t.set(platformRef, { balance: commission });
+          }
+          const commTxRef = db.collection('walletTransactions').doc();
+          const ctx = { to: 'platform', amount: commission, ts: new Date().toISOString(), type: 'commission', tripId: id } as any;
+          t.set(commTxRef, ctx);
+          commissionTx = ctx;
         }
       }
 
