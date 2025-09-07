@@ -41,7 +41,7 @@ export default function Index() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const pickup = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setPendingTrip({ pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords });
+        setPendingTrip({ pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords, vehicle });
         navigate('/user/verify');
       },
       () => {
