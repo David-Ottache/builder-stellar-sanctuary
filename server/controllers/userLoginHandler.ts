@@ -46,6 +46,7 @@ export const loginUser: RequestHandler = async (req, res) => {
       countryCode: data.countryCode,
       profilePhoto: data.profilePhoto,
       walletBalance: data.walletBalance ?? 0,
+      role: 'user',
     };
 
     return res.json({ message: 'Logged in', user: safe });
