@@ -17,7 +17,29 @@ export default function Login() {
       const res = await fetch('/api/drivers/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        await Swal.fire({ icon: 'error', title: 'Login failed', text: data.error || 'Invalid credentials' });
+        // if account exists but no password set, prompt to choose password
+        if (data.error === 'no_password') {
+          const { value: newPassword } = await Swal.fire({
+            title: 'Set a password',
+            input: 'password',
+            inputLabel: 'Please set a password for your account',
+            inputPlaceholder: 'Enter a password',
+            inputAttributes: { maxlength: '50', autocapitalize: 'off', autocorrect: 'off' },
+            showCancelButton: true,
+          }) as any;
+          if (newPassword) {
+            // call set-password endpoint
+            const r = await fetch('/api/drivers/set-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: newPassword }) });
+            if (r.ok) {
+              await Swal.fire({ icon: 'success', title: 'Password set', text: 'You can now log in with your password.' });
+            } else {
+              const dd = await r.json().catch(()=>({}));
+              await Swal.fire({ icon: 'error', title: 'Failed', text: dd.error || 'Could not set password' });
+            }
+          }
+        } else {
+          await Swal.fire({ icon: 'error', title: 'Login failed', text: data.error || 'Invalid credentials' });
+        }
         return;
       }
       const data = await res.json();
