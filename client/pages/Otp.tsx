@@ -2,11 +2,35 @@ import Layout from "@/components/app/Layout";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppStore } from "@/lib/store";
+import Swal from 'sweetalert2';
 
 export default function Otp() {
   const [code, setCode] = useState(["", "", "", ""]);
   const nav = useNavigate();
+  const { onboarding } = useAppStore();
   const canSubmit = code.every(Boolean);
+
+  const verify = async () => {
+    const codeStr = code.join('');
+    try {
+      const res = await fetch('/api/drivers/verify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: onboarding.phone, countryCode: onboarding.countryCode, code: codeStr })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(()=>({}));
+        await Swal.fire({ icon: 'error', title: 'Verification failed', text: data.error || 'Invalid code' });
+        return;
+      }
+      await Swal.fire({ icon: 'success', title: 'Verified', text: 'Your phone number has been verified.' });
+      nav('/');
+    } catch (e) {
+      console.error('OTP verify error', e);
+      await Swal.fire({ icon: 'error', title: 'Verification failed', text: 'An error occurred.' });
+    }
+  };
+
   return (
     <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
@@ -38,7 +62,7 @@ export default function Otp() {
           <Button
             className="h-12 w-full rounded-full"
             disabled={!canSubmit}
-            onClick={() => nav("/vehicle")}
+            onClick={verify}
           >
             Verify Code
           </Button>
