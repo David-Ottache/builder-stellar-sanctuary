@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import React, { createContext, useContext, useMemo, useState, useEffect, type ReactNode } from "react";
+import { haversineKm } from "@/lib/utils";
 
 export type Gender = "Male" | "Female" | "Other" | "";
 
@@ -79,6 +80,7 @@ interface StoreState {
   removeContact: (id: string) => void;
   sendSOS: (message?: string) => number;
   verifyDriver: (codeOrId: string) => DriverInfo | null;
+  trips: TripDetails[];
 }
 
 const AppStore = createContext<StoreState | null>(null);
@@ -216,10 +218,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     const id = `t_${Date.now()}`;
     const startedAt = new Date().toISOString();
     const vehicle = pendingTrip?.vehicle;
-    const distanceKm = pendingTrip && pendingTrip.pickupCoords && pendingTrip.destinationCoords ? (
-      // import haversine dynamically to avoid circular import; simple calculation using existing helper
-      (function(){ try { return require('../lib/utils').haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords); } catch { return undefined; } })()
-    ) : undefined;
+    const distanceKm = pendingTrip && pendingTrip.pickupCoords && pendingTrip.destinationCoords ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : undefined;
     const record: TripDetails = { id, pickup, destination, fee: computedFee, driverId: driver.id, status: 'ongoing', startedAt, vehicle, distanceKm };
     setTrip(record);
     setTrips((prev)=> [record, ...prev]);
