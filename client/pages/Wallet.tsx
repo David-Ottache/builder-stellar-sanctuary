@@ -139,7 +139,7 @@ export default function Wallet() {
         <h1 className="text-2xl font-bold">Wallet</h1>
         <div className="mt-3 rounded-2xl border bg-white p-4 shadow-sm">
           <div className="text-sm text-neutral-600">My Balance</div>
-          <div className="mt-1 text-3xl font-extrabold">₦{(appUser?.walletBalance ?? 0).toLocaleString()}.00</div>
+          <div className="mt-1 text-3xl font-extrabold">₦{(displayBalance ?? 0).toLocaleString()}.00</div>
           <div className="mt-4 flex gap-3">
             <Button className="h-10 flex-1 rounded-full" onClick={doSend} disabled={loading}>Send</Button>
             <Button variant="secondary" className="h-10 flex-1 rounded-full" onClick={doRequest} disabled={loading}>Request</Button>
