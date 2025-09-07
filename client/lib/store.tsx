@@ -17,6 +17,7 @@ export interface UserProfile {
   identificationPhoto?: string; // data URL
   vehicleType?: string;
   password?: string;
+  role?: 'driver' | 'user';
 }
 
 export interface DriverInfo {
