@@ -16,6 +16,14 @@ export default function UserDetails() {
     (async () => {
       if (!id) return;
       setLoading(true);
+      // check store first
+      const storeDriver = (drivers || []).find((d:any)=>d.id === id);
+      if (storeDriver) {
+        setUser(storeDriver as any);
+        setLoading(false);
+        return;
+      }
+
       const origin = window.location.origin;
       const primary = `${origin}/api/users/${id}`;
       const fallback = `${origin}/.netlify/functions/api/users/${id}`;
@@ -30,7 +38,7 @@ export default function UserDetails() {
           return;
         }
         const data = await res.json().catch(()=>null);
-        setUser(data?.user ?? null);
+        setUser(data?.user ?? data?.driver ?? null);
       } catch (e) {
         console.error('Failed fetching user', e);
         setUser(null);
@@ -38,7 +46,7 @@ export default function UserDetails() {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, drivers]);
 
   if (loading) return (
     <Layout>
