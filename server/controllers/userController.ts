@@ -62,13 +62,14 @@ export const registerUser: RequestHandler = async (req, res) => {
       }
       const db = getFirestore();
       if (db) {
-        const docData = Object.fromEntries(Object.entries(user).filter(([, v]) => v !== undefined));
+        // ensure walletBalance initialized
+        const docData = Object.fromEntries(Object.entries({ ...user, walletBalance: 10000 }).filter(([, v]) => v !== undefined));
         const docRef = await db.collection("users").add(docData);
         console.log("User persisted to Firestore with id", docRef.id);
         // set the stored document's id field to the Firestore id to make it stable for lookups
         try { await docRef.update({ id: docRef.id }); } catch (e) { console.warn('Failed to update user doc id field', e); }
         // return the firestore doc id as id as well (so callers can use it)
-        return res.status(201).json({ message: "User registered", user: { id: docRef.id, firstName: user.firstName, lastName: user.lastName, phone: user.phone, countryCode: user.countryCode } });
+        return res.status(201).json({ message: "User registered", user: { id: docRef.id, firstName: user.firstName, lastName: user.lastName, phone: user.phone, countryCode: user.countryCode, walletBalance: 10000 } });
       } else {
         console.log("Firestore not available; skipping persistence");
       }
