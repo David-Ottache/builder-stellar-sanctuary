@@ -48,6 +48,7 @@ export const loginDriver: RequestHandler = async (req, res) => {
       countryCode: data.countryCode,
       vehicleType: data.vehicleType,
       profilePhoto: data.profilePhoto,
+      role: 'driver',
     };
 
     return res.json({ message: 'Logged in', user: safe });
