@@ -60,7 +60,24 @@ export default function UserDocuments() {
             mergeOnboardingToDriver(updates);
             let redirected = false;
             try {
-              const payload = {
+              const origin = window.location.origin;
+              const primary = `${origin}/api/users/register`;
+              const fallback = `${origin}/.netlify/functions/api/users/register`;
+
+              // quick connectivity check (GET /api/ping)
+              const pingPrimary = await fetch(`${origin}/api/ping`).catch(()=>null);
+              const pingFallback = await fetch(`${origin}/.netlify/functions/api/ping`).catch(()=>null);
+              if (!pingPrimary && !pingFallback) {
+                await Swal.fire({ icon: 'error', title: 'Network error', text: `Could not reach API endpoints. Tried:\n${primary}\n${fallback}` });
+                throw new Error('API unreachable');
+              }
+
+              // Build payload but omit large images to avoid failures in preview
+              const maxImageLength = 500000; // ~0.5MB
+              const includeProfile = profilePhoto && profilePhoto.length < maxImageLength;
+              const includeId = idPhoto && idPhoto.length < maxImageLength;
+
+              const payload: any = {
                 firstName: onboarding.firstName ?? undefined,
                 lastName: onboarding.lastName ?? undefined,
                 email: onboarding.email ?? undefined,
@@ -68,19 +85,20 @@ export default function UserDocuments() {
                 countryCode: onboarding.countryCode ?? undefined,
                 gender: onboarding.gender ?? undefined,
                 location: onboarding.location ?? undefined,
-                profilePhoto: profilePhoto ?? onboarding.profilePhoto ?? undefined,
                 identificationNumber: idNumber ?? onboarding.identificationNumber ?? undefined,
-                identificationPhoto: idPhoto ?? onboarding.identificationPhoto ?? undefined,
                 password: onboarding.password ?? undefined,
+                omittedImages: false,
               };
+
+              if (includeProfile) payload.profilePhoto = profilePhoto ?? onboarding.profilePhoto ?? undefined;
+              if (includeId) payload.identificationPhoto = idPhoto ?? onboarding.identificationPhoto ?? undefined;
+              if (!includeProfile || !includeId) payload.omittedImages = true;
+
               console.log('User register payload', payload);
+
               let res: Response | null = null;
-              const origin = window.location.origin;
-              const primary = `${origin}/api/users/register`;
-              const fallback = `${origin}/.netlify/functions/api/users/register`;
 
               try {
-                console.log('Attempting primary register URL', primary);
                 res = await fetch(primary, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -89,7 +107,6 @@ export default function UserDocuments() {
               } catch (err) {
                 console.warn('Primary fetch failed, attempting fallback', err);
                 try {
-                  console.log('Attempting fallback register URL', fallback);
                   res = await fetch(fallback, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -117,12 +134,18 @@ export default function UserDocuments() {
                 await Swal.fire({ icon: 'error', title: 'Registration failed', text: errMsg });
               } else {
                 const successMsg = data.message || 'Your account has been created. Please log in with your email and password.';
-                await Swal.fire({ icon: 'success', title: 'Registration complete', text: successMsg });
+                if (payload.omittedImages) {
+                  await Swal.fire({ icon: 'warning', title: 'Registration complete (images omitted)', text: successMsg + ' (Images were omitted due to size in this environment.)' });
+                } else {
+                  await Swal.fire({ icon: 'success', title: 'Registration complete', text: successMsg });
+                }
                 try { nav('/login'); redirected = true; } catch (e) { console.error('Navigation failed', e); }
               }
             } catch (e) {
               console.error('Error registering user', e);
-              await Swal.fire({ icon: 'error', title: 'Registration failed', text: (e as Error).message || 'An error occurred. Please try again.' });
+              if (!(e instanceof Error && e.message === 'API unreachable')) {
+                await Swal.fire({ icon: 'error', title: 'Registration failed', text: (e as Error).message || 'An error occurred. Please try again.' });
+              }
             } finally {
               setLoading(false);
               if (!redirected) {
