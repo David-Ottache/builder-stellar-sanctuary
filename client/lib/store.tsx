@@ -220,8 +220,31 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     const vehicle = pendingTrip?.vehicle;
     const distanceKm = pendingTrip && pendingTrip.pickupCoords && pendingTrip.destinationCoords ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : undefined;
     const record: TripDetails = { id, pickup, destination, fee: computedFee, driverId: driver.id, status: 'ongoing', startedAt, vehicle, distanceKm };
+
+    // optimistic local update
     setTrip(record);
     setTrips((prev)=> [record, ...prev]);
+
+    // persist to server if user available
+    (async ()=>{
+      try {
+        if (!user) return;
+        const payload = { userId: user.id, pickup, destination, fee: computedFee, driverId: driver.id, vehicle, distanceKm, status: 'ongoing', startedAt };
+        const res = await fetch('/api/trips', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) {
+          console.warn('Failed persisting trip to server', await res.text().catch(()=>''));
+          return;
+        }
+        const data = await res.json().catch(()=>null);
+        if (data?.id) {
+          // replace local temporary id with server id
+          setTrips((prev)=> prev.map(t=> t.id === id ? { ...t, id: data.id } : t));
+          setTrip((prev)=> prev && prev.id === id ? { ...prev, id: data.id } : prev);
+        }
+      } catch (e) {
+        console.warn('persist trip error', e);
+      }
+    })();
   };
 
   const endTrip = () => {
