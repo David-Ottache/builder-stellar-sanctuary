@@ -15,29 +15,37 @@ export default function Index() {
   const [destination, setDestination] = useState("");
   const [vehicle, setVehicle] = useState<VehicleId>("go");
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
   const navigate = useNavigate();
   const { setPendingTrip } = useAppStore();
 
+  // attempt to read current position early so we can show pricing
+  React.useEffect(()=>{
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos)=>{
+      setPickupCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    }, ()=>{}, { enableHighAccuracy: false, timeout: 3000 });
+  }, []);
+
+  const distanceKm = (pickupCoords && destinationCoords) ? haversineKm(pickupCoords, destinationCoords) : null;
+
   const handleStart = () => {
     if (!destination) { toast.error('Please enter a destination'); return; }
+    if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
+
     if (!navigator.geolocation) {
-      // if we don't have pickup coords, ask user to allow or fallback
-      if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
       setPendingTrip({ pickup: 'Unknown location', destination, destinationCoords });
       navigate('/user/verify');
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const { latitude: lat, longitude: lng } = pos.coords;
-        const pickupCoords = { lat, lng };
-        if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
-        const distance = haversineKm(pickupCoords, destinationCoords);
-        setPendingTrip({ pickup: 'Current location', destination, pickupCoords, destinationCoords });
+        const pickup = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setPendingTrip({ pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords });
         navigate('/user/verify');
       },
       () => {
-        if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
         setPendingTrip({ pickup: 'Current location', destination, destinationCoords });
         navigate('/user/verify');
       },
@@ -47,7 +55,7 @@ export default function Index() {
 
   return (
     <Layout className="relative">
-      <MapView pickupCoords={null} destinationCoords={destinationCoords} onPickDestination={(c)=> setDestinationCoords(c)} />
+      <MapView pickupCoords={pickupCoords} destinationCoords={destinationCoords} onPickDestination={(c)=> setDestinationCoords(c)} />
 
       <div className="pointer-events-none absolute inset-x-4 top-4 z-20">
         <LocationInputs
