@@ -37,10 +37,16 @@ export interface DriverInfo {
 }
 
 export interface TripDetails {
+  id?: string;
   pickup: string;
   destination: string;
   fee: number;
   driverId: string | null;
+  status?: 'ongoing' | 'completed' | 'cancelled';
+  startedAt?: string;
+  endedAt?: string;
+  vehicle?: 'go' | 'comfort' | 'xl';
+  distanceKm?: number;
 }
 
 export interface Coords { lat: number; lng: number }
