@@ -99,6 +99,7 @@ export function createServer() {
   const tripController = await import('./controllers/tripController');
   app.post('/api/trips', tripController.createTrip as any);
   app.get('/api/trips/:userId', tripController.listTrips as any);
+  app.get('/api/trips/driver/:driverId', tripController.listTripsByDriver as any);
 
   return app;
 }
