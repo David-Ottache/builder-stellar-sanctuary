@@ -121,7 +121,13 @@ export const deductFunds: RequestHandler = async (req, res) => {
       if (bal < a) throw new Error('insufficient funds');
       t.update(userRef, { walletBalance: bal - a });
       const txRef = db.collection('walletTransactions').doc();
-      t.set(txRef, { from: userId, amount: a, ts: new Date().toISOString(), type: 'deduct' });
+      // include optional tripId when provided in body
+      const meta: any = { from: userId, amount: a, ts: new Date().toISOString(), type: 'deduct' };
+      if (req.body && (req.body.tripId || req.body.note)) {
+        if (req.body.tripId) meta.tripId = req.body.tripId;
+        if (req.body.note) meta.note = req.body.note;
+      }
+      t.set(txRef, meta);
     });
     return res.json({ message: 'deducted' });
   } catch (e: any) {
