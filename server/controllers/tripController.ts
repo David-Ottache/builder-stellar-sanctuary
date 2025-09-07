@@ -87,3 +87,28 @@ export const listTripsByDriver: RequestHandler = async (req, res) => {
     return res.status(500).json({ error: 'Internal error' });
   }
 };
+
+export const endTrip: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'id required' });
+    if (!isInitialized()) {
+      const init = await initializeFirebaseAdmin();
+      if (!init.initialized) return res.status(503).json({ error: 'database not available' });
+    }
+    const db = getFirestore();
+    if (!db) return res.status(503).json({ error: 'database not available' });
+
+    const docRef = db.collection('trips').doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) return res.status(404).json({ error: 'Trip not found' });
+
+    const endedAt = new Date().toISOString();
+    await docRef.update({ status: 'completed', endedAt });
+    const updated = await docRef.get();
+    return res.json({ trip: { id: updated.id, ...(updated.data() as any) } });
+  } catch (e) {
+    console.error('endTrip error', e);
+    res.status(500).json({ error: 'Internal error' });
+  }
+};
