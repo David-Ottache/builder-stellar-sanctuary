@@ -53,7 +53,7 @@ export default function UserDocuments() {
             </label>
             {idPhoto && <img src={idPhoto} alt="ID preview" className="mt-2 h-16 w-24 rounded object-cover" />}
           </div>
-          <Button className="h-12 w-full rounded-full" disabled={loading} onClick={async ()=>{
+          <Button className="h-12 w-full rounded-full" disabled={loading} onClick={async () => {
             setLoading(true);
             const updates = { identificationNumber: idNumber, profilePhoto, identificationPhoto: idPhoto };
             setOnboarding(updates);
@@ -73,25 +73,33 @@ export default function UserDocuments() {
                 identificationPhoto: idPhoto ?? onboarding.identificationPhoto ?? undefined,
                 password: onboarding.password ?? undefined,
               };
+              console.log('User register payload', payload);
               const res = await fetch('/api/users/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
               });
+
+              const text = await res.text().catch(() => '');
+              let data: any = {};
+              try { data = text ? JSON.parse(text) : {}; } catch { data = { text }; }
+
               if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'Could not register your account. Please try again.' });
+                const errMsg = data.error || data.message || data.text || 'Could not register your account. Please try again.';
+                console.warn('User register failed', res.status, errMsg);
+                await Swal.fire({ icon: 'error', title: 'Registration failed', text: errMsg });
               } else {
-                await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been created. Please log in with your email and password.' });
-                try { nav('/login'); redirected = true; } catch(e) { console.error('Navigation failed', e); }
+                const successMsg = data.message || 'Your account has been created. Please log in with your email and password.';
+                await Swal.fire({ icon: 'success', title: 'Registration complete', text: successMsg });
+                try { nav('/login'); redirected = true; } catch (e) { console.error('Navigation failed', e); }
               }
             } catch (e) {
               console.error('Error registering user', e);
-              await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'An error occurred. Please try again.' });
+              await Swal.fire({ icon: 'error', title: 'Registration failed', text: (e as Error).message || 'An error occurred. Please try again.' });
             } finally {
               setLoading(false);
               if (!redirected) {
-                try { nav('/'); } catch(e) { console.error('Navigation failed', e); }
+                try { nav('/'); } catch (e) { console.error('Navigation failed', e); }
               }
             }
           }}>Next</Button>
