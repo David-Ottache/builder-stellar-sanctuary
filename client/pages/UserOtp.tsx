@@ -14,7 +14,7 @@ export default function UserOtp() {
   const verify = async () => {
     const codeStr = code.join('');
     try {
-      const res = await fetch('/api/drivers/verify', {
+      const res = await fetch('/api/users/verify', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: onboarding.phone, countryCode: onboarding.countryCode, code: codeStr })
       });
