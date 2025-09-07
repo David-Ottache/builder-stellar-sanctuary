@@ -141,9 +141,17 @@ export const getTransactions: RequestHandler = async (req, res) => {
     }
     const db = getFirestore();
     if (!db) return res.status(503).json({ error: 'database not available' });
-    const q = await db.collection('walletTransactions').where('to', '==', userId).orderBy('ts', 'desc').limit(50).get();
-    const tx = q.docs.map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
-    return res.json({ transactions: tx });
+    try {
+      const q = await db.collection('walletTransactions').where('to', '==', userId).orderBy('ts', 'desc').limit(50).get();
+      const tx = q.docs.map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
+      return res.json({ transactions: tx });
+    } catch (err:any) {
+      console.warn('getTransactions query failed', err?.message || err);
+      if (String(err?.message || '').includes('requires an index')) {
+        return res.json({ transactions: [] });
+      }
+      throw err;
+    }
   } catch (e) {
     console.error('getTransactions error', e);
     return res.status(500).json({ error: 'Internal error' });
