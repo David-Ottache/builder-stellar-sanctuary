@@ -7,17 +7,47 @@ import VehicleSelector, { type VehicleId } from "@/components/app/VehicleSelecto
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
+import { useState } from "react";
+import { haversineKm } from "@/lib/utils";
 
 export default function Index() {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [vehicle, setVehicle] = useState<VehicleId>("go");
+  const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const navigate = useNavigate();
   const { setPendingTrip } = useAppStore();
 
+  const handleStart = () => {
+    if (!destination) { toast.error('Please enter a destination'); return; }
+    if (!navigator.geolocation) {
+      // if we don't have pickup coords, ask user to allow or fallback
+      if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
+      setPendingTrip({ pickup: 'Unknown location', destination, destinationCoords });
+      navigate('/user/verify');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        const pickupCoords = { lat, lng };
+        if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
+        const distance = haversineKm(pickupCoords, destinationCoords);
+        setPendingTrip({ pickup: 'Current location', destination, pickupCoords, destinationCoords });
+        navigate('/user/verify');
+      },
+      () => {
+        if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
+        setPendingTrip({ pickup: 'Current location', destination, destinationCoords });
+        navigate('/user/verify');
+      },
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
+  };
+
   return (
     <Layout className="relative">
-      <MapView />
+      <MapView pickupCoords={null} destinationCoords={destinationCoords} onPickDestination={(c)=> setDestinationCoords(c)} />
 
       <div className="pointer-events-none absolute inset-x-4 top-4 z-20">
         <LocationInputs
@@ -39,29 +69,10 @@ export default function Index() {
             <div className="text-sm font-semibold text-neutral-600">Choose your ride</div>
             <div className="text-xs text-neutral-500">Upfront pricing</div>
           </div>
-          <VehicleSelector selected={vehicle} onSelect={setVehicle} />
+          <VehicleSelector selected={vehicle} onSelect={setVehicle} distanceKm={destinationCoords && pickup ? undefined : undefined} />
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Button variant="outline" className="h-12 rounded-xl">Schedule</Button>
-            <Button className="h-12 rounded-xl" onClick={()=>{
-              if (!destination) { toast.error('Please enter a destination'); return; }
-              if (!navigator.geolocation) {
-                setPendingTrip({ pickup: 'Unknown location', destination });
-                navigate('/user/verify');
-                return;
-              }
-              navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                  const { latitude: lat, longitude: lng } = pos.coords;
-                  setPendingTrip({ pickup: 'Current location', destination, pickupCoords: { lat, lng } });
-                  navigate('/user/verify');
-                },
-                () => {
-                  setPendingTrip({ pickup: 'Current location', destination });
-                  navigate('/user/verify');
-                },
-                { enableHighAccuracy: true, timeout: 5000 }
-              );
-            }}>Start Trip</Button>
+            <Button className="h-12 rounded-xl" onClick={handleStart}>Start Trip</Button>
           </div>
         </div>
       </div>
