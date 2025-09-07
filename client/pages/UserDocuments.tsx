@@ -75,8 +75,13 @@ export default function UserDocuments() {
               };
               console.log('User register payload', payload);
               let res: Response | null = null;
+              const origin = window.location.origin;
+              const primary = `${origin}/api/users/register`;
+              const fallback = `${origin}/.netlify/functions/api/users/register`;
+
               try {
-                res = await fetch('/api/users/register', {
+                console.log('Attempting primary register URL', primary);
+                res = await fetch(primary, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(payload),
@@ -84,25 +89,31 @@ export default function UserDocuments() {
               } catch (err) {
                 console.warn('Primary fetch failed, attempting fallback', err);
                 try {
-                  // Netlify dev or production may host the express app under /.netlify/functions/api
-                  res = await fetch('/.netlify/functions/api/users/register', {
+                  console.log('Attempting fallback register URL', fallback);
+                  res = await fetch(fallback, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                   });
                 } catch (err2) {
                   console.error('Fallback fetch failed', err2);
+                  await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'Network error. Could not reach server.' });
                   throw err2;
                 }
               }
 
-              const text = await res!.text().catch(() => '');
+              if (!res) {
+                await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'No response from server.' });
+                throw new Error('No response');
+              }
+
+              const text = await res.text().catch(() => '');
               let data: any = {};
               try { data = text ? JSON.parse(text) : {}; } catch { data = { text }; }
 
-              if (!res!.ok) {
+              if (!res.ok) {
                 const errMsg = data.error || data.message || data.text || 'Could not register your account. Please try again.';
-                console.warn('User register failed', res!.status, errMsg);
+                console.warn('User register failed', res.status, errMsg);
                 await Swal.fire({ icon: 'error', title: 'Registration failed', text: errMsg });
               } else {
                 const successMsg = data.message || 'Your account has been created. Please log in with your email and password.';
