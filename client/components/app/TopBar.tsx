@@ -21,7 +21,7 @@ export default function TopBar({ className }: Props) {
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Zap className="h-5 w-5" />
         </div>
-        <span className="text-lg font-extrabold tracking-tight">VoltGo</span>
+        <span className="text-lg font-extrabold tracking-tight">reCab</span>
       </div>
       <div className="pointer-events-auto flex items-center gap-3 text-sm">
         <div className="h-9 w-9 overflow-hidden rounded-full ring-2 ring-primary/30">
