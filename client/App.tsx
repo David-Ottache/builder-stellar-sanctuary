@@ -59,6 +59,7 @@ const App = () => (
             <Route path="/register/documents" element={<Documents />} />
             <Route path="/search" element={<Search />} />
             <Route path="/user/verify" element={<UserVerify />} />
+            <Route path="/user/:id" element={<UserDetails />} />
             <Route path="/safety" element={<Safety />} />
             <Route path="/driver/:id" element={<DriverDetails />} />
             <Route path="/trip/summary" element={<TripSummary />} />
