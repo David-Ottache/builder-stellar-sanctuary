@@ -1,8 +1,5 @@
 import { cn } from "@/lib/utils";
 import { Zap } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-import { Zap } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 
 interface Props {
