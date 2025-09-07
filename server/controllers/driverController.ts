@@ -73,6 +73,7 @@ export const registerDriver: RequestHandler = async (req, res) => {
         );
         const docRef = await db.collection("drivers").add(docData);
         console.log("Driver persisted to Firestore with id", docRef.id);
+        try { await docRef.update({ id: docRef.id }); } catch (e) { console.warn('Failed to update driver doc id field', e); }
         return res.status(201).json({ message: "Driver registered", driver: { id: docRef.id, firstName: driver.firstName, lastName: driver.lastName, phone: driver.phone, countryCode: driver.countryCode } });
       } else {
         console.log("Firestore not available; skipping persistence");
