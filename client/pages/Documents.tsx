@@ -59,6 +59,7 @@ export default function Documents() {
             const updates = { driverLicenseNumber: license, profilePhoto, driverLicensePhoto: licensePhoto };
             setOnboarding(updates);
             mergeOnboardingToDriver(updates);
+            let redirected = false;
 
             try {
               // Build explicit payload from onboarding and current local values to avoid stale/undefined fields
@@ -91,15 +92,16 @@ export default function Documents() {
                 console.log('Driver registered', data);
                 await Swal.fire({ icon: 'success', title: 'Registration complete', text: 'Your account has been created. Please log in with your email and password.' });
                 // navigate to login page after user closes alert
-                try { nav('/login'); } catch(e) { console.error('Navigation failed', e); }
-                return; // avoid nav('/wallet') in finally
+                try { nav('/login'); redirected = true; } catch(e) { console.error('Navigation failed', e); }
               }
             } catch (e) {
               console.error('Error registering driver', e);
               await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'An error occurred. Please try again.' });
             } finally {
               setLoading(false);
-              try { nav('/wallet'); } catch(e) { console.error('Navigation failed', e); }
+              if (!redirected) {
+                try { nav('/wallet'); } catch(e) { console.error('Navigation failed', e); }
+              }
             }
           }}>Next</Button>
           <div className="text-center text-sm">Already Have An Account? <Link to="/login" className="font-semibold">Sign In</Link></div>
