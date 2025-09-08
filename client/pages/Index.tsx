@@ -88,7 +88,7 @@ export default function Index() {
       <MapView
         pickupCoords={pickupCoords}
         destinationCoords={destinationCoords}
-        hidePickupMarker={true}
+        hidePickupMarker={!pickupCoords}
         onPick={(c) => {
           // when map is clicked, set coords based on active mode
           if (pickMode === 'pickup') {
