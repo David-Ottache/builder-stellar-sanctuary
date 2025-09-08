@@ -84,21 +84,17 @@ export default function Trips() {
 
                 {t.distanceKm != null && <div className="mt-2 text-xs text-neutral-500">Distance: {t.distanceKm.toFixed(2)} km • Type: {t.vehicle}</div>}
 
-                <div className="mt-3 flex items-center justify-between gap-2">
+                <div className="mt-3 flex items-center justify-start gap-2">
                   <div className="flex gap-2 items-center">
                     <button
                       className="rounded-lg bg-neutral-100 px-3 py-1 text-sm text-neutral-700"
                       onClick={() => toggleDetails(t.id)}
                     >{expandedTripId === t.id ? 'Hide details' : 'View details'}</button>
-                    {/* show rating prominently for drivers */}
-                    {typeof t.rating === 'number' && (user && (user.role === 'driver' || !!user.vehicleType)) && (
+                    {/* show rating (stars) if available */}
+                    {typeof t.rating === 'number' && (
                       <div className="text-sm text-yellow-600 font-semibold">{t.rating} ★</div>
                     )}
                   </div>
-                  {/* only allow drivers to end trips from this UI */}
-                  { (user && !(user.role === 'driver' || !!user.vehicleType) && t.status !== 'completed') ? (
-                    <button className="rounded-xl bg-red-500 px-3 py-2 text-white" onClick={()=>endTrip(t.id)}>End Trip</button>
-                  ) : null}
                 </div>
 
                 {expandedTripId === t.id && (
