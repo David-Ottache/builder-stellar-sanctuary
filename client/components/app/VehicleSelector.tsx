@@ -8,7 +8,9 @@ export function computeFare(distanceKm: number | null | undefined, vehicleId: Ve
   const d = Number(distanceKm ?? 0) || 0;
   const rate = RATES_PER_KM[vehicleId] ?? 200;
   const raw = Math.round(rate * d);
-  return Math.max(1, raw);
+  // Ensure minimum fare equals the per-km rate (charge at least 1 km)
+  const minFare = Math.max(1, Math.round(rate * 1));
+  return Math.max(minFare, raw);
 }
 
 interface Props {
