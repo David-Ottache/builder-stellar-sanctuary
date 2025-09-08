@@ -256,9 +256,9 @@ export default function Wallet() {
     if (!amount || amount <= 0) return;
     try {
       setLoading(true);
-      const res = await fetch('/api/wallet/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: appUser.id, amount }) });
-      if (!res.ok) {
-        const d = await res.json().catch(()=>({}));
+      const res = await safeFetch('/api/wallet/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: appUser.id, amount }) });
+      if (!res || !res.ok) {
+        const d = res ? await res.json().catch(()=>({})) : {};
         return Swal.fire('Top up failed', d.error || '');
       }
       // optimistic update: add amount
