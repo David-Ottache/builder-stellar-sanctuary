@@ -225,7 +225,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
       {/* markers for fallback mode */}
       {!googleKey && (
         <div className="absolute inset-0 pointer-events-none">
-          <RenderMarker type="pickup" coords={pickupCoords} project={project} />
+          {!hidePickupMarker && <RenderMarker type="pickup" coords={pickupCoords} project={project} />}
           <RenderMarker type="destination" coords={destinationCoords} project={project} />
         </div>
       )}
