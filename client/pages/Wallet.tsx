@@ -238,7 +238,7 @@ export default function Wallet() {
             let title = '';
             if (isTopUp) title = 'Top Up';
             else if (t.type === 'deduct') title = 'Payment';
-            else if (t.from && t.to) title = 'Transfer';
+            else if (t.from && t.to) title = `Transfer (${namesMap[t.from] || t.from} → ${namesMap[t.to] || t.to})`;
             else if (isIncoming) title = `From ${namesMap[t.from] || t.from || ''}`;
             else if (isOutgoing) title = `To ${namesMap[t.to] || t.to || ''}`;
             else title = t.type || 'Transaction';
