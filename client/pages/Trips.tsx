@@ -17,7 +17,21 @@ export default function Trips() {
         const res = await fetch(endpoint);
         if (!res.ok) return;
         const data = await res.json().catch(()=>null);
-        if (data?.trips) setTrips(data.trips);
+        if (data?.trips) {
+          setTrips(data.trips);
+          // synchronize driver rides counts from trip history (aggregate by driverId)
+          try {
+            const counts: Record<string, number> = {};
+            (data.trips || []).forEach((tr:any) => {
+              if (tr && tr.driverId) {
+                counts[String(tr.driverId)] = (counts[String(tr.driverId)] || 0) + 1;
+              }
+            });
+            Object.keys(counts).forEach((did) => {
+              try { upsertDriver({ id: did, rides: counts[did] }); } catch(e){}
+            });
+          } catch(e) { console.warn('sync driver rides failed', e); }
+        }
         // fetch requester names for driver view
         if (isDriver && data?.trips?.length) {
           const ids = Array.from(new Set(data.trips.map((t:any)=> String(t.userId)).filter(Boolean))) as string[];
