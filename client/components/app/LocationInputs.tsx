@@ -61,23 +61,27 @@ export default function LocationInputs({
             <ArrowUpDown className="h-4 w-4" />
           </button>
 
-          <button
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-white text-neutral-700 hover:text-primary"
-            onClick={() => { if (onPickPickup) onPickPickup(); }}
-            title="Pick pickup on map"
-            aria-label="Pick pickup on map"
-          >
-            <MapPin className="h-4 w-4" />
-          </button>
+          {onPickPickup && (
+            <button
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-white text-neutral-700 hover:text-primary"
+              onClick={() => { if (onPickPickup) onPickPickup(); }}
+              title="Pick pickup on map"
+              aria-label="Pick pickup on map"
+            >
+              <MapPin className="h-4 w-4" />
+            </button>
+          )}
 
-          <button
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-white text-neutral-700 hover:text-primary"
-            onClick={() => { if (onPickDestination) onPickDestination(); }}
-            title="Pick destination on map"
-            aria-label="Pick destination on map"
-          >
-            <MapPin className="h-4 w-4" />
-          </button>
+          {onPickDestination && (
+            <button
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-white text-neutral-700 hover:text-primary"
+              onClick={() => { if (onPickDestination) onPickDestination(); }}
+              title="Pick destination on map"
+              aria-label="Pick destination on map"
+            >
+              <MapPin className="h-4 w-4" />
+            </button>
+          )}
 
           <button
             className="inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-white text-neutral-700 hover:text-primary"
