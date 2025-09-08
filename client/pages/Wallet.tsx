@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import Swal from 'sweetalert2';
-import { safeFetch } from '@/lib/utils';
+import { safeFetch, cachedFetch } from '@/lib/utils';
 
 export default function Wallet() {
   const { user: appUser, setUser } = useAppStore();
