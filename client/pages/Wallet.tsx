@@ -77,6 +77,46 @@ export default function Wallet() {
     })();
   }, [appUser]);
 
+  useEffect(()=>{
+    (async ()=>{
+      if (!transactions || !transactions.length) return;
+      const ids = new Set<string>();
+      for (const t of transactions) {
+        if (t.from) ids.add(t.from);
+        if (t.to) ids.add(t.to);
+      }
+      const missing = Array.from(ids).filter(id => id && !namesMap[id]);
+      if (!missing.length) return;
+      const mapUpdates: Record<string,string> = {};
+      await Promise.all(missing.map(async (id)=>{
+        try {
+          const r1 = await fetch(`/api/users/${encodeURIComponent(id)}`);
+          if (r1.ok) {
+            const dd = await r1.json().catch(()=>null);
+            if (dd && (dd.user || dd.firstName || dd.name)) {
+              const name = dd.user ? `${dd.user.firstName||''} ${dd.user.lastName||''}`.trim() : (dd.firstName || dd.name || id);
+              mapUpdates[id] = name || id;
+              return;
+            }
+          }
+        } catch(e){}
+        try {
+          const r2 = await fetch(`/api/drivers/${encodeURIComponent(id)}`);
+          if (r2.ok) {
+            const dd = await r2.json().catch(()=>null);
+            if (dd && dd.driver) {
+              const name = `${dd.driver.firstName||''} ${dd.driver.lastName||''}`.trim() || dd.driver.name || id;
+              mapUpdates[id] = name || id;
+              return;
+            }
+          }
+        } catch(e){}
+        mapUpdates[id] = id;
+      }));
+      setNamesMap((prev)=> ({ ...prev, ...mapUpdates }));
+    })();
+  }, [transactions]);
+
   const doSend = async () => {
     if (!appUser) return Swal.fire('Not signed in');
     const { value: formValues } = await Swal.fire({
