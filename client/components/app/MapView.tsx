@@ -96,8 +96,20 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
               if (sessionRaw) {
                 try { hdr['x-user-id'] = JSON.parse(sessionRaw).id; } catch(e){}
               }
-              const res = await fetch('/api/presence', { headers: hdr });
-              if (!res.ok) return;
+              const origin = window.location.origin;
+              const endpoints = [`${origin}/api/presence`, `${origin}/.netlify/functions/api/presence`, '/api/presence', '/.netlify/functions/api/presence'];
+              let res: Response | null = null;
+              for (const url of endpoints) {
+                try {
+                  res = await fetch(url, { headers: hdr, cache: 'no-store' });
+                  if (res && res.ok) break;
+                } catch (err) {
+                  // try next
+                  res = null;
+                  continue;
+                }
+              }
+              if (!res || !res.ok) return;
               const data = await res.json().catch(()=>null);
               if (!data) return;
               renderPresence(data.presence || []);
