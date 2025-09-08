@@ -148,9 +148,7 @@ export default function UserDocuments() {
               }
             } finally {
               setLoading(false);
-              if (!redirected) {
-                try { nav('/'); } catch (e) { console.error('Navigation failed', e); }
-              }
+              // Do not navigate automatically on failure — only navigate when we explicitly redirected after success
             }
           }}>Next</Button>
           <div className="text-center text-sm">Already Have An Account? <Link to="/login" className="font-semibold">Sign In</Link></div>
