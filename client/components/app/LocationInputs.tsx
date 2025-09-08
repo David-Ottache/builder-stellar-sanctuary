@@ -8,6 +8,9 @@ interface Props {
   setDestination: (v: string) => void;
   onSwap: () => void;
   className?: string;
+  onPickPickup?: () => void;
+  onPickDestination?: () => void;
+  onUseCurrentLocation?: () => void;
 }
 
 export default function LocationInputs({
