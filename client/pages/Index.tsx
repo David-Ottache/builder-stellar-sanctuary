@@ -61,8 +61,27 @@ export default function Index() {
   }, [destination]);
 
   const handleStart = () => {
-    if (!destination) { toast.error('Please enter a destination'); return; }
-    if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
+    if (!vehicle) { Swal.fire('Missing selection', 'Please choose a vehicle type', 'warning'); return; }
+    if (!destination) { Swal.fire('Missing destination', 'Please enter a destination', 'warning'); return; }
+    if (!destinationCoords) { Swal.fire('Missing destination', 'Please tap the map to choose a destination', 'warning'); return; }
+
+    // ensure pickup is available (either pinned or current)
+    const hasPickup = !!pickupCoords || pickup === 'Current location' || pickup === 'Pinned location';
+    if (!hasPickup && navigator.geolocation) {
+      // ask user to allow location or set pickup
+      return Swal.fire({ title: 'Pickup missing', text: 'Please allow access to your device location or pin a pickup on the map', icon: 'warning', confirmButtonText: 'Use Current Location' }).then((res)=>{
+        if (res.isConfirmed) {
+          // try to get current position
+          navigator.geolocation.getCurrentPosition((pos)=>{
+            const pickup = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            setPendingTrip({ pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords, vehicle });
+            navigate('/user/verify');
+          }, ()=>{
+            Swal.fire('Location unavailable', 'Unable to access current location. Please pick a location on the map.', 'error');
+          }, { enableHighAccuracy: true, timeout: 5000 });
+        }
+      });
+    }
 
     if (!navigator.geolocation) {
       setPendingTrip({ pickup: 'Unknown location', destination, destinationCoords, vehicle });
