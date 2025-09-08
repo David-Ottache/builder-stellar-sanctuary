@@ -145,6 +145,11 @@ export async function createServer() {
   app.get('/api/trips/driver/:driverId', tripController.listTripsByDriver as any);
   app.post('/api/trips/:id/end', tripController.endTrip as any);
 
+  // Presence (online users/drivers)
+  const presenceController = await import('./controllers/presenceController');
+  app.post('/api/presence', presenceController.setPresence as any);
+  app.get('/api/presence', presenceController.listPresence as any);
+
   // Lookup endpoint: search both drivers and users by id (document id or stored 'id' field)
   const lookupController = await import('./controllers/lookupController');
   app.get('/api/lookup/:id', lookupController.lookupById as any);
