@@ -131,8 +131,7 @@ export default function Wallet() {
       if (!transactions || !transactions.length) return;
       const ids = new Set<string>();
       for (const t of transactions) {
-        if (t.from) ids.add(t.from);
-        if (t.to) ids.add(t.to);
+        if (t.participantId) ids.add(t.participantId);
       }
       const missing = Array.from(ids).filter(id => id && !namesMap[id]);
       if (!missing.length) return;
