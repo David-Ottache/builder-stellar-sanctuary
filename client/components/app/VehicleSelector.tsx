@@ -23,8 +23,7 @@ export default function VehicleSelector({ selected, onSelect, distanceKm }: Prop
     <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 pt-1">
       {(Object.keys(RATES_PER_KM) as VehicleId[]).map((id) => {
         const active = selected === id;
-        const rate = RATES_PER_KM[id];
-        const price = Math.round(rate * distance);
+        const price = computeFare(distance, id);
         return (
           <button
             key={id}
