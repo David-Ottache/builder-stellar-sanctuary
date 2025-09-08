@@ -74,7 +74,7 @@ export function getFirestore(): any | null {
 
 export function getAuth(): any | null {
   if (!admin) {
-    console.warn("getAuth called before firebase-admin initialization");
+    // firebase-admin not initialized yet; return null silently
     return null;
   }
   try {
