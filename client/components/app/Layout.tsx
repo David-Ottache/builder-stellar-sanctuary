@@ -27,6 +27,8 @@ export default function Layout({ children, className, hideTopBar, hideBottomNav 
             <SOS />
           </>
         )}
+        {/* Global rating modal */}
+        <RatingModal />
       </div>
     </div>
   );
