@@ -246,9 +246,9 @@ export default function Wallet() {
             let title = '';
             if (isTopUp) title = 'Top Up';
             else if (t.type === 'deduct') title = 'Payment';
-            else if (t.from && t.to) title = `Transfer (${namesMap[t.from] || t.from} → ${namesMap[t.to] || t.to})`;
-            else if (isIncoming) title = `From ${namesMap[t.from] || t.from || ''}`;
-            else if (isOutgoing) title = `To ${namesMap[t.to] || t.to || ''}`;
+            else if (t.from && t.to) title = `Transfer (${(namesMap[t.from] && namesMap[t.from].name) || t.from} → ${(namesMap[t.to] && namesMap[t.to].name) || t.to})`;
+            else if (isIncoming) title = `From ${(namesMap[t.from] && namesMap[t.from].name) || t.from || ''}`;
+            else if (isOutgoing) title = `To ${(namesMap[t.to] && namesMap[t.to].name) || t.to || ''}`;
             else title = t.type || 'Transaction';
             return (
               <div key={t.id} className="flex items-center gap-3 rounded-xl p-2">
