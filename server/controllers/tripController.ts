@@ -36,6 +36,30 @@ export const createTrip: RequestHandler = async (req, res) => {
   }
 };
 
+export const getTripById: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'id required' });
+    if (!isInitialized()) {
+      const init = await initializeFirebaseAdmin();
+      if (!init.initialized) return res.status(503).json({ error: 'database not available' });
+    }
+    const db = getFirestore();
+    if (!db) return res.status(503).json({ error: 'database not available' });
+    try {
+      const doc = await db.collection('trips').doc(id).get();
+      if (!doc.exists) return res.status(404).json({ error: 'trip not found' });
+      return res.json({ trip: { id: doc.id, ...(doc.data() as any) } });
+    } catch (err:any) {
+      console.warn('getTripById query failed', err?.message || err);
+      return res.status(500).json({ error: 'internal' });
+    }
+  } catch (e) {
+    console.error('getTripById error', e);
+    return res.status(500).json({ error: 'Internal error' });
+  }
+};
+
 export const listTrips: RequestHandler = async (req, res) => {
   try {
     const { userId } = req.params;
