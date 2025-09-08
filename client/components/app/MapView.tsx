@@ -155,7 +155,21 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
                   try { userId = JSON.parse(sessionRaw).id; } catch(e){}
                 }
                 if (!userId) return;
-                await fetch('/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': userId }, body: JSON.stringify({ id: userId, lat, lng, online: true }) }).catch(()=>{});
+                const origin = window.location.origin;
+                const endpoints = [`${origin}/api/presence`, `${origin}/.netlify/functions/api/presence`, '/api/presence', '/.netlify/functions/api/presence'];
+                let posted = false;
+                for (const url of endpoints) {
+                  try {
+                    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': userId }, body: JSON.stringify({ id: userId, lat, lng, online: true }) , keepalive: true });
+                    if (r && r.ok) { posted = true; break; }
+                  } catch (err) {
+                    // ignore and try next
+                  }
+                }
+                if (!posted) {
+                  // nothing to do, but avoid throwing
+                  // console.warn('presence post failed for all endpoints');
+                }
               } catch (e) { console.warn('watchPosition post failed', e); }
             }, (err)=>{ /* ignore */ }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
           }
