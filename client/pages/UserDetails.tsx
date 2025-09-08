@@ -126,11 +126,8 @@ export default function UserDetails() {
             if (pendingTrip?.pickupCoords && pendingTrip?.destinationCoords) {
               try { distance = haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords); } catch (e) { distance = 0; }
             }
-            // use central rates
-            const rate = RATES_PER_KM[vehicleId as keyof typeof RATES_PER_KM] ?? 200;
-            // ensure minimum fee of 1 to avoid server-side 'amount must be positive' errors
-            const rawFee = Math.round(rate * distance);
-            const fee = Math.max(1, rawFee);
+            // compute using central helper
+            const fee = computeFare(distance, vehicleId as any);
 
             if (!selectedDriverId) selectDriver(user.id);
 
