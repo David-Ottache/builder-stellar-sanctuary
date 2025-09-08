@@ -30,8 +30,8 @@ export default function VehicleSelector({ selected, onSelect, distanceKm }: Prop
             )}
           >
             <div className="flex items-center justify-between text-sm">
-              <div className="font-semibold">{id === 'go' ? 'Go' : id === 'comfort' ? 'Comfort' : 'XL'}</div>
-              <div className="text-xs text-neutral-500">{id === 'go' ? '3 min' : id === 'comfort' ? '5 min' : '6 min'}</div>
+              <div className="font-semibold">{id === 'go' ? 'Go' : id === 'comfort' ? 'Comfort' : id === 'xl' ? 'XL' : 'Prestige'}</div>
+              <div className="text-xs text-neutral-500">{id === 'go' ? '3 min' : id === 'comfort' ? '5 min' : id === 'xl' ? '6 min' : '8 min'}</div>
             </div>
             <div className="mt-2 flex items-end justify-between">
               <div className="text-2xl font-bold">N{price}</div>
