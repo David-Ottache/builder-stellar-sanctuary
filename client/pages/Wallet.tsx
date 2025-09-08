@@ -9,6 +9,7 @@ export default function Wallet() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayBalance, setDisplayBalance] = useState<number>(appUser?.walletBalance ?? 0);
+  const [namesMap, setNamesMap] = useState<Record<string,string>>({});
 
   useEffect(()=>{
     (async ()=>{
