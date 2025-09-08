@@ -41,6 +41,25 @@ export async function createServer() {
 
   // Middleware
   app.use(cors());
+
+  // init Sentry if DSN provided
+  try {
+    if (process.env.SENTRY_DSN) {
+      // dynamic import to avoid hard dependency when DSN not set
+      (async () => {
+        try {
+          const Sentry = await import('@sentry/node');
+          Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.2 });
+          app.use(Sentry.Handlers.requestHandler());
+          app.use(Sentry.Handlers.errorHandler());
+          console.log('Sentry initialized for server');
+        } catch (e) {
+          console.warn('Failed to init Sentry (server):', e);
+        }
+      })();
+    }
+  } catch (e) { console.warn('Sentry init check failed', e); }
+
   // simple request logger for /api calls
   app.use((req, _res, next) => {
     try {
