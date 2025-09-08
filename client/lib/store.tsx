@@ -442,6 +442,10 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     verifyDriver,
     trips,
     setTrips: _setTrips,
+    ratingPrompt,
+    openRatingPrompt,
+    closeRatingPrompt,
+    submitRating,
   };
 
   return <AppStore.Provider value={value}>{children}</AppStore.Provider>;
