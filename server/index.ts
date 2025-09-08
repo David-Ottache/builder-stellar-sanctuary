@@ -88,6 +88,23 @@ export async function createServer() {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+  // Quick logging for POST /api/users/register to help debug client-side timeouts
+  app.post('/api/users/register', (req, res, next) => {
+    try {
+      console.log('Incoming /api/users/register request — headers:', Object.keys(req.headers).length ? '[headers present]' : 'no-headers');
+      console.log('Incoming /api/users/register body preview:', typeof req.body === 'object' ? Object.keys(req.body).slice(0,10) : typeof req.body);
+    } catch (e) {}
+    next();
+  });
+
+  // Simple echo endpoint for connectivity testing
+  app.post('/api/echo', (req, res) => {
+    try {
+      console.log('Echo received body keys:', typeof req.body === 'object' ? Object.keys(req.body).slice(0,10) : typeof req.body);
+    } catch (e) {}
+    res.json({ ok: true, bodyPreview: typeof req.body === 'object' ? Object.keys(req.body).slice(0,10) : typeof req.body });
+  });
+
   // Example API routes
   app.get("/api/ping", (_req, res) => {
     const ping = process.env.PING_MESSAGE ?? "ping";
