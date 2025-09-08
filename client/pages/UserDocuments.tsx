@@ -64,9 +64,16 @@ export default function UserDocuments() {
               const primary = `/api/users/register`;
               const fallback = `/.netlify/functions/api/users/register`;
 
+              // helper to avoid synchronous fetch wrapper issues (e.g., FullStory) by deferring call into Promise chain
+              const deferFetch = (input: RequestInfo, init?: RequestInit) => new Promise<Response>((resolve, reject) => {
+                try {
+                  Promise.resolve().then(() => fetch(input, init)).then(resolve).catch(reject);
+                } catch (e) { reject(e); }
+              });
+
               // quick connectivity check (GET /api/ping) using relative paths
-              const pingPrimary = await fetch(`/api/ping`).catch(()=>null);
-              const pingFallback = await fetch(`/.netlify/functions/api/ping`).catch(()=>null);
+              const pingPrimary = await deferFetch(`/api/ping`).catch(()=>null);
+              const pingFallback = await deferFetch(`/.netlify/functions/api/ping`).catch(()=>null);
               if (!pingPrimary && !pingFallback) {
                 await Swal.fire({ icon: 'error', title: 'Network error', text: `Could not reach API endpoints. Tried relative paths to the current origin.` });
                 throw new Error('API unreachable');
