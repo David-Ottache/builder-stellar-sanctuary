@@ -10,6 +10,8 @@ interface Props {
   onPick?: (c: { lat: number; lng: number }) => void;
   // optional mode to indicate which location is being selected ('pickup' | 'destination' | undefined)
   pickMode?: 'pickup' | 'destination' | null;
+  // when true, do not render the pickup pin marker (useful for root page)
+  hidePickupMarker?: boolean;
 }
 
 export default function MapView({ className, pickupCoords, destinationCoords, onPickDestination, onPick, pickMode }: Props) {
