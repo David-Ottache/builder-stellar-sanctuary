@@ -76,7 +76,7 @@ export default function Index() {
         navigate('/user/verify');
       },
       () => {
-        setPendingTrip({ pickup: 'Current location', destination, destinationCoords });
+        setPendingTrip({ pickup: 'Current location', destination, destinationCoords, vehicle });
         navigate('/user/verify');
       },
       { enableHighAccuracy: true, timeout: 5000 }
