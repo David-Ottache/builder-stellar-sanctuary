@@ -109,6 +109,7 @@ export default function UserVerify() {
   }
 
   const check = async (c: string) => {
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
     let value = (c || '').trim();
     if (!value) return setResult(null);
     // if value is a URL, try to extract code query param or last path segment
@@ -136,6 +137,19 @@ export default function UserVerify() {
       setResult({ id: storeMatch.id, name: storeMatch.name, avatar: storeMatch.avatar || 'https://i.pravatar.cc/80', rides: storeMatch.rides || 0, rating: storeMatch.rating || 0 });
       return;
     }
+
+    // check client cache in sessionStorage
+    try {
+      const raw = sessionStorage.getItem('lookup.cache');
+      if (raw) {
+        const parsed = JSON.parse(raw || '{}') as Record<string, { ts: number; data: any }>;
+        const entry = parsed[value];
+        if (entry && (Date.now() - entry.ts) < CACHE_TTL) {
+          setResult(entry.data);
+          return;
+        }
+      }
+    } catch (e) { /* ignore cache parse errors */ }
 
     setLoading(true);
     const origin = window.location.origin;
