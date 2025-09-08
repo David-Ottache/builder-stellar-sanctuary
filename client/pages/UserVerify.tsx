@@ -259,13 +259,7 @@ export default function UserVerify() {
           </div>
         )}
 
-        // <div className="mt-4 rounded-2xl border bg-white p-4">
-        //   <div className="relative mx-auto h-44 w-full max-w-xs rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50">
-        //     <div className="absolute inset-6 rounded border-2 border-primary/70" />
-        //     <div className="absolute inset-0 flex items-end justify-center p-3">
-        //       {/* scanner placeholder - use Upload QR image or Use Camera below */}
-        //     </div>
-        //   </div>
+        
 
           <div className="mt-3 flex gap-2 items-center">
             <label className="flex-1 inline-flex items-center gap-2 rounded-xl border bg-neutral-100 px-3 py-2">
