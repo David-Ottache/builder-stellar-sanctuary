@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
-export type VehicleId = "go" | "comfort" | "xl";
+export type VehicleId = "go" | "comfort" | "xl" | "prestige";
 
-const RATES_PER_KM: Record<VehicleId, number> = { go: 100, comfort: 400, xl: 600 };
+export const RATES_PER_KM: Record<VehicleId, number> = { go: 200, comfort: 400, xl: 600, prestige: 800 };
 
 interface Props {
   selected: VehicleId;
