@@ -82,6 +82,11 @@ interface StoreState {
   verifyDriver: (codeOrId: string) => DriverInfo | null;
   trips: TripDetails[];
   setTrips: (t: TripDetails[]) => void;
+  // rating UI
+  ratingPrompt: { open: boolean; driverId?: string | null; tripId?: string | null };
+  openRatingPrompt: (driverId: string | null, tripId?: string | null) => void;
+  closeRatingPrompt: () => void;
+  submitRating: (driverId: string, stars: number) => void;
 }
 
 const AppStore = createContext<StoreState | null>(null);
