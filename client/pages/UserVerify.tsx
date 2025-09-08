@@ -260,10 +260,11 @@ export default function UserVerify() {
             <div className="text-neutral-700">Vehicle: {pendingTrip.vehicle ?? 'go'}</div>
             {(() => {
               const vehicleId = (pendingTrip.vehicle as string) || 'go';
-              const distance = (pendingTrip.pickupCoords && pendingTrip.destinationCoords) ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : null;
-              const fee = distance !== null ? computeFare(distance, vehicleId as any) : null;
+              // if we have both coords compute exact distance, otherwise fallback to 0 so computeFare returns the minimum fare for the vehicle
+              const distance = (pendingTrip.pickupCoords && pendingTrip.destinationCoords) ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : 0;
+              const fee = computeFare(distance, vehicleId as any);
               return (
-                <div className="text-neutral-700">Amount: {fee !== null ? `₦${fee.toLocaleString()}` : 'TBD'}</div>
+                <div className="text-neutral-700">Amount: {`₦${fee.toLocaleString()}`}</div>
               );
             })()}
           </div>
