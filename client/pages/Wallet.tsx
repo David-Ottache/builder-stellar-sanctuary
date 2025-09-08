@@ -30,8 +30,8 @@ export default function Wallet() {
           setDisplayBalance(Number(appUser.walletBalance ?? (appUser.wallet && (appUser.wallet as any).balance) ?? (appUser as any).balance ?? 0));
         }
 
-        const res = await fetch(`/api/wallet/transactions/${appUser.id}`);
-        if (!res.ok) return;
+        const res = await safeFetch(`/api/wallet/transactions/${appUser.id}`);
+        if (!res || !res.ok) return;
         const data = await res.json().catch(()=>null);
         if (data?.transactions) {
           // annotate transactions with a participantId (from or to) to simplify UI
