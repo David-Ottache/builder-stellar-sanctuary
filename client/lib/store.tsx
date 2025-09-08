@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useMemo, useState, useEffect, type ReactNode } from "react";
 import { haversineKm } from "@/lib/utils";
 
-export type Gender = "Male" | "Female" | "Other" | "";
+// Relax Gender to accept any string to avoid strict mismatches across forms
+export type Gender = string;
 
 export interface UserProfile {
+  id?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -19,6 +21,9 @@ export interface UserProfile {
   vehicleType?: string;
   password?: string;
   role?: 'driver' | 'user';
+  // optional wallet fields used in app
+  walletBalance?: number;
+  wallet?: { balance?: number } | null;
 }
 
 export interface DriverInfo {
@@ -43,11 +48,13 @@ export interface TripDetails {
   destination: string;
   fee: number;
   driverId: string | null;
+  userId?: string | null;
   status?: 'ongoing' | 'completed' | 'cancelled';
   startedAt?: string;
   endedAt?: string;
   vehicle?: 'go' | 'comfort' | 'xl';
   distanceKm?: number;
+  rating?: number;
 }
 
 export interface Coords { lat: number; lng: number }
