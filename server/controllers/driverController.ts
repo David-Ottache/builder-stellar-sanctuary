@@ -55,41 +55,7 @@ export const registerDriver: RequestHandler = async (req, res) => {
       otpExpires,
     });
 
-    // Persist to Firestore if available
-    try {
-      // ensure initialized (await initialization to avoid race conditions)
-      if (!isInitialized()) {
-        const init = await initializeFirebaseAdmin();
-        if (!init.initialized) {
-          console.log("Firestore not available after initialization attempt; skipping persistence");
-        }
-      }
-
-      const db = getFirestore();
-      if (db) {
-        // remove undefined values to avoid Firestore errors
-        const docData = Object.fromEntries(
-          Object.entries(driver).filter(([, v]) => v !== undefined),
-        );
-        const docRef = await db.collection("drivers").add(docData);
-        console.log("Driver persisted to Firestore with id", docRef.id);
-        try { await docRef.update({ id: docRef.id }); } catch (e) { console.warn('Failed to update driver doc id field', e); }
-        return res.status(201).json({ message: "Driver registered", driver: { id: docRef.id, firstName: driver.firstName, lastName: driver.lastName, phone: driver.phone, countryCode: driver.countryCode } });
-      } else {
-        console.log("Firestore not available; skipping persistence");
-      }
-    } catch (e) {
-      console.warn("Failed to persist driver to Firestore:", (e as Error).message || e);
-    }
-
-    // Send OTP SMS (non-blocking)
-    try {
-      await sendSMS(`${countryCode || ""}${phone}`, `Your verification code is ${otpCode}`);
-    } catch (e) {
-      console.warn('Failed sending OTP SMS', e);
-    }
-
-    // Send a minimal safe response (don't include passwordHash or otpCode)
+    // Send a minimal safe response immediately so the client feels snappy
     const safe = {
       id: driver.id,
       firstName: driver.firstName,
@@ -99,6 +65,48 @@ export const registerDriver: RequestHandler = async (req, res) => {
     };
 
     res.status(201).json({ message: "Driver registered", driver: safe });
+
+    // Persist to Firestore and send SMS in background (non-blocking)
+    (async () => {
+      try {
+        if (!isInitialized()) {
+          const init = await initializeFirebaseAdmin();
+          if (!init.initialized) {
+            console.log("Firestore not available after initialization attempt; skipping persistence");
+            // still attempt SMS even if Firestore missing
+          }
+        }
+
+        const db = getFirestore();
+        if (db) {
+          const docData = Object.fromEntries(
+            Object.entries(driver).filter(([, v]) => v !== undefined),
+          );
+          const docRef = await db.collection("drivers").add(docData);
+          console.log("Driver persisted to Firestore with id", docRef.id);
+          try { await docRef.update({ id: docRef.id }); } catch (e) { console.warn('Failed to update driver doc id field', e); }
+
+          // try to warm lookup cache by notifying lookup controller (if available)
+          try {
+            const lookup = await import('./lookupController');
+            if (lookup && typeof lookup.setCache === 'function') {
+              lookup.setCache(docRef.id, { driver: { id: docRef.id, ...docData } });
+            }
+          } catch (e) { /* ignore */ }
+        } else {
+          console.log("Firestore not available; skipping persistence");
+        }
+      } catch (e) {
+        console.warn("Failed to persist driver to Firestore (background):", (e as Error).message || e);
+      }
+
+      // Send OTP SMS (best-effort background)
+      try {
+        await sendSMS(`${countryCode || ""}${phone}`, `Your verification code is ${otpCode}`);
+      } catch (e) {
+        console.warn('Failed sending OTP SMS (background)', e);
+      }
+    })();
   } catch (err) {
     console.error("registerDriver error", err);
     res.status(500).json({ error: "Internal server error" });
