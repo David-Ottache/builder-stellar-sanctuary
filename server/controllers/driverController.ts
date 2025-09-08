@@ -147,3 +147,69 @@ export const getDriver: RequestHandler = async (req, res) => {
     res.status(500).json({ error: 'Internal error' });
   }
 };
+
+// Simple in-memory rating fallback if Firestore unavailable
+const inMemoryDriverRatings: Map<string, { rides: number; rating: number }> = new Map();
+
+export const rateDriver: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { stars } = req.body || {};
+    const s = Number(stars || 0);
+    if (!id) return res.status(400).json({ error: 'driver id required' });
+    if (!s || s < 1 || s > 5) return res.status(400).json({ error: 'stars must be 1-5' });
+
+    if (!isInitialized()) {
+      try { await initializeFirebaseAdmin(); } catch (e) { /* ignore */ }
+    }
+    const db = getFirestore();
+
+    if (db) {
+      try {
+        // add rating doc
+        const ratingDoc = { driverId: id, stars: s, createdAt: new Date().toISOString() };
+        await db.collection('driverRatings').add(ratingDoc);
+
+        // try update aggregated driver doc
+        const docRef = db.collection('drivers').doc(id);
+        const doc = await docRef.get().catch(()=>null);
+        if (doc && doc.exists) {
+          const data: any = doc.data() || {};
+          const prevRides = Number(data.rides || 0);
+          const prevRating = Number(data.rating || 0);
+          const newRides = prevRides + 1;
+          const newRating = ((prevRating * prevRides) + s) / newRides;
+          await docRef.update({ rides: newRides, rating: Math.round((newRating + Number.EPSILON) * 10) / 10 }).catch(()=>{});
+          return res.json({ ok: true, rides: newRides, rating: Math.round((newRating + Number.EPSILON) * 10) / 10 });
+        }
+
+        // fallback: try to find by id field
+        const q = await db.collection('drivers').where('id','==',id).limit(1).get().catch(()=>null);
+        if (q && !q.empty) {
+          const d = q.docs[0];
+          const data: any = d.data() || {};
+          const prevRides = Number(data.rides || 0);
+          const prevRating = Number(data.rating || 0);
+          const newRides = prevRides + 1;
+          const newRating = ((prevRating * prevRides) + s) / newRides;
+          await db.collection('drivers').doc(d.id).update({ rides: newRides, rating: Math.round((newRating + Number.EPSILON) * 10) / 10 }).catch(()=>{});
+          return res.json({ ok: true, rides: newRides, rating: Math.round((newRating + Number.EPSILON) * 10) / 10 });
+        }
+
+        // driver doc not found; record in in-memory map
+      } catch (e) {
+        console.warn('Failed persisting rating to Firestore', e);
+      }
+    }
+
+    // in-memory fallback
+    const current = inMemoryDriverRatings.get(id) || { rides: 0, rating: 0 };
+    const newRides = current.rides + 1;
+    const newRating = ((current.rating * current.rides) + s) / newRides;
+    inMemoryDriverRatings.set(id, { rides: newRides, rating: Math.round((newRating + Number.EPSILON) * 10) / 10 });
+    return res.json({ ok: true, rides: newRides, rating: Math.round((newRating + Number.EPSILON) * 10) / 10 });
+  } catch (e) {
+    console.error('rateDriver error', e);
+    res.status(500).json({ error: 'Internal error' });
+  }
+};
