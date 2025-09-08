@@ -9,7 +9,7 @@ export default function Wallet() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayBalance, setDisplayBalance] = useState<number>(appUser?.walletBalance ?? 0);
-  const [namesMap, setNamesMap] = useState<Record<string,string>>({});
+  const [namesMap, setNamesMap] = useState<Record<string,{ name: string; avatar?: string }>>({});
 
   useEffect(()=>{
     (async ()=>{
@@ -42,7 +42,7 @@ export default function Wallet() {
           }
           const missing = Array.from(ids).filter(id => id && !namesMap[id]);
           if (missing.length) {
-            const mapUpdates: Record<string,string> = {};
+            const mapUpdates: Record<string,{ name: string; avatar?: string }> = {};
             await Promise.all(missing.map(async (id)=>{
               try {
                 // try user endpoint
@@ -50,8 +50,10 @@ export default function Wallet() {
                 if (r1.ok) {
                   const dd = await r1.json().catch(()=>null);
                   if (dd && (dd.user || dd.firstName || dd.name)) {
-                    const name = dd.user ? `${dd.user.firstName||''} ${dd.user.lastName||''}`.trim() : (dd.firstName || dd.name || id);
-                    mapUpdates[id] = name || id;
+                    const user = dd.user || dd;
+                    const name = user ? `${user.firstName||''} ${user.lastName||''}`.trim() : (dd.firstName || dd.name || id);
+                    const avatar = (user && (user.profilePhoto || user.avatar || user.photoUrl)) || undefined;
+                    mapUpdates[id] = { name: name || id, avatar };
                     return;
                   }
                 }
@@ -61,14 +63,16 @@ export default function Wallet() {
                 if (r2.ok) {
                   const dd = await r2.json().catch(()=>null);
                   if (dd && dd.driver) {
-                    const name = `${dd.driver.firstName||''} ${dd.driver.lastName||''}`.trim() || dd.driver.name || id;
-                    mapUpdates[id] = name || id;
+                    const driver = dd.driver;
+                    const name = `${driver.firstName||''} ${driver.lastName||''}`.trim() || driver.name || id;
+                    const avatar = driver.avatar || driver.profilePhoto || undefined;
+                    mapUpdates[id] = { name: name || id, avatar };
                     return;
                   }
                 }
               } catch(e){}
               // fallback to id
-              mapUpdates[id] = id;
+              mapUpdates[id] = { name: id, avatar: undefined };
             }));
             setNamesMap((prev)=> ({ ...prev, ...mapUpdates }));
           }
@@ -87,15 +91,17 @@ export default function Wallet() {
       }
       const missing = Array.from(ids).filter(id => id && !namesMap[id]);
       if (!missing.length) return;
-      const mapUpdates: Record<string,string> = {};
+      const mapUpdates: Record<string,{ name: string; avatar?: string }> = {};
       await Promise.all(missing.map(async (id)=>{
         try {
           const r1 = await fetch(`/api/users/${encodeURIComponent(id)}`);
           if (r1.ok) {
             const dd = await r1.json().catch(()=>null);
             if (dd && (dd.user || dd.firstName || dd.name)) {
-              const name = dd.user ? `${dd.user.firstName||''} ${dd.user.lastName||''}`.trim() : (dd.firstName || dd.name || id);
-              mapUpdates[id] = name || id;
+              const user = dd.user || dd;
+              const name = user ? `${user.firstName||''} ${user.lastName||''}`.trim() : (dd.firstName || dd.name || id);
+              const avatar = (user && (user.profilePhoto || user.avatar || user.photoUrl)) || undefined;
+              mapUpdates[id] = { name: name || id, avatar };
               return;
             }
           }
@@ -105,13 +111,15 @@ export default function Wallet() {
           if (r2.ok) {
             const dd = await r2.json().catch(()=>null);
             if (dd && dd.driver) {
-              const name = `${dd.driver.firstName||''} ${dd.driver.lastName||''}`.trim() || dd.driver.name || id;
-              mapUpdates[id] = name || id;
+              const driver = dd.driver;
+              const name = `${driver.firstName||''} ${driver.lastName||''}`.trim() || driver.name || id;
+              const avatar = driver.avatar || driver.profilePhoto || undefined;
+              mapUpdates[id] = { name: name || id, avatar };
               return;
             }
           }
         } catch(e){}
-        mapUpdates[id] = id;
+        mapUpdates[id] = { name: id, avatar: undefined };
       }));
       setNamesMap((prev)=> ({ ...prev, ...mapUpdates }));
     })();
@@ -244,9 +252,24 @@ export default function Wallet() {
             else title = t.type || 'Transaction';
             return (
               <div key={t.id} className="flex items-center gap-3 rounded-xl p-2">
-                <div className="h-9 w-9 rounded-full bg-neutral-100 flex items-center justify-center">{isTopUp ? 'T' : isIncoming ? '+' : '-'}</div>
+                <div className="h-9 w-9 rounded-full bg-neutral-100 overflow-hidden flex items-center justify-center">
+                {isTopUp ? (
+                  <div className="text-sm font-semibold">T</div>
+                ) : (
+                  (() => {
+                    const idToShow = isIncoming ? t.from : isOutgoing ? t.to : (t.from || t.to);
+                    const p = idToShow ? namesMap[idToShow] : undefined;
+                    if (p && p.avatar) return <img src={p.avatar} alt={p.name} className="h-full w-full object-cover" />;
+                    const initials = p && p.name ? p.name.split(' ').map(s=>s[0]).join('').substring(0,2).toUpperCase() : (idToShow ? String(idToShow).substring(0,2).toUpperCase() : '?');
+                    return <div className="text-sm font-semibold">{initials}</div>;
+                  })()
+                )}
+              </div>
                 <div className="flex-1">
                   <div className="text-sm font-semibold">{title}</div>
+                  {(!(t.from && t.to) && !(t.type === 'topup')) && (
+                    <div className="text-xs text-neutral-600">{namesMap[isIncoming ? t.from : t.to]?.name || ''}</div>
+                  )}
                   <div className="text-xs text-neutral-600">{t.tripId ? `Trip ${t.tripId} • ` : ''}{new Date(t.ts).toLocaleString()}</div>
                 </div>
                 <div className={isIncoming ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
