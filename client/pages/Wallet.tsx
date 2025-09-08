@@ -33,12 +33,13 @@ export default function Wallet() {
         if (!res.ok) return;
         const data = await res.json().catch(()=>null);
         if (data?.transactions) {
-          setTransactions(data.transactions);
+          // annotate transactions with a participantId (from or to) to simplify UI
+          const annotated = (data.transactions || []).map((t:any) => ({ ...t, participantId: t.from || t.to || null }));
+          setTransactions(annotated);
           // prefetch participant names for transactions
           const ids = new Set<string>();
-          for (const t of data.transactions) {
-            if (t.from) ids.add(t.from);
-            if (t.to) ids.add(t.to);
+          for (const t of annotated) {
+            if (t.participantId) ids.add(t.participantId);
           }
           const missing = Array.from(ids).filter(id => id && !namesMap[id]);
           if (missing.length) {
