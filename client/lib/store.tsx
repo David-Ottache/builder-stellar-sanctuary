@@ -175,6 +175,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     }
   });
 
+  // persist pending trip to sessionStorage so it survives navigation/refresh and is available
+  React.useEffect(()=>{
+    try {
+      if (pendingTrip) sessionStorage.setItem('ride.pending', JSON.stringify(pendingTrip));
+      else sessionStorage.removeItem('ride.pending');
+    } catch(e) { /* ignore */ }
+  }, [pendingTrip]);
+
   const [drivers, setDrivers] = useState<DriverInfo[]>(MOCK_DRIVERS);
 
   const setOnboarding = (updates: Partial<UserProfile>) =>
