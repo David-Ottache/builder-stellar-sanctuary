@@ -50,12 +50,90 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
           const lng = ev.latLng.lng();
           if (onPickDestination) onPickDestination({ lat, lng });
         });
+
+        // presence polling and markers
+        try {
+          const markersById: Record<string, any> = {};
+          markersRef.current = [];
+
+          const renderPresence = (presence: any[]) => {
+            if (!mapRef.current) return;
+            // remove markers not present
+            const keep = new Set(presence.map(p=>String(p.id)));
+            Object.keys(markersById).forEach(k => { if (!keep.has(k)) { markersById[k].setMap(null); delete markersById[k]; } });
+
+            presence.forEach((p:any) => {
+              if (!p.lat || !p.lng) return;
+              const id = String(p.id);
+              const pos = new google.maps.LatLng(p.lat, p.lng);
+              if (markersById[id]) {
+                markersById[id].setPosition(pos);
+              } else {
+                const m = new google.maps.Marker({ position: pos, map: mapRef.current, title: id, label: { text: id, color: '#fff' }, icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: p.online ? '#0ea5a5' : '#888', fillOpacity: 1, scale: 7, strokeColor: '#fff', strokeWeight: 2 } });
+                markersById[id] = m;
+              }
+            });
+
+            // convert to array for cleanup reference
+            markersRef.current = Object.values(markersById);
+          };
+
+          let pollInterval: any = null;
+
+          const fetchPresence = async () => {
+            try {
+              const hdr = {} as any;
+              const sessionRaw = sessionStorage.getItem('session.user');
+              if (sessionRaw) {
+                try { hdr['x-user-id'] = JSON.parse(sessionRaw).id; } catch(e){}
+              }
+              const res = await fetch('/api/presence', { headers: hdr });
+              if (!res.ok) return;
+              const data = await res.json().catch(()=>null);
+              if (!data) return;
+              renderPresence(data.presence || []);
+            } catch (e) { console.warn('fetchPresence failed', e); }
+          };
+
+          // start polling
+          await fetchPresence();
+          pollInterval = window.setInterval(fetchPresence, 5000);
+
+          // geolocation watch to post presence
+          let watchId: number | null = null;
+          if (navigator.geolocation) {
+            watchId = navigator.geolocation.watchPosition(async (pos) => {
+              try {
+                const lat = pos.coords.latitude; const lng = pos.coords.longitude;
+                const sessionRaw = sessionStorage.getItem('session.user');
+                let userId: string | null = null;
+                if (sessionRaw) {
+                  try { userId = JSON.parse(sessionRaw).id; } catch(e){}
+                }
+                if (!userId) return;
+                await fetch('/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': userId }, body: JSON.stringify({ id: userId, lat, lng, online: true }) }).catch(()=>{});
+              } catch (e) { console.warn('watchPosition post failed', e); }
+            }, (err)=>{ /* ignore */ }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
+          }
+
+          // cleanup on unmount
+          (mapRef.current as any).__presenceCleanup = () => {
+            try { if (pollInterval) window.clearInterval(pollInterval); } catch(e){}
+            try { if (watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(watchId); } catch(e){}
+            try { Object.values(markersById).forEach((m:any)=>m.setMap(null)); } catch(e){}
+          };
+
+        } catch (e) { /* swallow presence init errors */ }
+
       } catch (e) {
         console.warn('Failed loading Google Maps', e);
       }
     })();
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      try { if (mapRef.current && (mapRef.current as any).__presenceCleanup) (mapRef.current as any).__presenceCleanup(); } catch(e){}
+    };
   }, [googleKey]);
 
   // synchronize markers from pickup/destination when not using google maps
