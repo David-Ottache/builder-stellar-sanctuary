@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
 import { useState } from "react";
+import Swal from 'sweetalert2';
 
 export default function UserRegisterContact() {
   const { onboarding, setOnboarding } = useAppStore();
@@ -12,6 +13,9 @@ export default function UserRegisterContact() {
   const nav = useNavigate();
 
   const continueToDetails = () => {
+    if (!email || !email.trim()) return Swal.fire('Missing field', 'Please enter your email address', 'warning');
+    if (!phone || !phone.trim()) return Swal.fire('Missing field', 'Please enter your mobile number', 'warning');
+    if (!agree) return Swal.fire('Agreement required', 'You must agree to the terms to continue', 'warning');
     setOnboarding({ email, phone });
     nav("/user/register/details");
   };
