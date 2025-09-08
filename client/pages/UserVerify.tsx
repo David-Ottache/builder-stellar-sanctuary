@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { safeFetch, haversineKm } from "@/lib/utils";
-import { RATES_PER_KM } from "@/components/app/VehicleSelector";
+import { RATES_PER_KM, computeFare } from "@/components/app/VehicleSelector";
 
 export default function UserVerify() {
   const { pendingTrip, selectDriver, upsertDriver, drivers } = useAppStore();
