@@ -106,7 +106,7 @@ export default function UserDocuments() {
               let res: Response | null = null;
 
               try {
-                res = await fetch(primary, {
+                res = await deferFetch(primary, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(payload),
@@ -114,14 +114,14 @@ export default function UserDocuments() {
               } catch (err) {
                 console.warn('Primary fetch failed, attempting fallback', err);
                 try {
-                  res = await fetch(fallback, {
+                  res = await deferFetch(fallback, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                   });
                 } catch (err2) {
                   console.error('Fallback fetch failed', err2);
-                  await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'Network error. Could not reach server.' });
+                  await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'Network error. Could not reach server. ' + String(err2?.message || err2) });
                   throw err2;
                 }
               }
