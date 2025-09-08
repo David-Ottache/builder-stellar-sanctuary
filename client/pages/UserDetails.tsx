@@ -120,13 +120,15 @@ export default function UserDetails() {
         <div className="mt-4 flex gap-3">
           <Button className="h-12 flex-1 rounded-full" onClick={async () => {
               // determine fee using pending trip coords and vehicle type
-            const rates: Record<string, number> = { go: 100, comfort: 400, xl: 600 };
+            import("@/components/app/VehicleSelector").then(({ RATES_PER_KM }) => {});
             const vehicleId = (pendingTrip?.vehicle as string) || 'go';
             let distance = 0;
             if (pendingTrip?.pickupCoords && pendingTrip?.destinationCoords) {
               try { distance = haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords); } catch (e) { distance = 0; }
             }
-            const rate = rates[vehicleId] ?? 100;
+            // load rates from VehicleSelector to keep a single source of truth
+            const rates = (await import("@/components/app/VehicleSelector")).RATES_PER_KM as Record<string, number>;
+            const rate = rates[vehicleId] ?? 200;
             // ensure minimum fee of 1 to avoid server-side 'amount must be positive' errors
             const rawFee = Math.round(rate * distance);
             const fee = Math.max(1, rawFee);
