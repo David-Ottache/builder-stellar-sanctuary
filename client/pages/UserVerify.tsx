@@ -261,7 +261,7 @@ export default function UserVerify() {
             {(() => {
               const vehicleId = (pendingTrip.vehicle as string) || 'go';
               const distance = (pendingTrip.pickupCoords && pendingTrip.destinationCoords) ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : null;
-              const fee = distance !== null ? Math.max(1, Math.round((RATES_PER_KM[vehicleId as keyof typeof RATES_PER_KM] ?? 200) * distance)) : null;
+              const fee = distance !== null ? computeFare(distance, vehicleId as any) : null;
               return (
                 <div className="text-neutral-700">Amount: {fee !== null ? `₦${fee.toLocaleString()}` : 'TBD'}</div>
               );
