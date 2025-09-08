@@ -60,15 +60,15 @@ export default function UserDocuments() {
             mergeOnboardingToDriver(updates);
             let redirected = false;
             try {
-              const origin = window.location.origin;
-              const primary = `${origin}/api/users/register`;
-              const fallback = `${origin}/.netlify/functions/api/users/register`;
+              // Use relative endpoints so requests go through the current site/proxy and avoid cross-origin failures
+              const primary = `/api/users/register`;
+              const fallback = `/.netlify/functions/api/users/register`;
 
-              // quick connectivity check (GET /api/ping)
-              const pingPrimary = await fetch(`${origin}/api/ping`).catch(()=>null);
-              const pingFallback = await fetch(`${origin}/.netlify/functions/api/ping`).catch(()=>null);
+              // quick connectivity check (GET /api/ping) using relative paths
+              const pingPrimary = await fetch(`/api/ping`).catch(()=>null);
+              const pingFallback = await fetch(`/.netlify/functions/api/ping`).catch(()=>null);
               if (!pingPrimary && !pingFallback) {
-                await Swal.fire({ icon: 'error', title: 'Network error', text: `Could not reach API endpoints. Tried:\n${primary}\n${fallback}` });
+                await Swal.fire({ icon: 'error', title: 'Network error', text: `Could not reach API endpoints. Tried relative paths to the current origin.` });
                 throw new Error('API unreachable');
               }
 
