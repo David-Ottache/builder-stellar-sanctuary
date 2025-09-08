@@ -28,6 +28,36 @@ export default function Index() {
 
   const distanceKm = (pickupCoords && destinationCoords) ? haversineKm(pickupCoords, destinationCoords) : null;
 
+  // When user types a destination, attempt to geocode it (pin on map) using Google Maps Geocoder
+  useEffect(() => {
+    if (!destination || destination.trim().length === 0) {
+      setDestinationCoords(null);
+      return;
+    }
+
+    let mounted = true;
+    const timeout = setTimeout(async () => {
+      try {
+        const g = (window as any).google;
+        if (!g || !g.maps || !g.maps.Geocoder) return;
+        const geocoder = new g.maps.Geocoder();
+        geocoder.geocode({ address: destination }, (results: any, status: any) => {
+          try {
+            if (!mounted) return;
+            if (status === 'OK' && results && results[0] && results[0].geometry && results[0].geometry.location) {
+              const loc = results[0].geometry.location;
+              setDestinationCoords({ lat: loc.lat(), lng: loc.lng() });
+            }
+          } catch (e) { /* ignore geocode parse errors */ }
+        });
+      } catch (e) {
+        // geocoding failed; ignore
+      }
+    }, 600);
+
+    return () => { mounted = false; clearTimeout(timeout); };
+  }, [destination]);
+
   const handleStart = () => {
     if (!destination) { toast.error('Please enter a destination'); return; }
     if (!destinationCoords) { toast.error('Please tap the map to choose a destination'); return; }
