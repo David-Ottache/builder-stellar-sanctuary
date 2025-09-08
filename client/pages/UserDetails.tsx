@@ -137,7 +137,7 @@ export default function UserDetails() {
                 return;
               }
 
-              const wallet = Number(appUser.walletBalance ?? appUser.wallet ?? appUser.balance ?? 0);
+              const wallet = Number(appUser.walletBalance ?? (appUser.wallet && (appUser.wallet as any).balance) ?? (appUser as any).balance ?? 0);
               if (wallet >= fee) {
                 const newBalance = wallet - fee;
                 // fetch latest balance from server to avoid stale client state
