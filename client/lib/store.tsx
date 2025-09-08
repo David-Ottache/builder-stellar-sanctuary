@@ -144,6 +144,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     try { const raw = localStorage.getItem('trips.history'); return raw ? (JSON.parse(raw) as TripDetails[]) : []; } catch { return []; }
   });
   const _setTrips = (updates: TripDetails[]) => setTrips(updates);
+  // rating prompt state for post-trip rating
+  const [ratingPrompt, setRatingPrompt] = useState<{ open: boolean; driverId?: string | null; tripId?: string | null }>({ open: false });
   const [contacts, setContacts] = useState<EmergencyContact[]>(() => {
     try {
       const raw = localStorage.getItem("safety.contacts");
