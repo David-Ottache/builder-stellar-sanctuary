@@ -52,7 +52,7 @@ export default function Trips() {
         return;
       }
       // update local trips
-      setTrips((prev)=> prev.map(t=> t.id === tripId ? data.trip : t));
+      setTrips(trips.map(t=> t.id === tripId ? data.trip : t));
       alert('Trip ended');
     } catch (e) {
       console.warn('endTrip failed', e);
