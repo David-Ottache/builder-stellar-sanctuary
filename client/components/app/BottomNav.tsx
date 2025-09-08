@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Home, Clock, Wallet, User, Scan } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAppStore } from "@/lib/store";
 
 interface Props {
   className?: string;
@@ -16,6 +17,7 @@ const items = [
 
 export default function BottomNav({ className }: Props) {
   const location = useLocation();
+  const { trip, endTrip } = useAppStore();
   return (
     <nav
       className={cn(
@@ -43,6 +45,16 @@ export default function BottomNav({ className }: Props) {
           </NavLink>
         );
       })}
+      {trip && (
+        <button
+          onClick={() => {
+            try {
+              if (window.confirm('End current trip?')) endTrip();
+            } catch (e) { console.warn('failed ending trip from nav', e); }
+          }}
+          className="absolute -top-10 right-4 rounded-full bg-red-600 text-white px-3 py-2 text-sm"
+        >End Trip</button>
+      )}
     </nav>
   );
 }
