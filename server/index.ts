@@ -163,6 +163,7 @@ export async function createServer() {
   app.get('/api/trips/:userId', tripController.listTrips as any);
   app.get('/api/trips/driver/:driverId', tripController.listTripsByDriver as any);
   app.post('/api/trips/:id/end', tripController.endTrip as any);
+  app.post('/api/trips/:id/rate', tripController.rateTrip as any);
 
   // Presence (online users/drivers)
   const presenceController = await import('./controllers/presenceController');
