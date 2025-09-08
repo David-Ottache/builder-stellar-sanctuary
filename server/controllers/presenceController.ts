@@ -99,3 +99,81 @@ export const listPresence: RequestHandler = async (req, res) => {
     res.status(500).json({ error: 'Internal error' });
   }
 };
+
+// Server-sent events stream for low-latency presence updates
+export const streamPresence: RequestHandler = async (req, res) => {
+  try {
+    // set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    if (!isInitialized()) {
+      try { await initializeFirebaseAdmin(); } catch (e) { /* ignore */ }
+    }
+    const db = getFirestore();
+    const cutoff = Date.now() - PRESENCE_TTL_MS;
+
+    const send = (obj: any) => {
+      try { res.write(`data: ${JSON.stringify(obj)}\n\n`); } catch (e) {}
+    };
+
+    let unsubscribe: any = null;
+    let intervalId: any = null;
+
+    if (db) {
+      try {
+        const q = db.collection('presence');
+        unsubscribe = q.onSnapshot((snap: any) => {
+          try {
+            const items: any[] = [];
+            snap.forEach((d: any) => {
+              const data = d.data() || {};
+              const updated = Date.parse(data.updatedAt || '') || 0;
+              if (updated >= (Date.now() - PRESENCE_TTL_MS)) {
+                items.push({ id: d.id, ...data });
+              } else {
+                try { db.collection('presence').doc(d.id).delete().catch(()=>{}); } catch (e) {}
+              }
+            });
+            send({ presence: items });
+          } catch (e) { /* ignore snapshot processing errors */ }
+        }, (err: any) => {
+          // on error, send a ping with error
+          send({ error: String(err?.message || err) });
+        });
+      } catch (e) {
+        console.warn('Failed to create firestore snapshot listener', e);
+      }
+    }
+
+    // Fallback: poll in-memory presence every 3s
+    if (!unsubscribe) {
+      const fetchAndSend = () => {
+        const items = Array.from(inMemoryPresence.values()).filter((p:any) => {
+          const ts = Date.parse(p.updatedAt || '') || 0;
+          return ts >= (Date.now() - PRESENCE_TTL_MS);
+        });
+        send({ presence: items });
+      };
+      // send initial
+      fetchAndSend();
+      intervalId = setInterval(fetchAndSend, 3000);
+    }
+
+    // keep connection alive with periodic comments
+    const keepAlive = setInterval(() => { try { res.write(': keep-alive\n\n'); } catch (e) {} }, 25000);
+
+    req.on('close', () => {
+      try { if (unsubscribe) unsubscribe(); } catch (e) {}
+      try { if (intervalId) clearInterval(intervalId); } catch (e) {}
+      try { clearInterval(keepAlive); } catch (e) {}
+      try { res.end(); } catch (e) {}
+    });
+
+  } catch (e) {
+    console.error('streamPresence error', e);
+    try { res.status(500).end(); } catch (err) {}
+  }
+};
