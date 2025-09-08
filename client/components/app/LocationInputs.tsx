@@ -20,6 +20,9 @@ export default function LocationInputs({
   setDestination,
   onSwap,
   className,
+  onPickPickup,
+  onPickDestination,
+  onUseCurrentLocation,
 }: Props) {
   return (
     <div
