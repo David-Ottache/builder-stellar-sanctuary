@@ -35,6 +35,24 @@ import { AppStoreProvider } from "./lib/store";
 
 const queryClient = new QueryClient();
 
+// Initialize Sentry (if DSN provided) — dynamic import to avoid hard dependency
+if (import.meta.env.VITE_SENTRY_DSN) {
+  (async () => {
+    try {
+      const Sentry = await import('@sentry/react');
+      const BrowserTracing = (await import('@sentry/tracing')).BrowserTracing;
+      Sentry.init({
+        dsn: import.meta.env.VITE_SENTRY_DSN,
+        integrations: [new BrowserTracing()],
+        tracesSampleRate: 0.2,
+      });
+      console.log('Sentry initialized (client)');
+    } catch (e) {
+      console.warn('Failed to init Sentry (client):', e);
+    }
+  })();
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
