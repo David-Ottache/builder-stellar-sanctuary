@@ -149,6 +149,8 @@ export async function createServer() {
   const presenceController = await import('./controllers/presenceController');
   app.post('/api/presence', presenceController.setPresence as any);
   app.get('/api/presence', presenceController.listPresence as any);
+  // SSE stream for low-latency presence updates
+  app.get('/api/presence/stream', presenceController.streamPresence as any);
 
   // Lookup endpoint: search both drivers and users by id (document id or stored 'id' field)
   const lookupController = await import('./controllers/lookupController');
