@@ -312,7 +312,7 @@ export default function Wallet() {
                 <div className="flex-1">
                   <div className="text-sm font-semibold">{title}</div>
                   {(!(t.from && t.to) && !(t.type === 'topup')) && (
-                    <div className="text-xs text-neutral-600">{namesMap[isIncoming ? t.from : t.to]?.name || ''}</div>
+                    <div className="text-xs text-neutral-600">{t.participantId ? (namesMap[t.participantId]?.name || '') : ''}</div>
                   )}
                   <div className="text-xs text-neutral-600">{t.tripId ? `Trip ${t.tripId} • ` : ''}{new Date(t.ts).toLocaleString()}</div>
                 </div>
