@@ -80,26 +80,41 @@ export default function Wallet() {
           }
 
           // For trip payouts without 'from', try to resolve passenger by tripId
-          for (const t of data.transactions) {
-            if (!t.from && t.tripId) {
+          for (const t of annotated) {
+            if (!t.participantId && t.tripId) {
               try {
                 const r = await fetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
                 if (r.ok) {
                   const td = await r.json().catch(()=>null);
                   const trip = td?.trip;
-                  if (trip && trip.userId) {
-                    const uid = trip.userId as string;
-                    if (!namesMap[uid]) {
-                      try {
-                        const ru = await fetch(`/api/users/${encodeURIComponent(uid)}`);
-                        if (ru.ok) {
-                          const ud = await ru.json().catch(()=>null);
-                          const user = ud?.user || ud;
-                          const name = user ? `${user.firstName||''} ${user.lastName||''}`.trim() : (ud.firstName || ud.name || uid);
-                          const avatar = (user && (user.profilePhoto || user.avatar || user.photoUrl)) || undefined;
-                          setNamesMap(prev => ({ ...prev, [uid]: { name: name || uid, avatar } }));
-                        }
-                      } catch(e){}
+                  if (trip) {
+                    const uid = trip.userId as string || trip.driverId as string || null;
+                    if (uid) {
+                      // set namesMap for uid if missing
+                      if (!namesMap[uid]) {
+                        try {
+                          const ru = await fetch(`/api/users/${encodeURIComponent(uid)}`);
+                          if (ru.ok) {
+                            const ud = await ru.json().catch(()=>null);
+                            const user = ud?.user || ud;
+                            const name = user ? `${user.firstName||''} ${user.lastName||''}`.trim() : (ud.firstName || ud.name || uid);
+                            const avatar = (user && (user.profilePhoto || user.avatar || user.photoUrl)) || undefined;
+                            setNamesMap(prev => ({ ...prev, [uid]: { name: name || uid, avatar } }));
+                          } else {
+                            // try drivers
+                            const rd = await fetch(`/api/drivers/${encodeURIComponent(uid)}`);
+                            if (rd.ok) {
+                              const dd = await rd.json().catch(()=>null);
+                              const driver = dd?.driver;
+                              const name = driver ? `${driver.firstName||''} ${driver.lastName||''}`.trim() : uid;
+                              const avatar = driver ? (driver.avatar || driver.profilePhoto) : undefined;
+                              setNamesMap(prev => ({ ...prev, [uid]: { name: name || uid, avatar } }));
+                            }
+                          }
+                        } catch(e){}
+                      }
+                      // annotate transaction participantId
+                      setTransactions(prev => prev.map(pt => pt.id === t.id ? { ...pt, participantId: uid } : pt));
                     }
                   }
                 }
