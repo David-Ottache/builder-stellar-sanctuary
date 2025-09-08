@@ -84,7 +84,7 @@ export default function Wallet() {
           for (const t of annotated) {
             if (!t.participantId && t.tripId) {
               try {
-                const r = await safeFetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
+                const r = await cachedFetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
                 if (r && r.ok) {
                   const td = await r.json().catch(()=>null);
                   const trip = td?.trip;
