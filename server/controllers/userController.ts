@@ -6,6 +6,9 @@ import bcrypt from 'bcryptjs';
 
 export const registerUser: RequestHandler = async (req, res) => {
   try {
+    // log incoming body keys for debugging timeouts and partial payloads
+    try { console.log('/api/users/register received body keys:', typeof req.body === 'object' ? Object.keys(req.body).slice(0,10) : typeof req.body); } catch (e) {}
+
     const {
       firstName,
       lastName,
