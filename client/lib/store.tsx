@@ -52,7 +52,7 @@ export interface TripDetails {
   status?: 'ongoing' | 'completed' | 'cancelled';
   startedAt?: string;
   endedAt?: string;
-  vehicle?: 'go' | 'comfort' | 'xl';
+  vehicle?: 'go' | 'comfort' | 'xl' | 'prestige';
   distanceKm?: number;
   rating?: number;
 }
