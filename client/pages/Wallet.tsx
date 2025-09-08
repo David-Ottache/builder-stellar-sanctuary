@@ -301,7 +301,7 @@ export default function Wallet() {
                   <div className="text-sm font-semibold">T</div>
                 ) : (
                   (() => {
-                    const idToShow = isIncoming ? t.from : isOutgoing ? t.to : (t.from || t.to);
+                    const idToShow = t.participantId || (isIncoming ? t.from : isOutgoing ? t.to : (t.from || t.to));
                     const p = idToShow ? namesMap[idToShow] : undefined;
                     if (p && p.avatar) return <img src={p.avatar} alt={p.name} className="h-full w-full object-cover" />;
                     const initials = p && p.name ? p.name.split(' ').map(s=>s[0]).join('').substring(0,2).toUpperCase() : (idToShow ? String(idToShow).substring(0,2).toUpperCase() : '?');
