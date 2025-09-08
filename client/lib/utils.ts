@@ -15,6 +15,40 @@ export async function safeFetch(input: RequestInfo, init?: RequestInit) {
   }
 }
 
+// Simple GET cache using sessionStorage. Returns Response-like object with json() method.
+export async function cachedFetch(input: string, init?: RequestInit, ttl = 5 * 60 * 1000) {
+  // only cache GET requests
+  const method = (init && init.method) ? init.method.toUpperCase() : 'GET';
+  if (method !== 'GET') return safeFetch(input, init as any);
+  try {
+    const key = `cache:${input}`;
+    const raw = sessionStorage.getItem(key);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.ts && (Date.now() - parsed.ts) < ttl && parsed.data !== undefined) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => parsed.data,
+            text: async () => JSON.stringify(parsed.data),
+          } as unknown as Response;
+        }
+      } catch (e) { /* ignore parse errors */ }
+    }
+  } catch (e) { /* ignore session failures */ }
+
+  const res = await safeFetch(input, init);
+  if (!res || !res.ok) return res;
+  try {
+    const data = await res.clone().json().catch(()=>null);
+    try {
+      sessionStorage.setItem(`cache:${input}`, JSON.stringify({ ts: Date.now(), data }));
+    } catch (e) { /* ignore storage errors */ }
+  } catch (e) { /* ignore json parse */ }
+  return res;
+}
+
 export function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const toRad = (v: number) => (v * Math.PI) / 180;
   const R = 6371; // Earth radius in km
