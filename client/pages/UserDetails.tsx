@@ -184,14 +184,14 @@ export default function UserDetails() {
 
                 // start the trip with computed fee
                 startTrip({ pickup: pendingTrip?.pickup ?? 'Current location', destination: pendingTrip?.destination ?? 'TBD', driverId: user.id, fee });
-                navigate('/trip/summary');
+                navigate('/');
               } else {
                 await Swal.fire({ icon: 'error', title: 'Insufficient funds', text: 'You have insufficient funds in your wallet. Please top up or choose another payment method.' });
               }
             } else {
               // card payment - proceed without wallet deduction
               startTrip({ pickup: pendingTrip?.pickup ?? 'Current location', destination: pendingTrip?.destination ?? 'TBD', driverId: user.id, fee });
-              navigate('/trip/summary');
+              navigate('/');
             }
           }}>Request</Button>
         </div>
