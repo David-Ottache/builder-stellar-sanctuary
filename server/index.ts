@@ -125,6 +125,8 @@ export async function createServer() {
 
   // Get driver
   app.get('/api/drivers/:id', getDriver as any);
+  // Rate driver
+  app.post('/api/drivers/:id/rate', (await import('./controllers/driverController')).rateDriver as any);
 
   // Contacts (per-user emergency contacts)
   app.post('/api/users/:id/contacts', contactsController.addContact as any);
