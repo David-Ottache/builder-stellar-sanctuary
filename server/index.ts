@@ -161,6 +161,7 @@ export async function createServer() {
   const tripController = await import('./controllers/tripController');
   app.post('/api/trips', tripController.createTrip as any);
   app.get('/api/trips/:userId', tripController.listTrips as any);
+  app.get('/api/trip/:id', tripController.getTripById as any);
   app.get('/api/trips/driver/:driverId', tripController.listTripsByDriver as any);
   app.post('/api/trips/:id/end', tripController.endTrip as any);
   app.post('/api/trips/:id/rate', tripController.rateTrip as any);
