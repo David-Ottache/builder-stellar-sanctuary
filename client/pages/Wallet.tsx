@@ -62,8 +62,8 @@ export default function Wallet() {
                 }
               } catch(e){}
               try {
-                const r2 = await fetch(`/api/drivers/${encodeURIComponent(id)}`);
-                if (r2.ok) {
+                const r2 = await safeFetch(`/api/drivers/${encodeURIComponent(id)}`);
+                if (r2 && r2.ok) {
                   const dd = await r2.json().catch(()=>null);
                   if (dd && dd.driver) {
                     const driver = dd.driver;
