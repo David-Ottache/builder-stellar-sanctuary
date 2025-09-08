@@ -96,7 +96,7 @@ export default function Trips() {
                     )}
                   </div>
                   {/* only allow drivers to end trips from this UI */}
-                  { (user && (user.role === 'driver' || !!user.vehicleType) && t.status !== 'completed') ? (
+                  { (user && !(user.role === 'driver' || !!user.vehicleType) && t.status !== 'completed') ? (
                     <button className="rounded-xl bg-red-500 px-3 py-2 text-white" onClick={()=>endTrip(t.id)}>End Trip</button>
                   ) : null}
                 </div>
