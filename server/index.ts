@@ -60,6 +60,23 @@ export async function createServer() {
     }
   } catch (e) { console.warn('Sentry init check failed', e); }
 
+  // Ensure firebase-admin is attempted before handling API requests (idempotent)
+  app.use(async (req, _res, next) => {
+    try {
+      if (req.path && req.path.startsWith('/api')) {
+        try {
+          const { initializeFirebaseAdmin, isInitialized } = await import('./config/firebaseAdmin');
+          if (!isInitialized()) {
+            await initializeFirebaseAdmin();
+          }
+        } catch (e) {
+          console.warn('Background firebase init failed in middleware', e);
+        }
+      }
+    } catch (e) {}
+    next();
+  });
+
   // simple request logger for /api calls
   app.use((req, _res, next) => {
     try {
