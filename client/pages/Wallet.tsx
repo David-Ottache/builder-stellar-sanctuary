@@ -25,7 +25,7 @@ export default function Wallet() {
             }
           } catch(e) { console.warn('failed fetching driver data', e); }
         } else {
-          setDisplayBalance(Number(appUser.walletBalance ?? appUser.wallet ?? appUser.balance ?? 0));
+          setDisplayBalance(Number(appUser.walletBalance ?? (appUser.wallet && (appUser.wallet as any).balance) ?? (appUser as any).balance ?? 0));
         }
 
         const res = await fetch(`/api/wallet/transactions/${appUser.id}`);
