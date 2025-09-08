@@ -14,6 +14,15 @@ export const lookupById: RequestHandler = async (req, res) => {
     console.debug('lookupById called for id', id);
     if (!id) return res.status(400).json({ error: 'id required' });
 
+    // check in-memory cache first
+    try {
+      const cached = cache.get(String(id));
+      if (cached && (Date.now() - cached.ts) < CACHE_TTL) {
+        console.debug('lookupById cache hit for', id);
+        return res.json(cached.data);
+      }
+    } catch (e) { /* ignore cache errors */ }
+
     if (!isInitialized()) {
       const init = await initializeFirebaseAdmin();
       if (!init.initialized) {
@@ -33,7 +42,9 @@ export const lookupById: RequestHandler = async (req, res) => {
     if (driverDoc.exists) {
       const data: any = driverDoc.data();
       console.debug('lookupById found driver by doc id', driverDoc.id);
-      return res.json({ driver: { id: driverDoc.id, ...data } });
+      const out = { driver: { id: driverDoc.id, ...data } };
+      try { setCache(driverDoc.id, out); } catch (e) {}
+      return res.json(out);
     }
 
     // try users by doc id
@@ -41,7 +52,9 @@ export const lookupById: RequestHandler = async (req, res) => {
     if (userDoc.exists) {
       const data: any = userDoc.data();
       console.debug('lookupById found user by doc id', userDoc.id);
-      return res.json({ user: { id: userDoc.id, ...data } });
+      const out = { user: { id: userDoc.id, ...data } };
+      try { setCache(userDoc.id, out); } catch (e) {}
+      return res.json(out);
     }
 
     // fallback: query drivers where stored 'id' field equals param
@@ -49,7 +62,9 @@ export const lookupById: RequestHandler = async (req, res) => {
     if (!dq.empty) {
       const d = dq.docs[0];
       console.debug('lookupById found driver by id field', d.id);
-      return res.json({ driver: { id: d.id, ...(d.data() as any) } });
+      const out = { driver: { id: d.id, ...(d.data() as any) } };
+      try { setCache(d.id, out); } catch (e) {}
+      return res.json(out);
     }
 
     // fallback: query users where stored 'id' field equals param
@@ -57,7 +72,9 @@ export const lookupById: RequestHandler = async (req, res) => {
     if (!uq.empty) {
       const u = uq.docs[0];
       console.debug('lookupById found user by id field', u.id);
-      return res.json({ user: { id: u.id, ...(u.data() as any) } });
+      const out = { user: { id: u.id, ...(u.data() as any) } };
+      try { setCache(u.id, out); } catch (e) {}
+      return res.json(out);
     }
 
     console.debug('lookupById not found', id);
