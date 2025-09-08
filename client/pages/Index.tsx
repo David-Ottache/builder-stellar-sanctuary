@@ -139,7 +139,6 @@ export default function Index() {
             setPickup(destination);
             setDestination(pickup);
           }}
-          onPickPickup={() => setPickMode('pickup')}
           onPickDestination={() => setPickMode('destination')}
           onUseCurrentLocation={() => {
             if (!navigator.geolocation) { setPickup('Current location'); return; }
