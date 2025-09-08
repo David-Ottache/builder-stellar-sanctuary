@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { safeFetch } from "@/lib/utils";
 
 export default function UserVerify() {
-  const { pendingTrip, selectDriver, upsertDriver } = useAppStore();
+  const { pendingTrip, selectDriver, upsertDriver, drivers } = useAppStore();
   const [code, setCode] = useState("");
   const [result, setResult] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
@@ -129,6 +129,13 @@ export default function UserVerify() {
         }
       }
     } catch (e) {}
+
+    // quick local store lookup to speed up checks
+    const storeMatch = (drivers || []).find(d => (d.id && d.id.toLowerCase() === value.toLowerCase()) );
+    if (storeMatch) {
+      setResult({ id: storeMatch.id, name: storeMatch.name, avatar: storeMatch.avatar || 'https://i.pravatar.cc/80', rides: storeMatch.rides || 0, rating: storeMatch.rating || 0 });
+      return;
+    }
 
     setLoading(true);
     const origin = window.location.origin;
