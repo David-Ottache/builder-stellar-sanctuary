@@ -30,7 +30,7 @@ export default function Wallet() {
           setDisplayBalance(Number(appUser.walletBalance ?? (appUser.wallet && (appUser.wallet as any).balance) ?? (appUser as any).balance ?? 0));
         }
 
-        const res = await safeFetch(`/api/wallet/transactions/${appUser.id}`);
+        const res = await cachedFetch(`/api/wallet/transactions/${appUser.id}`);
         if (!res || !res.ok) return;
         const data = await res.json().catch(()=>null);
         if (data?.transactions) {
