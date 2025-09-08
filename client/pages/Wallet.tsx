@@ -44,6 +44,7 @@ export default function Wallet() {
           if (missing.length) {
             const mapUpdates: Record<string,{ name: string; avatar?: string }> = {};
             await Promise.all(missing.map(async (id)=>{
+              // if id looks like 'trip:<tripId>' skip — we'll handle per-transaction below
               try {
                 // try user endpoint
                 const r1 = await fetch(`/api/users/${encodeURIComponent(id)}`);
@@ -75,6 +76,34 @@ export default function Wallet() {
               mapUpdates[id] = { name: id, avatar: undefined };
             }));
             setNamesMap((prev)=> ({ ...prev, ...mapUpdates }));
+          }
+
+          // For trip payouts without 'from', try to resolve passenger by tripId
+          for (const t of data.transactions) {
+            if (!t.from && t.tripId) {
+              try {
+                const r = await fetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
+                if (r.ok) {
+                  const td = await r.json().catch(()=>null);
+                  const trip = td?.trip;
+                  if (trip && trip.userId) {
+                    const uid = trip.userId as string;
+                    if (!namesMap[uid]) {
+                      try {
+                        const ru = await fetch(`/api/users/${encodeURIComponent(uid)}`);
+                        if (ru.ok) {
+                          const ud = await ru.json().catch(()=>null);
+                          const user = ud?.user || ud;
+                          const name = user ? `${user.firstName||''} ${user.lastName||''}`.trim() : (ud.firstName || ud.name || uid);
+                          const avatar = (user && (user.profilePhoto || user.avatar || user.photoUrl)) || undefined;
+                          setNamesMap(prev => ({ ...prev, [uid]: { name: name || uid, avatar } }));
+                        }
+                      } catch(e){}
+                    }
+                  }
+                }
+              } catch(e){}
+            }
           }
         }
       } catch(e){ console.warn('failed fetching tx', e); }
