@@ -67,13 +67,20 @@ export default function UserDocuments() {
               // helper to avoid synchronous fetch wrapper issues (e.g., FullStory) by deferring call into Promise chain
               const deferFetch = (input: RequestInfo, init?: RequestInit) => new Promise<Response>((resolve, reject) => {
                 try {
-                  Promise.resolve().then(() => fetch(input, init)).then(resolve).catch(reject);
+                  // schedule in macrotask to avoid sync instrumentation issues
+                  setTimeout(() => {
+                    try {
+                      fetch(input, init).then(resolve).catch(reject);
+                    } catch (e) { reject(e); }
+                  }, 0);
                 } catch (e) { reject(e); }
               });
 
               // quick connectivity check (GET /api/ping) using relative paths
-              const pingPrimary = await deferFetch(`/api/ping`).catch(()=>null);
-              const pingFallback = await deferFetch(`/.netlify/functions/api/ping`).catch(()=>null);
+              console.log('User register: checking connectivity');
+              const pingPrimary = await deferFetch(`/api/ping`).catch((err)=>{ console.warn('pingPrimary err', err); return null; });
+              const pingFallback = await deferFetch(`/.netlify/functions/api/ping`).catch((err)=>{ console.warn('pingFallback err', err); return null; });
+              console.log('User register: ping results', !!pingPrimary, !!pingFallback);
               if (!pingPrimary && !pingFallback) {
                 await Swal.fire({ icon: 'error', title: 'Network error', text: `Could not reach API endpoints. Tried relative paths to the current origin.` });
                 throw new Error('API unreachable');
