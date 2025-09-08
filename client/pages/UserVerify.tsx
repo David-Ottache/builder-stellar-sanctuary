@@ -181,12 +181,26 @@ export default function UserVerify() {
           if (!data) continue;
           if (data.user) {
             const u = data.user;
-            setResult({ id: u.id, name: `${u.firstName||''} ${u.lastName||''}`.trim() || u.email || u.phone, avatar: u.profilePhoto || 'https://i.pravatar.cc/80', rides: u.rides || 0, rating: u.rating || 0 });
+            const out = { id: u.id, name: `${u.firstName||''} ${u.lastName||''}`.trim() || u.email || u.phone, avatar: u.profilePhoto || 'https://i.pravatar.cc/80', rides: u.rides || 0, rating: u.rating || 0 };
+            try {
+              const raw = sessionStorage.getItem('lookup.cache');
+              const parsed = raw ? JSON.parse(raw) : {};
+              parsed[String(u.id)] = { ts: Date.now(), data: out };
+              sessionStorage.setItem('lookup.cache', JSON.stringify(parsed));
+            } catch (e) {}
+            setResult(out);
             return;
           }
           if (data.driver) {
             const d = data.driver;
-            setResult({ id: d.id, name: `${d.firstName||''} ${d.lastName||''}`.trim() || d.email || d.phone, avatar: d.profilePhoto || 'https://i.pravatar.cc/80', rides: d.rides || 0, rating: d.rating || 0 });
+            const out = { id: d.id, name: `${d.firstName||''} ${d.lastName||''}`.trim() || d.email || d.phone, avatar: d.profilePhoto || 'https://i.pravatar.cc/80', rides: d.rides || 0, rating: d.rating || 0 };
+            try {
+              const raw = sessionStorage.getItem('lookup.cache');
+              const parsed = raw ? JSON.parse(raw) : {};
+              parsed[String(d.id)] = { ts: Date.now(), data: out };
+              sessionStorage.setItem('lookup.cache', JSON.stringify(parsed));
+            } catch (e) {}
+            setResult(out);
             return;
           }
         } catch (e) {
