@@ -88,6 +88,32 @@ export const listTripsByDriver: RequestHandler = async (req, res) => {
   }
 };
 
+export const rateTrip: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { stars } = req.body || {};
+    const s = Number(stars || 0);
+    if (!id) return res.status(400).json({ error: 'id required' });
+    if (!s || s < 1 || s > 5) return res.status(400).json({ error: 'stars must be 1-5' });
+
+    if (!isInitialized()) {
+      const init = await initializeFirebaseAdmin();
+      if (!init.initialized) return res.status(503).json({ error: 'database not available' });
+    }
+    const db = getFirestore();
+    if (!db) return res.status(503).json({ error: 'database not available' });
+
+    const tripRef = db.collection('trips').doc(id);
+    const tripDoc = await tripRef.get();
+    if (!tripDoc.exists) return res.status(404).json({ error: 'trip not found' });
+    await tripRef.update({ rating: s }).catch(()=>{});
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('rateTrip error', e);
+    return res.status(500).json({ error: 'Internal error' });
+  }
+};
+
 export const endTrip: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
