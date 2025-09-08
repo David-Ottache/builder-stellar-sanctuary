@@ -49,8 +49,8 @@ export default function Wallet() {
               // if id looks like 'trip:<tripId>' skip — we'll handle per-transaction below
               try {
                 // try user endpoint
-                const r1 = await fetch(`/api/users/${encodeURIComponent(id)}`);
-                if (r1.ok) {
+                const r1 = await safeFetch(`/api/users/${encodeURIComponent(id)}`);
+                if (r1 && r1.ok) {
                   const dd = await r1.json().catch(()=>null);
                   if (dd && (dd.user || dd.firstName || dd.name)) {
                     const user = dd.user || dd;
