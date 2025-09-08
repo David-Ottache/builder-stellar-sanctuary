@@ -52,38 +52,7 @@ export const registerUser: RequestHandler = async (req, res) => {
       otpExpires,
     });
 
-    // Persist to Firestore if available
-    try {
-      if (!isInitialized()) {
-        const init = await initializeFirebaseAdmin();
-        if (!init.initialized) {
-          console.log("Firestore not available after initialization attempt; skipping persistence");
-        }
-      }
-      const db = getFirestore();
-      if (db) {
-        // ensure walletBalance initialized
-        const docData = Object.fromEntries(Object.entries({ ...user, walletBalance: 10000 }).filter(([, v]) => v !== undefined));
-        const docRef = await db.collection("users").add(docData);
-        console.log("User persisted to Firestore with id", docRef.id);
-        // set the stored document's id field to the Firestore id to make it stable for lookups
-        try { await docRef.update({ id: docRef.id }); } catch (e) { console.warn('Failed to update user doc id field', e); }
-        // return the firestore doc id as id as well (so callers can use it)
-        return res.status(201).json({ message: "User registered", user: { id: docRef.id, firstName: user.firstName, lastName: user.lastName, phone: user.phone, countryCode: user.countryCode, walletBalance: 10000 } });
-      } else {
-        console.log("Firestore not available; skipping persistence");
-      }
-    } catch (e) {
-      console.warn("Failed to persist user to Firestore:", (e as Error).message || e);
-    }
-
-    // Send OTP SMS (non-blocking)
-    try {
-      await sendSMS(`${countryCode || ""}${phone}`, `Your verification code is ${otpCode}`);
-    } catch (e) {
-      console.warn('Failed sending OTP SMS', e);
-    }
-
+    // Send a minimal safe response immediately so the client feels snappy
     const safe = {
       id: user.id,
       firstName: user.firstName,
@@ -94,6 +63,44 @@ export const registerUser: RequestHandler = async (req, res) => {
     };
 
     res.status(201).json({ message: "User registered", user: safe });
+
+    // Persist to Firestore and send SMS in background (non-blocking)
+    (async () => {
+      try {
+        if (!isInitialized()) {
+          const init = await initializeFirebaseAdmin();
+          if (!init.initialized) {
+            console.log("Firestore not available after initialization attempt; skipping persistence");
+          }
+        }
+        const db = getFirestore();
+        if (db) {
+          const docData = Object.fromEntries(Object.entries({ ...user, walletBalance: 10000 }).filter(([, v]) => v !== undefined));
+          const docRef = await db.collection("users").add(docData);
+          console.log("User persisted to Firestore with id", docRef.id);
+          try { await docRef.update({ id: docRef.id }); } catch (e) { console.warn('Failed to update user doc id field', e); }
+
+          // warm lookup cache
+          try {
+            const lookup = await import('./lookupController');
+            if (lookup && typeof lookup.setCache === 'function') {
+              lookup.setCache(docRef.id, { user: { id: docRef.id, ...docData } });
+            }
+          } catch (e) { /* ignore */ }
+        } else {
+          console.log("Firestore not available; skipping persistence");
+        }
+      } catch (e) {
+        console.warn("Failed to persist user to Firestore (background):", (e as Error).message || e);
+      }
+
+      // Send OTP SMS (best-effort background)
+      try {
+        await sendSMS(`${countryCode || ""}${phone}`, `Your verification code is ${otpCode}`);
+      } catch (e) {
+        console.warn('Failed sending OTP SMS (background)', e);
+      }
+    })();
   } catch (err) {
     console.error("registerUser error", err);
     res.status(500).json({ error: "Internal server error" });
