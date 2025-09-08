@@ -119,7 +119,12 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
           // try SSE first
           try {
             if ((window as any).EventSource) {
-              es = new EventSource('/api/presence/stream');
+              try {
+                const origin = window.location.origin;
+                es = new EventSource(`${origin}/api/presence/stream`);
+              } catch(e) {
+                es = new EventSource('/api/presence/stream');
+              }
               es.onmessage = (ev: MessageEvent) => {
                 try {
                   const payload = JSON.parse(ev.data || '{}');
