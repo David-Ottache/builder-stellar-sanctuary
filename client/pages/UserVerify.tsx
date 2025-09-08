@@ -259,7 +259,8 @@ export default function UserVerify() {
           </div>
         )}
 
-        
+        <div className="mt-4 rounded-2xl border bg-white p-4">
+          
 
           <div className="mt-3 flex gap-2 items-center">
             <label className="flex-1 inline-flex items-center gap-2 rounded-xl border bg-neutral-100 px-3 py-2">
