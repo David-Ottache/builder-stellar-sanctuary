@@ -128,6 +128,8 @@ export default function UserDocuments() {
               let data: any = {};
               try { data = text ? JSON.parse(text) : {}; } catch { data = { text }; }
 
+              console.log('User register response', res ? res.status : 'no-res', data);
+
               if (!res.ok) {
                 const errMsg = data.error || data.message || data.text || 'Could not register your account. Please try again.';
                 console.warn('User register failed', res.status, errMsg);
