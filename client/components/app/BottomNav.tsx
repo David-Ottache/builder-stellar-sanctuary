@@ -17,7 +17,8 @@ const items = [
 
 export default function BottomNav({ className }: Props) {
   const location = useLocation();
-  const { trip, endTrip } = useAppStore();
+  const { trip, endTrip, user } = useAppStore();
+  const itemsToRender = items.filter(i => !(user && user.role === 'driver' && i.to === '/user/verify'));
   return (
     <nav
       className={cn(
@@ -27,7 +28,7 @@ export default function BottomNav({ className }: Props) {
       )}
       aria-label="Primary"
     >
-      {items.map(({ to, label, Icon }) => {
+      {itemsToRender.map(({ to, label, Icon }) => {
         const active = location.pathname === to;
         return (
           <NavLink
