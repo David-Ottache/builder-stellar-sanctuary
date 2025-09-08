@@ -85,7 +85,48 @@ export default function Index() {
 
   return (
     <Layout className="relative">
-      <MapView pickupCoords={pickupCoords} destinationCoords={destinationCoords} onPickDestination={(c)=> setDestinationCoords(c)} />
+      <MapView
+        pickupCoords={pickupCoords}
+        destinationCoords={destinationCoords}
+        onPick={(c) => {
+          // when map is clicked, set coords based on active mode
+          if (pickMode === 'pickup') {
+            setPickupCoords(c);
+            // try reverse geocode
+            try {
+              const g = (window as any).google;
+              if (g && g.maps && g.maps.Geocoder) {
+                const geocoder = new g.maps.Geocoder();
+                geocoder.geocode({ location: c }, (results:any, status:any) => {
+                  try { if (status === 'OK' && results && results[0]) setPickup(results[0].formatted_address || 'Pinned location'); } catch(e){}
+                });
+              } else {
+                setPickup('Pinned location');
+              }
+            } catch(e) { setPickup('Pinned location'); }
+            setPickMode(null);
+          } else if (pickMode === 'destination') {
+            setDestinationCoords(c);
+            try {
+              const g = (window as any).google;
+              if (g && g.maps && g.maps.Geocoder) {
+                const geocoder = new g.maps.Geocoder();
+                geocoder.geocode({ location: c }, (results:any, status:any) => {
+                  try { if (status === 'OK' && results && results[0]) setDestination(results[0].formatted_address || 'Pinned location'); } catch(e){}
+                });
+              } else {
+                setDestination('Pinned location');
+              }
+            } catch(e) { setDestination('Pinned location'); }
+            setPickMode(null);
+          } else {
+            // default fallback: set destination
+            setDestinationCoords(c);
+            setDestination('Pinned location');
+          }
+        }}
+        pickMode={pickMode}
+      />
 
       <div className="pointer-events-none absolute inset-x-4 top-4 z-20">
         <LocationInputs
@@ -96,6 +137,15 @@ export default function Index() {
           onSwap={() => {
             setPickup(destination);
             setDestination(pickup);
+          }}
+          onPickPickup={() => setPickMode('pickup')}
+          onPickDestination={() => setPickMode('destination')}
+          onUseCurrentLocation={() => {
+            if (!navigator.geolocation) { setPickup('Current location'); return; }
+            navigator.geolocation.getCurrentPosition((pos)=>{
+              setPickupCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+              setPickup('Current location');
+            }, ()=>{ setPickup('Current location'); });
           }}
           className="pointer-events-auto"
         />
