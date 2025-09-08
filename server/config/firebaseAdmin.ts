@@ -61,7 +61,7 @@ export function getAdmin(): any | null {
 export function getFirestore(): any | null {
   // Prefer using admin.firestore() when available
   if (!admin) {
-    console.warn("getFirestore called before firebase-admin initialization");
+    // firebase-admin not initialized yet; return null silently
     return null;
   }
   try {
