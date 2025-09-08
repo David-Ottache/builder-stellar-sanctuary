@@ -113,18 +113,22 @@ export default function UserDocuments() {
               let res: Response | null = null;
 
               try {
+                console.log('User register: attempting POST to', primary);
+                const bodyStr = JSON.stringify(payload);
                 res = await deferFetch(primary, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload),
+                  body: bodyStr,
                 });
               } catch (err) {
                 console.warn('Primary fetch failed, attempting fallback', err);
                 try {
+                  console.log('User register: attempting POST to fallback', fallback);
+                  const bodyStr = JSON.stringify(payload);
                   res = await deferFetch(fallback, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
+                    body: bodyStr,
                   });
                 } catch (err2) {
                   console.error('Fallback fetch failed', err2);
