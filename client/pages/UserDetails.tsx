@@ -127,7 +127,9 @@ export default function UserDetails() {
               try { distance = haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords); } catch (e) { distance = 0; }
             }
             const rate = rates[vehicleId] ?? 100;
-            const fee = Math.round(rate * distance);
+            // ensure minimum fee of 1 to avoid server-side 'amount must be positive' errors
+            const rawFee = Math.round(rate * distance);
+            const fee = Math.max(1, rawFee);
 
             if (!selectedDriverId) selectDriver(user.id);
 
