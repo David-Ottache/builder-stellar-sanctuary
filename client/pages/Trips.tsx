@@ -19,11 +19,11 @@ export default function Trips() {
         if (data?.trips) setTrips(data.trips);
         // fetch requester names for driver view
         if (isDriver && data?.trips?.length) {
-          const ids = Array.from(new Set(data.trips.map((t:any)=> t.userId).filter(Boolean)));
+          const ids = Array.from(new Set(data.trips.map((t:any)=> String(t.userId)).filter(Boolean))) as string[];
           const map: Record<string,string> = {};
           await Promise.all(ids.map(async (id)=>{
             try {
-              const r = await fetch(`/api/users/${id}`);
+              const r = await fetch(`/api/users/${encodeURIComponent(id)}`);
               if (!r.ok) return;
               const d = await r.json().catch(()=>null);
               if (d?.user) map[id] = (d.user.firstName ? `${d.user.firstName} ${d.user.lastName || ''}`.trim() : d.user.phone || d.user.email || id);
