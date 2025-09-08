@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import TopBar from "./TopBar";
 import BottomNav from "./BottomNav";
 import SOS from "./SOS";
+import RatingModal from "./RatingModal";
 import { ReactNode } from "react";
 
 interface Props {
