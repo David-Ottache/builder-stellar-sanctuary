@@ -3,7 +3,7 @@ import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 
 export default function Trips() {
-  const { trips, setTrips, user } = useAppStore();
+  const { trips, setTrips, user, upsertDriver } = useAppStore();
   const [requesterNames, setRequesterNames] = useState<Record<string,string>>({});
   const [expandedTripId, setExpandedTripId] = useState<string | null>(null);
 
