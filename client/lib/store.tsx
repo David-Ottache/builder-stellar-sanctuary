@@ -298,7 +298,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   };
 
   const submitRating: StoreState['submitRating'] = (driverId, stars) => {
-    // update driver average rating and rides count locally
+    // optimistic local update
     setDrivers((prev)=> prev.map(d=> {
       if (d.id !== driverId) return d;
       const prevRides = d.rides || 0;
@@ -311,8 +311,27 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     // attach rating to trip history if present
     setTrips((prev)=> prev.map(t=> t.id === ratingPrompt.tripId ? { ...t, rating: stars } : t));
 
-    // close prompt
+    // close prompt immediately for UX
+    const tripIdToClose = ratingPrompt.tripId;
     setRatingPrompt({ open: false });
+
+    // persist to server in background
+    (async ()=>{
+      try {
+        const res = await fetch(`/api/drivers/${encodeURIComponent(driverId)}/rate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stars }) });
+        if (!res.ok) {
+          console.warn('Failed posting rating to server', await res.text().catch(()=>''));
+          return;
+        }
+        const data = await res.json().catch(()=>null);
+        if (data && (data.rides !== undefined || data.rating !== undefined)) {
+          // synchronize local driver with server computed aggregates
+          setDrivers((prev)=> prev.map(d=> d.id === driverId ? { ...d, rides: data.rides ?? d.rides, rating: data.rating ?? d.rating } : d));
+        }
+      } catch (e) {
+        console.warn('persist rating failed', e);
+      }
+    })();
   };
 
   const addContact: StoreState["addContact"] = (c) => {
