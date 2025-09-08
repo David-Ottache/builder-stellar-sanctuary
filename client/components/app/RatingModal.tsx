@@ -1,5 +1,14 @@
 import React from 'react';
 import { useAppStore } from '@/lib/store';
+import { toast } from 'sonner';
+
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill={filled ? '#f59e0b' : 'none'} stroke={filled ? '#f59e0b' : '#d1d5db'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 .587l3.668 7.431L23.4 9.75l-5.7 5.56L19.336 24 12 19.897 4.664 24l1.636-8.69L.6 9.75l7.732-1.732z" />
+    </svg>
+  );
+}
 
 export default function RatingModal() {
   const { ratingPrompt, closeRatingPrompt, submitRating, drivers } = useAppStore();
@@ -11,6 +20,12 @@ export default function RatingModal() {
 
   if (!ratingPrompt.open) return null;
   const driver = drivers.find(d=>d.id === ratingPrompt.driverId) || null;
+
+  const onSubmit = () => {
+    if (!ratingPrompt.driverId) return;
+    submitRating(ratingPrompt.driverId, stars);
+    toast.success('Thanks for rating the driver');
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
@@ -28,12 +43,14 @@ export default function RatingModal() {
           <div style={{ fontWeight: 600, marginBottom: 8 }}>Rate your ride</div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {[1,2,3,4,5].map((s)=> (
-              <button key={s} onClick={()=>setStars(s)} style={{ background: s <= stars ? '#f59e0b' : '#e5e7eb', border: 'none', padding: 8, borderRadius: 6, width: 40, height: 40, color: s <= stars ? 'white' : '#111', fontWeight: 700 }}>{s}★</button>
+              <button key={s} onClick={()=>setStars(s)} style={{ background: 'transparent', border: 'none', padding: 4, borderRadius: 6 }} aria-label={`Rate ${s} star`}>
+                <StarIcon filled={s <= stars} />
+              </button>
             ))}
           </div>
           <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button onClick={() => { closeRatingPrompt(); }} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', background: 'white' }}>Skip</button>
-            <button onClick={() => { if (ratingPrompt.driverId) submitRating(ratingPrompt.driverId, stars); }} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#0ea5a5', color: 'white' }}>Submit</button>
+            <button onClick={onSubmit} style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: '#0ea5a5', color: 'white' }}>Submit</button>
           </div>
         </div>
       </div>
