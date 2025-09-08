@@ -44,7 +44,35 @@ const App = () => (
         <BrowserRouter>
           <React.Suspense fallback={null}>
             <Routes>
-              {/* Wrap routes with AuthGate to enforce login and inactivity expiry */}
+              <Route path="/splash" element={<Splash />} />
+              <Route path="/welcome" element={<Welcome />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register/name" element={<RegisterName />} />
+              <Route path="/register/contact" element={<RegisterContact />} />
+              <Route path="/user/register/name" element={<UserRegisterName />} />
+              <Route path="/user/register/contact" element={<UserRegisterContact />} />
+              <Route path="/user/register/details" element={<UserPersonalDetails />} />
+              <Route path="/user/register/documents" element={<UserDocuments />} />
+              <Route path="/user/otp" element={<UserOtp />} />
+              <Route path="/vehicle" element={<VehicleChoice />} />
+              <Route path="/register/details" element={<PersonalDetails />} />
+              <Route path="/register/documents" element={<Documents />} />
+
+              {/* Protected routes: require login */}
+              <Route path="/" element={<AuthGate><Index /></AuthGate>} />
+              <Route path="/search" element={<AuthGate><Search /></AuthGate>} />
+              <Route path="/user/verify" element={<AuthGate><UserVerify /></AuthGate>} />
+              <Route path="/user/:id" element={<AuthGate><UserDetails /></AuthGate>} />
+              <Route path="/safety" element={<AuthGate><Safety /></AuthGate>} />
+              <Route path="/driver/:id" element={<AuthGate><DriverDetails /></AuthGate>} />
+              <Route path="/trip/summary" element={<AuthGate><TripSummary /></AuthGate>} />
+              <Route path="/app" element={<AuthGate><FigmaApp /></AuthGate>} />
+              <Route path="/trips" element={<AuthGate><Trips /></AuthGate>} />
+              <Route path="/wallet" element={<AuthGate><Wallet /></AuthGate>} />
+              <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
+
+              {/* catch-all */}
+              <Route path="*" element={<AuthGate><NotFound /></AuthGate>} />
             </Routes>
           </React.Suspense>
         </BrowserRouter>
