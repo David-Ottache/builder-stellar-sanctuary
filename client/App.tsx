@@ -39,8 +39,9 @@ const queryClient = new QueryClient();
 if (import.meta.env.VITE_SENTRY_DSN) {
   (async () => {
     try {
-      const Sentry = await import('@sentry/react');
-      const BrowserTracing = (await import('@sentry/tracing')).BrowserTracing;
+      const Sentry = await import(/* @vite-ignore */ '@sentry/react').catch(()=>null);
+      const tracingMod = await import(/* @vite-ignore */ '@sentry/tracing').catch(()=>null);
+      const BrowserTracing = tracingMod ? tracingMod.BrowserTracing : null;
       Sentry.init({
         dsn: import.meta.env.VITE_SENTRY_DSN,
         integrations: [new BrowserTracing()],
