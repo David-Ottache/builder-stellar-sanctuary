@@ -4,6 +4,13 @@ export type VehicleId = "go" | "comfort" | "xl" | "prestige";
 
 export const RATES_PER_KM: Record<VehicleId, number> = { go: 200, comfort: 400, xl: 600, prestige: 800 };
 
+export function computeFare(distanceKm: number | null | undefined, vehicleId: VehicleId) {
+  const d = Number(distanceKm ?? 0) || 0;
+  const rate = RATES_PER_KM[vehicleId] ?? 200;
+  const raw = Math.round(rate * d);
+  return Math.max(1, raw);
+}
+
 interface Props {
   selected: VehicleId;
   onSelect: (id: VehicleId) => void;
