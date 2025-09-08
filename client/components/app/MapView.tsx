@@ -150,33 +150,64 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
 
           // geolocation watch to post presence
           let watchId: number | null = null;
-          if (navigator.geolocation) {
-            watchId = navigator.geolocation.watchPosition(async (pos) => {
-              try {
-                const lat = pos.coords.latitude; const lng = pos.coords.longitude;
-                const sessionRaw = sessionStorage.getItem('session.user');
-                let userId: string | null = null;
-                if (sessionRaw) {
-                  try { userId = JSON.parse(sessionRaw).id; } catch(e){}
-                }
-                if (!userId) return;
-                const origin = window.location.origin;
-                const endpoints = [`${origin}/api/presence`, `${origin}/.netlify/functions/api/presence`, '/api/presence', '/.netlify/functions/api/presence'];
-                let posted = false;
-                for (const url of endpoints) {
+          try {
+            if (navigator.geolocation) {
+              // avoid making the callback itself an async function to prevent unhandled rejections bubbling
+              watchId = navigator.geolocation.watchPosition((pos) => {
+                // run async work and catch errors explicitly
+                (async () => {
                   try {
-                    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': userId }, body: JSON.stringify({ id: userId, lat, lng, online: true }) , keepalive: true });
-                    if (r && r.ok) { posted = true; break; }
-                  } catch (err) {
-                    // ignore and try next
+                    const lat = pos.coords.latitude; const lng = pos.coords.longitude;
+                    const sessionRaw = sessionStorage.getItem('session.user');
+                    let userId: string | null = null;
+                    if (sessionRaw) {
+                      try { userId = JSON.parse(sessionRaw).id; } catch(e){}
+                    }
+                    if (!userId) return;
+                    const origin = window.location.origin;
+                    const endpoints = [`${origin}/api/presence`, `${origin}/.netlify/functions/api/presence`, '/api/presence', '/.netlify/functions/api/presence'];
+                    let posted = false;
+
+                    // try navigator.sendBeacon first (best-effort, does not throw)
+                    try {
+                      if (navigator.sendBeacon) {
+                        const payload = JSON.stringify({ id: userId, lat, lng, online: true });
+                        const blob = new Blob([payload], { type: 'application/json' });
+                        for (const url of endpoints) {
+                          try {
+                            const ok = navigator.sendBeacon(url, blob);
+                            if (ok) { posted = true; break; }
+                          } catch (be) {
+                            // ignore and try next
+                          }
+                        }
+                      }
+                    } catch (be) {
+                      // ignore sendBeacon errors
+                    }
+
+                    if (!posted) {
+                      for (const url of endpoints) {
+                        try {
+                          // use keepalive when available but don't rely on it — catch any errors
+                          const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': userId }, body: JSON.stringify({ id: userId, lat, lng, online: true }), keepalive: true });
+                          if (r && r.ok) { posted = true; break; }
+                        } catch (err) {
+                          // ignore and try next
+                        }
+                      }
+                    }
+
+                    // nothing to do if all endpoints failed
+                  } catch (e) {
+                    console.warn('watchPosition post failed', e);
                   }
-                }
-                if (!posted) {
-                  // nothing to do, but avoid throwing
-                  // console.warn('presence post failed for all endpoints');
-                }
-              } catch (e) { console.warn('watchPosition post failed', e); }
-            }, (err)=>{ /* ignore */ }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
+                })().catch((e)=>{ console.warn('watchPosition inner error', e); });
+              }, (err)=>{ /* ignore geolocation errors */ }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
+            }
+          } catch (e) {
+            console.warn('Failed to start geolocation watch', e);
+            watchId = null;
           }
 
           // cleanup on unmount
