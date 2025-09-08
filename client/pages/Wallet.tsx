@@ -200,7 +200,13 @@ export default function Wallet() {
       Swal.fire('Success', 'Transfer completed');
       // refresh transactions
       const txRes = await fetch(`/api/wallet/transactions/${appUser.id}`);
-      if (txRes.ok) { const dd = await txRes.json().catch(()=>null); if (dd?.transactions) setTransactions(dd.transactions); }
+      if (txRes.ok) {
+        const dd = await txRes.json().catch(()=>null);
+        if (dd?.transactions) {
+          const annotated = (dd.transactions || []).map((t:any) => ({ ...t, participantId: t.from || t.to || null }));
+          setTransactions(annotated);
+        }
+      }
     } catch (e) {
       console.error('send error', e);
       Swal.fire('Error', 'Transfer failed');
@@ -259,7 +265,13 @@ export default function Wallet() {
       Swal.fire('Top up initiated', 'Top up queued (simulate bank integration)');
       // refresh transactions
       const txRes = await fetch(`/api/wallet/transactions/${appUser.id}`);
-      if (txRes.ok) { const dd = await txRes.json().catch(()=>null); if (dd?.transactions) setTransactions(dd.transactions); }
+      if (txRes.ok) {
+        const dd = await txRes.json().catch(()=>null);
+        if (dd?.transactions) {
+          const annotated = (dd.transactions || []).map((t:any) => ({ ...t, participantId: t.from || t.to || null }));
+          setTransactions(annotated);
+        }
+      }
     } catch (e) {
       console.error('topup error', e);
       Swal.fire('Error', 'Top up failed');
