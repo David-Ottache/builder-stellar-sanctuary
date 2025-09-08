@@ -19,8 +19,8 @@ export default function Wallet() {
         // If driver, fetch driver document to get driver wallet balance
         if (appUser.role === 'driver') {
           try {
-            const r = await fetch(`/api/drivers/${appUser.id}`);
-            if (r.ok) {
+            const r = await safeFetch(`/api/drivers/${appUser.id}`);
+            if (r && r.ok) {
               const d = await r.json().catch(()=>null);
               const bal = Number(d?.driver?.walletBalance ?? d?.driver?.balance ?? d?.driver?.wallet ?? 0);
               setDisplayBalance(bal);
