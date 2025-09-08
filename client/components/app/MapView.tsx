@@ -14,7 +14,7 @@ interface Props {
   hidePickupMarker?: boolean;
 }
 
-export default function MapView({ className, pickupCoords, destinationCoords, onPickDestination, onPick, pickMode }: Props) {
+export default function MapView({ className, pickupCoords, destinationCoords, onPickDestination, onPick, pickMode, hidePickupMarker }: Props) {
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const mapRef = React.useRef<any>(null);
