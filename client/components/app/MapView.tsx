@@ -51,7 +51,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
           if (onPickDestination) onPickDestination({ lat, lng });
         });
 
-        // presence polling and markers
+        // presence: prefer SSE (server streams from Firestore) and fallback to polling
         try {
           const markersById: Record<string, any> = {};
           markersRef.current = [];
@@ -79,6 +79,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
           };
 
           let pollInterval: any = null;
+          let es: EventSource | null = null;
 
           const fetchPresence = async () => {
             try {
@@ -95,9 +96,32 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
             } catch (e) { console.warn('fetchPresence failed', e); }
           };
 
-          // start polling
-          await fetchPresence();
-          pollInterval = window.setInterval(fetchPresence, 5000);
+          // try SSE first
+          try {
+            if ((window as any).EventSource) {
+              es = new EventSource('/api/presence/stream');
+              es.onmessage = (ev: MessageEvent) => {
+                try {
+                  const payload = JSON.parse(ev.data || '{}');
+                  if (payload && payload.presence) renderPresence(payload.presence || []);
+                } catch (e) { /* ignore parse errors */ }
+              };
+              es.onerror = () => {
+                try { es?.close(); } catch (e) {}
+                es = null;
+                // fallback to polling
+                fetchPresence().then(()=> { pollInterval = window.setInterval(fetchPresence, 5000); });
+              };
+            } else {
+              // no EventSource, start polling
+              await fetchPresence();
+              pollInterval = window.setInterval(fetchPresence, 5000);
+            }
+          } catch (e) {
+            // SSE failed, fallback to polling
+            await fetchPresence();
+            pollInterval = window.setInterval(fetchPresence, 5000);
+          }
 
           // geolocation watch to post presence
           let watchId: number | null = null;
@@ -119,6 +143,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
           // cleanup on unmount
           (mapRef.current as any).__presenceCleanup = () => {
             try { if (pollInterval) window.clearInterval(pollInterval); } catch(e){}
+            try { if (es) { es.close(); es = null; } } catch(e){}
             try { if (watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(watchId); } catch(e){}
             try { Object.values(markersById).forEach((m:any)=>m.setMap(null)); } catch(e){}
           };
