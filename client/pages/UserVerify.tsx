@@ -258,10 +258,9 @@ export default function UserVerify() {
             <div className="text-neutral-700">Destination: {pendingTrip.destination} {pendingTrip.destinationCoords ? `(${pendingTrip.destinationCoords.lat.toFixed(4)}, ${pendingTrip.destinationCoords.lng.toFixed(4)})` : ''}</div>
             <div className="text-neutral-700">Vehicle: {pendingTrip.vehicle ?? 'go'}</div>
             {(() => {
-              const rates: Record<string, number> = { go: 100, comfort: 400, xl: 600 };
               const vehicleId = (pendingTrip.vehicle as string) || 'go';
               const distance = (pendingTrip.pickupCoords && pendingTrip.destinationCoords) ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : null;
-              const fee = distance !== null ? Math.max(1, Math.round((rates[vehicleId] ?? 100) * distance)) : null;
+              const fee = distance !== null ? Math.max(1, Math.round((RATES_PER_KM[vehicleId as keyof typeof RATES_PER_KM] ?? 200) * distance)) : null;
               return (
                 <div className="text-neutral-700">Amount: {fee !== null ? `₦${fee.toLocaleString()}` : 'TBD'}</div>
               );
