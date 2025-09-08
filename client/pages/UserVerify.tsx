@@ -176,7 +176,8 @@ export default function UserVerify() {
     try {
       for (const url of candidates) {
         try {
-          const res = await safeFetch(url);
+          const useCache = typeof url === 'string' && (url.includes('/api/drivers') || url.includes('/api/users') || url.includes('/api/trip'));
+          const res = useCache ? await cachedFetch(url) : await safeFetch(url);
           if (!res || !res.ok) continue;
           const data = await res.json().catch(() => null);
           if (!data) continue;
