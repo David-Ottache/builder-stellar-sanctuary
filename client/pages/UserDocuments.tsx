@@ -86,11 +86,7 @@ export default function UserDocuments() {
                 throw new Error('API unreachable');
               }
 
-              // Build payload but omit large images to avoid failures in preview
-              const maxImageLength = 500000; // ~0.5MB
-              const includeProfile = profilePhoto && profilePhoto.length < maxImageLength;
-              const includeId = idPhoto && idPhoto.length < maxImageLength;
-
+              // Build payload but omit images to avoid large POST failures in the preview environment
               const payload: any = {
                 firstName: onboarding.firstName ?? undefined,
                 lastName: onboarding.lastName ?? undefined,
@@ -101,14 +97,10 @@ export default function UserDocuments() {
                 location: onboarding.location ?? undefined,
                 identificationNumber: idNumber ?? onboarding.identificationNumber ?? undefined,
                 password: onboarding.password ?? undefined,
-                omittedImages: false,
+                omittedImages: true, // always omit images in preview to keep payload small
               };
 
-              if (includeProfile) payload.profilePhoto = profilePhoto ?? onboarding.profilePhoto ?? undefined;
-              if (includeId) payload.identificationPhoto = idPhoto ?? onboarding.identificationPhoto ?? undefined;
-              if (!includeProfile || !includeId) payload.omittedImages = true;
-
-              console.log('User register payload', payload);
+              console.log('User register payload (images omitted in preview)', payload);
 
               let res: Response | null = null;
 
