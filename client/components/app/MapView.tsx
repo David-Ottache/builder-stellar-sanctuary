@@ -5,10 +5,14 @@ interface Props {
   className?: string;
   pickupCoords?: { lat: number; lng: number } | null;
   destinationCoords?: { lat: number; lng: number } | null;
+  // called when user clicks/taps the map with picked coords
   onPickDestination?: (c: { lat: number; lng: number }) => void;
+  onPick?: (c: { lat: number; lng: number }) => void;
+  // optional mode to indicate which location is being selected ('pickup' | 'destination' | undefined)
+  pickMode?: 'pickup' | 'destination' | null;
 }
 
-export default function MapView({ className, pickupCoords, destinationCoords, onPickDestination }: Props) {
+export default function MapView({ className, pickupCoords, destinationCoords, onPickDestination, onPick, pickMode }: Props) {
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const mapRef = React.useRef<any>(null);
@@ -48,7 +52,9 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
         mapRef.current.addListener('click', (ev: any) => {
           const lat = ev.latLng.lat();
           const lng = ev.latLng.lng();
-          if (onPickDestination) onPickDestination({ lat, lng });
+          const coords = { lat, lng };
+          try { if (onPick) onPick(coords); } catch(e){}
+          try { if (onPickDestination && (!pickMode || pickMode === 'destination')) onPickDestination(coords); } catch(e){}
         });
 
         // presence: prefer SSE (server streams from Firestore) and fallback to polling
@@ -196,7 +202,8 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
             const lng = center.lng + (xRatio - 0.5) * deltaLat * (rect.width / rect.height);
             const lat = center.lat + (0.5 - yRatio) * deltaLat;
             const coords = { lat, lng };
-            if (onPickDestination) onPickDestination(coords);
+            try { if (onPick) onPick(coords); } catch(e){}
+            try { if (onPickDestination && (!pickMode || pickMode === 'destination')) onPickDestination(coords); } catch(e){};
           }}
           style={{
             background:
