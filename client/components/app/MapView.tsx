@@ -201,6 +201,53 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
   }, [googleKey]);
 
   // synchronize markers from pickup/destination when not using google maps
+  React.useEffect(()=>{
+    try {
+      const g = (window as any).google;
+      if (!g || !g.maps) return;
+      if (!mapRef.current) return;
+      // keep refs on mapRef to store markers
+      const mRef: any = (mapRef.current as any).__customMarkers || { pickup: null, dest: null };
+      if (!mRef.pickup) {
+        try {
+          mRef.pickup = new g.maps.Marker({ map: mapRef.current, visible: false, icon: { path: g.maps.SymbolPath.CIRCLE, fillColor: '#0ea5a5', fillOpacity: 1, scale: 7, strokeColor: '#fff', strokeWeight: 2 } });
+        } catch(e) { mRef.pickup = null; }
+      }
+      if (!mRef.dest) {
+        try {
+          mRef.dest = new g.maps.Marker({ map: mapRef.current, visible: false, icon: { path: g.maps.SymbolPath.BACKWARD_CLOSED_ARROW, fillColor: '#ef4444', fillOpacity: 1, scale: 6, strokeColor: '#fff', strokeWeight: 2 } });
+        } catch(e) { mRef.dest = null; }
+      }
+
+      try {
+        if (mRef.pickup) {
+          if (pickupCoords) {
+            mRef.pickup.setPosition(pickupCoords);
+            mRef.pickup.setVisible(!hidePickupMarker);
+            if (!hidePickupMarker) {
+              try { mapRef.current.setCenter(pickupCoords); } catch(e){}
+            }
+          } else {
+            mRef.pickup.setVisible(false);
+          }
+        }
+      } catch(e) {}
+
+      try {
+        if (mRef.dest) {
+          if (destinationCoords) {
+            mRef.dest.setPosition(destinationCoords);
+            mRef.dest.setVisible(true);
+          } else {
+            mRef.dest.setVisible(false);
+          }
+        }
+      } catch(e) {}
+
+      (mapRef.current as any).__customMarkers = mRef;
+    } catch(e) { /* ignore */ }
+  }, [pickupCoords, destinationCoords, hidePickupMarker, googleKey]);
+
   const project = (coords?: { lat: number; lng: number } | null, rect?: DOMRect | null) => {
     if (!coords || !rect) return { left: 0, top: 0, visible: false };
     const deltaLat = 0.12;
