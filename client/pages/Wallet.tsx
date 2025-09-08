@@ -84,8 +84,8 @@ export default function Wallet() {
           for (const t of annotated) {
             if (!t.participantId && t.tripId) {
               try {
-                const r = await fetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
-                if (r.ok) {
+                const r = await safeFetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
+                if (r && r.ok) {
                   const td = await r.json().catch(()=>null);
                   const trip = td?.trip;
                   if (trip) {
@@ -94,8 +94,8 @@ export default function Wallet() {
                       // set namesMap for uid if missing
                       if (!namesMap[uid]) {
                         try {
-                          const ru = await fetch(`/api/users/${encodeURIComponent(uid)}`);
-                          if (ru.ok) {
+                          const ru = await safeFetch(`/api/users/${encodeURIComponent(uid)}`);
+                          if (ru && ru.ok) {
                             const ud = await ru.json().catch(()=>null);
                             const user = ud?.user || ud;
                             const name = user ? `${user.firstName||''} ${user.lastName||''}`.trim() : (ud.firstName || ud.name || uid);
@@ -103,8 +103,8 @@ export default function Wallet() {
                             setNamesMap(prev => ({ ...prev, [uid]: { name: name || uid, avatar } }));
                           } else {
                             // try drivers
-                            const rd = await fetch(`/api/drivers/${encodeURIComponent(uid)}`);
-                            if (rd.ok) {
+                            const rd = await safeFetch(`/api/drivers/${encodeURIComponent(uid)}`);
+                            if (rd && rd.ok) {
                               const dd = await rd.json().catch(()=>null);
                               const driver = dd?.driver;
                               const name = driver ? `${driver.firstName||''} ${driver.lastName||''}`.trim() : uid;
