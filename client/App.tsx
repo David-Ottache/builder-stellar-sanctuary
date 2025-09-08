@@ -42,34 +42,11 @@ const App = () => (
       <Sonner />
       <AppStoreProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/splash" element={<Splash />} />
-            <Route path="/welcome" element={<Welcome />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register/name" element={<RegisterName />} />
-            <Route path="/register/contact" element={<RegisterContact />} />
-            <Route path="/user/register/name" element={<UserRegisterName />} />
-            <Route path="/user/register/contact" element={<UserRegisterContact />} />
-            <Route path="/user/register/details" element={<UserPersonalDetails />} />
-            <Route path="/user/register/documents" element={<UserDocuments />} />
-            <Route path="/user/otp" element={<UserOtp />} />
-            <Route path="/vehicle" element={<VehicleChoice />} />
-            <Route path="/register/details" element={<PersonalDetails />} />
-            <Route path="/register/documents" element={<Documents />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/user/verify" element={<UserVerify />} />
-            <Route path="/user/:id" element={<UserDetails />} />
-            <Route path="/safety" element={<Safety />} />
-            <Route path="/driver/:id" element={<DriverDetails />} />
-            <Route path="/trip/summary" element={<TripSummary />} />
-            <Route path="/app" element={<FigmaApp />} />
-            <Route path="/trips" element={<Trips />} />
-            <Route path="/wallet" element={<Wallet />} />
-            <Route path="/profile" element={<Profile />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <React.Suspense fallback={null}>
+            <Routes>
+              {/* Wrap routes with AuthGate to enforce login and inactivity expiry */}
+            </Routes>
+          </React.Suspense>
         </BrowserRouter>
       </AppStoreProvider>
     </TooltipProvider>
