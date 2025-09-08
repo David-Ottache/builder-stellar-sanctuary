@@ -190,9 +190,9 @@ export default function Wallet() {
     if (!toId || !amount || amount <= 0) return Swal.fire('Invalid input');
     try {
       setLoading(true);
-      const res = await fetch('/api/wallet/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: appUser.id, toId, amount }) });
-      if (!res.ok) {
-        const d = await res.json().catch(()=>({}));
+      const res = await safeFetch('/api/wallet/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: appUser.id, toId, amount }) });
+      if (!res || !res.ok) {
+        const d = res ? await res.json().catch(()=>({})) : {};
         if (d.error === 'insufficient_funds') return Swal.fire('Insufficient funds');
         return Swal.fire('Transfer failed', d.error || '');
       }
