@@ -38,7 +38,7 @@ export default function DriverDetails() {
           <div className="mt-3 text-right text-sm text-neutral-700">Total Amount <span className="font-bold">N{driver.price * 1000}</span></div>
         </div>
         <div className="mt-4 flex gap-3">
-          <Button className="h-12 flex-1 rounded-full" onClick={()=>{ if(!selectedDriverId) selectDriver(driver.id); startTrip({ pickup: 'Federal Housing, Kuje.', destination: 'Transcorp Hilton', driverId: driver.id, fee: driver.price }); navigate('/trip/summary'); }}>Pay</Button>
+          <Button className="h-12 flex-1 rounded-full" onClick={()=>{ if(!selectedDriverId) selectDriver(driver.id); startTrip({ pickup: 'Federal Housing, Kuje.', destination: 'Transcorp Hilton', driverId: driver.id, fee: driver.price }); navigate('/'); }}>Pay</Button>
         </div>
         <div className="mt-4">
           <div className="flex gap-2">

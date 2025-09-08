@@ -8,7 +8,11 @@ interface Props {
 
 export default function TopBar({ className }: Props) {
   const { user } = useAppStore();
-  const avatar = user?.profilePhoto || user?.email ? `https://ui-avatars.com/api/?name=${encodeURIComponent((user.firstName || '') + ' ' + (user.lastName || ''))}&background=0D8ABC&color=fff` : 'https://i.pravatar.cc/80?img=15';
+  const avatar = user?.profilePhoto
+    ? user.profilePhoto
+    : user?.email
+      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(((user.firstName || '') + ' ' + (user.lastName || '')).trim())}&background=0D8ABC&color=fff`
+      : 'https://i.pravatar.cc/80?img=15';
 
   return (
     <div
