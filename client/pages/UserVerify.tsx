@@ -255,7 +255,17 @@ export default function UserVerify() {
           <div className="mt-3 rounded-2xl border bg-white p-4 text-sm">
             <div className="font-semibold">Trip</div>
             <div className="text-neutral-700">Pickup: {pendingTrip.pickup} {pendingTrip.pickupCoords ? `(${pendingTrip.pickupCoords.lat.toFixed(4)}, ${pendingTrip.pickupCoords.lng.toFixed(4)})` : ''}</div>
-            <div className="text-neutral-700">Destination: {pendingTrip.destination}</div>
+            <div className="text-neutral-700">Destination: {pendingTrip.destination} {pendingTrip.destinationCoords ? `(${pendingTrip.destinationCoords.lat.toFixed(4)}, ${pendingTrip.destinationCoords.lng.toFixed(4)})` : ''}</div>
+            <div className="text-neutral-700">Vehicle: {pendingTrip.vehicle ?? 'go'}</div>
+            {(() => {
+              const rates: Record<string, number> = { go: 100, comfort: 400, xl: 600 };
+              const vehicleId = (pendingTrip.vehicle as string) || 'go';
+              const distance = (pendingTrip.pickupCoords && pendingTrip.destinationCoords) ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : null;
+              const fee = distance !== null ? Math.max(1, Math.round((rates[vehicleId] ?? 100) * distance)) : null;
+              return (
+                <div className="text-neutral-700">Amount: {fee !== null ? `₦${fee.toLocaleString()}` : 'TBD'}</div>
+              );
+            })()}
           </div>
         )}
 
