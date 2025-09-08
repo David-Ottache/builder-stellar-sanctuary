@@ -139,7 +139,7 @@ export default function Wallet() {
       const mapUpdates: Record<string,{ name: string; avatar?: string }> = {};
       await Promise.all(missing.map(async (id)=>{
         try {
-          const r1 = await safeFetch(`/api/users/${encodeURIComponent(id)}`);
+          const r1 = await cachedFetch(`/api/users/${encodeURIComponent(id)}`);
       if (r1 && r1.ok) {
         const dd = await r1.json().catch(()=>null);
         if (dd && (dd.user || dd.firstName || dd.name)) {
