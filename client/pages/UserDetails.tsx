@@ -4,7 +4,7 @@ import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { safeFetch, haversineKm } from "@/lib/utils";
-import { RATES_PER_KM } from "@/components/app/VehicleSelector";
+import { RATES_PER_KM, computeFare } from "@/components/app/VehicleSelector";
 import Swal from 'sweetalert2';
 
 export default function UserDetails() {
