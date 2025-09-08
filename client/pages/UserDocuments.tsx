@@ -141,27 +141,19 @@ export default function UserDocuments() {
                 });
                 // if no response within timeout, fetchWithTimeout will reject
               } catch (err) {
-                console.warn('Primary fetch failed or timed out, attempting minimal payload to try fallback', err);
-                // try minimal payload (small payload to bypass any size-related issues)
-                const minimal = { firstName: onboarding.firstName, lastName: onboarding.lastName, phone: onboarding.phone };
+                console.warn('Primary fetch failed or timed out, attempting full POST to fallback', err);
                 try {
-                  console.log('User register: attempting minimal POST to', primary, minimal);
-                  res = await fetchWithTimeout(primary, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(minimal) }, 8000);
-                } catch (errMin) {
-                  console.warn('Minimal primary attempt failed, trying fallback', errMin);
-                  try {
-                    console.log('User register: attempting POST to fallback', fallback);
-                    const bodyStr = JSON.stringify(payload);
-                    res = await fetchWithTimeout(fallback, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: bodyStr,
-                    });
-                  } catch (err2) {
-                    console.error('Fallback fetch failed', err2);
-                    await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'Network error. Could not reach server. ' + String(err2?.message || err2) });
-                    throw err2;
-                  }
+                  console.log('User register: attempting POST to fallback', fallback);
+                  const bodyStr = JSON.stringify(payload);
+                  res = await fetchWithTimeout(fallback, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: bodyStr,
+                  });
+                } catch (err2) {
+                  console.error('Fallback fetch failed', err2);
+                  await Swal.fire({ icon: 'error', title: 'Registration failed', text: 'Network error. Could not reach server. ' + String(err2?.message || err2) });
+                  throw err2;
                 }
               }
 
