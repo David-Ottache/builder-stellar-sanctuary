@@ -15,6 +15,7 @@ export default function Index() {
   const [vehicle, setVehicle] = useState<VehicleId>("go");
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [pickMode, setPickMode] = useState<'pickup' | 'destination' | null>(null);
   const navigate = useNavigate();
   const { setPendingTrip } = useAppStore();
 
