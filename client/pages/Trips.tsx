@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export default function Trips() {
   const { trips, setTrips, user } = useAppStore();
   const [requesterNames, setRequesterNames] = useState<Record<string,string>>({});
+  const [expandedTripId, setExpandedTripId] = useState<string | null>(null);
 
   useEffect(()=>{
     (async ()=>{
@@ -60,6 +61,8 @@ export default function Trips() {
     }
   };
 
+  const toggleDetails = (id?: string | null) => setExpandedTripId(prev => prev === id ? null : (id ?? null));
+
   return (
     <Layout>
       <div className="px-4 pt-6">
@@ -78,10 +81,35 @@ export default function Trips() {
                   </div>
                   <div className="font-bold">N{(t.fee || 0).toLocaleString()}</div>
                 </div>
+
                 {t.distanceKm != null && <div className="mt-2 text-xs text-neutral-500">Distance: {t.distanceKm.toFixed(2)} km • Type: {t.vehicle}</div>}
-                {t.status !== 'completed' && (
-                  <div className="mt-3 flex gap-2">
-                    <button className="flex-1 rounded-xl bg-red-500 px-3 py-2 text-white" onClick={()=>endTrip(t.id)}>End Trip</button>
+
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <div className="flex gap-2 items-center">
+                    <button
+                      className="rounded-lg bg-neutral-100 px-3 py-1 text-sm text-neutral-700"
+                      onClick={() => toggleDetails(t.id)}
+                    >{expandedTripId === t.id ? 'Hide details' : 'View details'}</button>
+                    {/* show rating prominently for drivers */}
+                    {typeof t.rating === 'number' && (user && (user.role === 'driver' || !!user.vehicleType)) && (
+                      <div className="text-sm text-yellow-600 font-semibold">{t.rating} ★</div>
+                    )}
+                  </div>
+                  {/* only allow drivers to end trips from this UI */}
+                  { (user && (user.role === 'driver' || !!user.vehicleType) && t.status !== 'completed') ? (
+                    <button className="rounded-xl bg-red-500 px-3 py-2 text-white" onClick={()=>endTrip(t.id)}>End Trip</button>
+                  ) : null}
+                </div>
+
+                {expandedTripId === t.id && (
+                  <div className="mt-3 border-t pt-3 text-sm text-neutral-700">
+                    <div><strong>Driver:</strong> {t.driverId ?? 'N/A'}</div>
+                    <div><strong>Started:</strong> {t.startedAt ? new Date(t.startedAt).toLocaleString() : '—'}</div>
+                    <div><strong>Ended:</strong> {t.endedAt ? new Date(t.endedAt).toLocaleString() : '—'}</div>
+                    <div><strong>Distance:</strong> {t.distanceKm != null ? `${t.distanceKm.toFixed(2)} km` : '—'}</div>
+                    <div><strong>Vehicle:</strong> {t.vehicle ?? '—'}</div>
+                    <div><strong>Fee:</strong> N{(t.fee || 0).toLocaleString()}</div>
+                    <div><strong>Rating:</strong> {typeof t.rating === 'number' ? `${t.rating} / 5` : 'Not rated'}</div>
                   </div>
                 )}
               </div>
