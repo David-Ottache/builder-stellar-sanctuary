@@ -259,8 +259,53 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const endTrip = () => {
     if (!trip) return;
     const endedAt = new Date().toISOString();
+    // update trip history
     setTrips((prev)=> prev.map(t=> t.id === trip.id ? { ...t, status: 'completed', endedAt } : t));
+    // capture driver id and trip id for rating
+    const driverIdForRating = trip.driverId || null;
+    const tripIdForRating = trip.id || null;
+    // clear current trip
     setTrip(null);
+    // prompt for rating if driver present
+    if (driverIdForRating) {
+      setRatingPrompt({ open: true, driverId: driverIdForRating, tripId: tripIdForRating });
+    }
+    // persist end to server in background
+    (async ()=>{
+      try {
+        if (!user) return;
+        const origin = window.location.origin;
+        const primary = `${origin}/api/trips/${encodeURIComponent(String(tripIdForRating))}/end`;
+        const fallback = `${origin}/.netlify/functions/api/trips/${encodeURIComponent(String(tripIdForRating))}/end`;
+        try { await fetch(primary, { method: 'POST' }).catch(async ()=>{ await fetch(fallback, { method: 'POST' }).catch(()=>null); }); } catch(e){}
+      } catch(e){}
+    })();
+  };
+
+  const openRatingPrompt: StoreState['openRatingPrompt'] = (driverId, tripId) => {
+    setRatingPrompt({ open: true, driverId, tripId });
+  };
+
+  const closeRatingPrompt: StoreState['closeRatingPrompt'] = () => {
+    setRatingPrompt({ open: false });
+  };
+
+  const submitRating: StoreState['submitRating'] = (driverId, stars) => {
+    // update driver average rating and rides count locally
+    setDrivers((prev)=> prev.map(d=> {
+      if (d.id !== driverId) return d;
+      const prevRides = d.rides || 0;
+      const prevRating = typeof d.rating === 'number' ? d.rating : 0;
+      const newRides = prevRides + 1;
+      const newRating = ((prevRating * prevRides) + stars) / newRides;
+      return { ...d, rides: newRides, rating: Math.round((newRating + Number.EPSILON) * 10) / 10 };
+    }));
+
+    // attach rating to trip history if present
+    setTrips((prev)=> prev.map(t=> t.id === ratingPrompt.tripId ? { ...t, rating: stars } : t));
+
+    // close prompt
+    setRatingPrompt({ open: false });
   };
 
   const addContact: StoreState["addContact"] = (c) => {
