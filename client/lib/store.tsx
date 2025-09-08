@@ -326,15 +326,24 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     // persist to server in background
     (async ()=>{
       try {
+        // update driver aggregates
         const res = await fetch(`/api/drivers/${encodeURIComponent(driverId)}/rate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stars }) });
         if (!res.ok) {
           console.warn('Failed posting rating to server', await res.text().catch(()=>''));
-          return;
+        } else {
+          const data = await res.json().catch(()=>null);
+          if (data && (data.rides !== undefined || data.rating !== undefined)) {
+            // synchronize local driver with server computed aggregates
+            setDrivers((prev)=> prev.map(d=> d.id === driverId ? { ...d, rides: data.rides ?? d.rides, rating: data.rating ?? d.rating } : d));
+          }
         }
-        const data = await res.json().catch(()=>null);
-        if (data && (data.rides !== undefined || data.rating !== undefined)) {
-          // synchronize local driver with server computed aggregates
-          setDrivers((prev)=> prev.map(d=> d.id === driverId ? { ...d, rides: data.rides ?? d.rides, rating: data.rating ?? d.rating } : d));
+
+        // also attach rating to trip record on server when tripId is available
+        const tripId = ratingPrompt.tripId;
+        if (tripId) {
+          try {
+            await fetch(`/api/trips/${encodeURIComponent(String(tripId))}/rate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stars }) }).catch(()=>{});
+          } catch (e) { /* ignore */ }
         }
       } catch (e) {
         console.warn('persist rating failed', e);
