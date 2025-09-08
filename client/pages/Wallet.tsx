@@ -237,9 +237,9 @@ export default function Wallet() {
     if (!toId || !amount || amount <= 0) return Swal.fire('Invalid input');
     try {
       setLoading(true);
-      const res = await fetch('/api/wallet/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: appUser.id, toId, amount, note }) });
-      if (!res.ok) {
-        const d = await res.json().catch(()=>({}));
+      const res = await safeFetch('/api/wallet/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: appUser.id, toId, amount, note }) });
+      if (!res || !res.ok) {
+        const d = res ? await res.json().catch(()=>({})) : {};
         return Swal.fire('Request failed', d.error || '');
       }
       Swal.fire('Success', 'Request created');
