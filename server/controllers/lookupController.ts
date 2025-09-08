@@ -1,6 +1,13 @@
 import { RequestHandler } from "express";
 import { initializeFirebaseAdmin, getFirestore, isInitialized } from "../config/firebaseAdmin";
 
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const cache = new Map<string, { ts: number; data: any }>();
+
+export function setCache(id: string, data: any) {
+  try { cache.set(String(id), { ts: Date.now(), data }); } catch (e) { /* ignore */ }
+}
+
 export const lookupById: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
