@@ -250,7 +250,7 @@ export default function UserVerify() {
   return (
     <Layout>
       <div className="px-4 pt-6">
-        <h1 className="text-2xl font-bold">Verify User</h1>
+        <h1 className="text-2xl font-bold">Verify Driver</h1>
         <p className="mt-1 text-sm text-neutral-600">Scan a QR code or enter assigned user ID.</p>
 
         {pendingTrip && (
