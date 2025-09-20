@@ -64,8 +64,14 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
           const markersById: Record<string, any> = {};
           markersRef.current = [];
 
+          const getSession = () => {
+            try { const raw = sessionStorage.getItem('session.user'); return raw ? JSON.parse(raw) : null; } catch { return null; }
+          };
+
           const renderPresence = (presence: any[]) => {
             if (!mapRef.current) return;
+            const session = getSession();
+            const myId = session?.id;
             // remove markers not present
             const keep = new Set(presence.map(p=>String(p.id)));
             Object.keys(markersById).forEach(k => { if (!keep.has(k)) { markersById[k].setMap(null); delete markersById[k]; } });
@@ -74,11 +80,19 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
               if (!p.lat || !p.lng) return;
               const id = String(p.id);
               const pos = new google.maps.LatLng(p.lat, p.lng);
+              const isSelf = myId && id === String(myId);
+              const color = isSelf ? '#16a34a' : '#f59e0b'; // green for self (driver), yellow for others
+              const icon = { path: google.maps.SymbolPath.CIRCLE, fillColor: color, fillOpacity: 1, scale: isSelf ? 8 : 6, strokeColor: '#fff', strokeWeight: 2 } as any;
               if (markersById[id]) {
                 markersById[id].setPosition(pos);
+                try { markersById[id].setIcon(icon); } catch {}
               } else {
-                const m = new google.maps.Marker({ position: pos, map: mapRef.current, title: id, label: { text: id, color: '#fff' }, icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: p.online ? '#0ea5a5' : '#888', fillOpacity: 1, scale: 7, strokeColor: '#fff', strokeWeight: 2 } });
+                const m = new google.maps.Marker({ position: pos, map: mapRef.current, title: id, icon });
                 markersById[id] = m;
+              }
+              // keep map roughly centered on current user
+              if (isSelf) {
+                try { mapRef.current.setCenter(pos); } catch {}
               }
             });
 
