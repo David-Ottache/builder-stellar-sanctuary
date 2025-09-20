@@ -79,7 +79,7 @@ interface StoreState {
   mergeOnboardingToDriver: (updates?: Partial<UserProfile>) => void;
   trip: TripDetails | null;
   startTrip: (t: Omit<TripDetails, "fee"> & { fee?: number }) => void;
-  endTrip: () => void;
+  endTrip: (fee?: number) => void;
   pendingTrip: PendingTrip | null;
   setPendingTrip: (p: PendingTrip | null) => void;
   contacts: EmergencyContact[];
@@ -238,7 +238,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   const startTrip: StoreState["startTrip"] = ({ pickup, destination, driverId, fee }) => {
     const driver = drivers.find((d) => d.id === driverId) || drivers[0];
-    const computedFee = fee ?? driver.price;
+    const computedFee = 0;
     const id = `t_${Date.now()}`;
     const startedAt = new Date().toISOString();
     const vehicle = pendingTrip?.vehicle;
@@ -271,11 +271,12 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     })();
   };
 
-  const endTrip = () => {
+  const endTrip = (feeInput?: number) => {
     if (!trip) return;
     const endedAt = new Date().toISOString();
+    const amount = typeof feeInput === 'number' && isFinite(feeInput) && feeInput >= 0 ? Math.round(feeInput) : 0;
     // update trip history
-    setTrips((prev)=> prev.map(t=> t.id === trip.id ? { ...t, status: 'completed', endedAt } : t));
+    setTrips((prev)=> prev.map(t=> t.id === trip.id ? { ...t, status: 'completed', endedAt, fee: amount } : t));
     // capture driver id and trip id for rating
     const driverIdForRating = trip.driverId || null;
     const tripIdForRating = trip.id || null;
@@ -292,7 +293,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         const origin = window.location.origin;
         const primary = `${origin}/api/trips/${encodeURIComponent(String(tripIdForRating))}/end`;
         const fallback = `${origin}/.netlify/functions/api/trips/${encodeURIComponent(String(tripIdForRating))}/end`;
-        try { await fetch(primary, { method: 'POST' }).catch(async ()=>{ await fetch(fallback, { method: 'POST' }).catch(()=>null); }); } catch(e){}
+        const body = JSON.stringify({ fee: amount });
+        const headers = { 'Content-Type': 'application/json' } as any;
+        try { await fetch(primary, { method: 'POST', headers, body }).catch(async ()=>{ await fetch(fallback, { method: 'POST', headers, body }).catch(()=>null); }); } catch(e){}
       } catch(e){}
     })();
   };
