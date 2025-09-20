@@ -137,7 +137,7 @@ const MOCK_DRIVERS: DriverInfo[] = [
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
-      const raw = sessionStorage.getItem('session.user');
+      const raw = localStorage.getItem('session.user') || sessionStorage.getItem('session.user');
       if (!raw) return null;
       const parsed = JSON.parse(raw) as any;
       if (parsed && (parsed.walletBalance === undefined || parsed.walletBalance === null)) {
