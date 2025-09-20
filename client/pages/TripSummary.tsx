@@ -23,7 +23,7 @@ export default function TripSummary() {
           <div className="mt-2 text-sm text-neutral-700">
             <div>Pick Up Location: {trip?.pickup || 'Federal Housing, Kuje.'}</div>
             <div>Destination: {trip?.destination || 'Transcorp Hilton'}</div>
-            <div className="mt-2">Fee <span className="font-bold">N{trip?.fee ?? driver.price}</span></div>
+            {(() => { try { const { user } = require("@/lib/store").useAppStore.getState(); if (user && user.role === 'driver') return null; } catch (_) {} return (<div className="mt-2">Fee <span className="font-bold">N{trip?.fee ?? driver.price}</span></div>); })()}
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3">
