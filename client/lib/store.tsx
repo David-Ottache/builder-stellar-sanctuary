@@ -292,17 +292,19 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       if (user && user.role === 'user' && amount > 0) {
         const payWithWallet = window.confirm(`Trip completed. Total ₦${amount.toLocaleString()}\nPress OK to pay with wallet, or Cancel for cash.`);
         if (payWithWallet) {
-          try {
-            const res = await fetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
-            if (res && res.ok) {
-              try { setUser({ ...user, walletBalance: Math.max(0, Number(user.walletBalance ?? 0) - amount) }); } catch {}
-              try { alert('Payment successful from wallet'); } catch {}
-            } else {
-              try { alert('Wallet payment failed. Please pay cash.'); } catch {}
+          (async () => {
+            try {
+              const res = await fetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
+              if (res && res.ok) {
+                try { setUser({ ...user, walletBalance: Math.max(0, Number(user.walletBalance ?? 0) - amount) }); } catch {}
+                try { alert('Payment successful from wallet'); } catch {}
+              } else {
+                try { alert('Wallet payment failed. Please pay cash.'); } catch {}
+              }
+            } catch {
+              try { alert('Could not reach server. Please pay cash.'); } catch {}
             }
-          } catch {
-            try { alert('Could not reach server. Please pay cash.'); } catch {}
-          }
+          })();
         } else {
           try { alert('Please pay cash to the driver'); } catch {}
         }
