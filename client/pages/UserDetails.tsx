@@ -3,9 +3,8 @@ import Layout from "@/components/app/Layout";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { safeFetch, haversineKm } from "@/lib/utils";
-import { RATES_PER_KM, computeFare } from "@/components/app/VehicleSelector";
-import Swal from 'sweetalert2';
+import { safeFetch } from "@/lib/utils";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function UserDetails() {
   const { id } = useParams();
