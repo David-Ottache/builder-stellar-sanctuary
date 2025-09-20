@@ -465,6 +465,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     try {
       if (user) sessionStorage.setItem('session.user', JSON.stringify(user));
       else sessionStorage.removeItem('session.user');
+      const remember = localStorage.getItem('session.remember') === '1';
+      if (remember && user) localStorage.setItem('session.user', JSON.stringify(user));
+      else if (!remember) localStorage.removeItem('session.user');
     } catch {}
   }, [user]);
 
