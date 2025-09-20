@@ -71,7 +71,9 @@ export default function Index() {
           navigator.geolocation.getCurrentPosition((pos)=>{
             const pickup = { lat: pos.coords.latitude, lng: pos.coords.longitude };
             setPendingTrip({ pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords, vehicle });
-            navigate('/user/verify');
+            const dist = (pickup && destinationCoords) ? haversineKm(pickup, destinationCoords) : null;
+            const fare = dist ? Math.round(dist * 50) : null;
+            navigate('/user/verify', { state: { pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords, distanceKm: dist, fare, vehicle } });
           }, ()=>{
             Swal.fire('Location unavailable', 'Unable to access current location. Please pick a location on the map.', 'error');
           }, { enableHighAccuracy: true, timeout: 5000 });
@@ -81,7 +83,9 @@ export default function Index() {
 
     if (!navigator.geolocation) {
       setPendingTrip({ pickup: 'Unknown location', destination, destinationCoords, vehicle });
-      navigate('/user/verify');
+      const dist = (pickupCoords && destinationCoords) ? haversineKm(pickupCoords, destinationCoords) : null;
+      const fare = dist ? Math.round(dist * 50) : null;
+      navigate('/user/verify', { state: { pickup: 'Unknown location', destination, pickupCoords, destinationCoords, distanceKm: dist, fare, vehicle } });
       return;
     }
 
@@ -89,11 +93,15 @@ export default function Index() {
       (pos) => {
         const pickup = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPendingTrip({ pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords, vehicle });
-        navigate('/user/verify');
+        const dist = (pickup && destinationCoords) ? haversineKm(pickup, destinationCoords) : null;
+        const fare = dist ? Math.round(dist * 50) : null;
+        navigate('/user/verify', { state: { pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords, distanceKm: dist, fare, vehicle } });
       },
       () => {
         setPendingTrip({ pickup: 'Current location', destination, destinationCoords, vehicle });
-        navigate('/user/verify');
+        const dist = (pickupCoords && destinationCoords) ? haversineKm(pickupCoords, destinationCoords) : null;
+        const fare = dist ? Math.round(dist * 50) : null;
+        navigate('/user/verify', { state: { pickup: 'Current location', destination, pickupCoords, destinationCoords, distanceKm: dist, fare, vehicle } });
       },
       { enableHighAccuracy: true, timeout: 5000 }
     );
