@@ -4,7 +4,6 @@ import Layout from "@/components/app/Layout";
 import MapView from "@/components/app/MapView";
 import LocationInputs from "@/components/app/LocationInputs";
 import VehicleSelector, { type VehicleId } from "@/components/app/VehicleSelector";
-import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
 import Swal from 'sweetalert2';
