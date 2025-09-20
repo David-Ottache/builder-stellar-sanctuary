@@ -49,6 +49,7 @@ export default function Login() {
       const user = data.user;
       await Swal.fire({ icon: 'success', title: `Welcome ${user.firstName || ''}`, text: 'You are now logged in.' });
       setUser(user);
+      try { if (remember) localStorage.setItem('session.remember','1'); else localStorage.removeItem('session.remember'); } catch {}
       // navigate to appropriate home
       navigate('/');
     } catch (e) {
