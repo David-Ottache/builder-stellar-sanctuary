@@ -12,6 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const { setUser } = useAppStore();
   const navigate = useNavigate();
+  const [remember, setRemember] = useState(false);
 
   const doLogin = async () => {
     try {
