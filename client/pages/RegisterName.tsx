@@ -35,6 +35,11 @@ export default function RegisterName() {
           <input value={last} onChange={(e)=>setLast(e.target.value)} placeholder="Last Name" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
           <input value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password" type="password" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
           <Button className="h-12 w-full rounded-full" onClick={next}>Next</Button>
+          <div className="my-3 flex items-center gap-3"><div className="h-px flex-1 bg-neutral-200"/><div className="text-xs text-neutral-500">or</div><div className="h-px flex-1 bg-neutral-200"/></div>
+          <div className="grid grid-cols-1 gap-2">
+            <button onClick={async ()=>{ await Swal.fire({ icon:'info', title:'Google sign-in not configured', text:'Connect authentication (e.g., Supabase or Firebase Auth) to enable Google login.' }); }} className="w-full rounded-xl border bg-white px-4 py-3 text-sm font-medium">Continue with Google</button>
+            <button onClick={async ()=>{ await Swal.fire({ icon:'info', title:'Social sign-in not configured', text:'Connect an auth provider to enable social login.' }); }} className="w-full rounded-xl border bg-white px-4 py-3 text-sm font-medium">Continue with Facebook</button>
+          </div>
           <div className="text-center text-sm">Already Have An Account? <Link to="/login" className="font-semibold">Sign In</Link></div>
         </div>
       </div>
