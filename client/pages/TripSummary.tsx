@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 export default function TripSummary() {
-  const { trip, drivers, endTrip } = useAppStore();
+  const { trip, drivers, endTrip, user } = useAppStore();
   const navigate = useNavigate();
   const driver = drivers.find(d=>d.id===trip?.driverId) || drivers[0];
 
