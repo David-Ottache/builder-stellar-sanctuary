@@ -1,5 +1,4 @@
 import Layout from "@/components/app/Layout";
-import Layout from "@/components/app/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
