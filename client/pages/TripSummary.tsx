@@ -21,8 +21,8 @@ export default function TripSummary() {
         <div className="mt-4 rounded-2xl border bg-white p-4">
           <div className="font-semibold">Trip Details</div>
           <div className="mt-2 text-sm text-neutral-700">
-            <div>Pick Up Location: {trip?.pickup || 'Federal Housing, Kuje.'}</div>
-            <div>Destination: {trip?.destination || 'Transcorp Hilton'}</div>
+            {(!user || user.role !== 'driver') && (<div>Pick Up Location: {trip?.pickup || 'Federal Housing, Kuje.'}</div>)}
+            {(!user || user.role !== 'driver') && (<div>Destination: {trip?.destination || 'Transcorp Hilton'}</div>)}
             {(!user || user.role !== 'driver') && (
               <div className="mt-2">Fee <span className="font-bold">N{trip?.fee ?? driver.price}</span></div>
             )}
