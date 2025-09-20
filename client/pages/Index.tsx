@@ -17,7 +17,7 @@ export default function Index() {
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [pickMode, setPickMode] = useState<'pickup' | 'destination' | null>(null);
   const navigate = useNavigate();
-  const { setPendingTrip } = useAppStore();
+  const { setPendingTrip, user } = useAppStore();
   const [avgFare, setAvgFare] = useState<number | null>(null);
 
   // attempt to read current position early so we can show pricing
@@ -164,40 +164,44 @@ export default function Index() {
         pickMode={pickMode}
       />
 
-      <div className="pointer-events-none absolute inset-x-4 top-4 z-20">
-        <LocationInputs
-          pickup={pickup}
-          destination={destination}
-          setPickup={setPickup}
-          setDestination={setDestination}
-          onSwap={() => {
-            setPickup(destination);
-            setDestination(pickup);
-          }}
-          onPickDestination={() => setPickMode('destination')}
-          onUseCurrentLocation={() => {
-            if (!navigator.geolocation) { setPickup('Current location'); return; }
-            navigator.geolocation.getCurrentPosition((pos)=>{
-              setPickupCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-              setPickup('Current location');
-            }, ()=>{ setPickup('Current location'); });
-          }}
-          className="pointer-events-auto"
-        />
-      </div>
-
-      <div className="absolute bottom-[5.5rem] left-0 right-0 z-20">
-        <div className="mx-4 rounded-t-3xl border-t bg-white/95 p-4 pb-4 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-white/75">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="text-sm font-semibold text-neutral-600">Choose your ride</div>
-            <div className="text-xs text-neutral-500">Upfront pricing</div>
-          </div>
-          <VehicleSelector selected={vehicle} onSelect={setVehicle} distanceKm={distanceKm ?? 0} />
-          {avgFare !== null && (
-            <div className="mt-3 text-sm text-neutral-700">Average cost from "{pickup || 'your pickup'}" to "{destination}" is ₦{avgFare.toLocaleString()}</div>
-          )}
+      {user?.role !== 'driver' && (
+        <div className="pointer-events-none absolute inset-x-4 top-4 z-20">
+          <LocationInputs
+            pickup={pickup}
+            destination={destination}
+            setPickup={setPickup}
+            setDestination={setDestination}
+            onSwap={() => {
+              setPickup(destination);
+              setDestination(pickup);
+            }}
+            onPickDestination={() => setPickMode('destination')}
+            onUseCurrentLocation={() => {
+              if (!navigator.geolocation) { setPickup('Current location'); return; }
+              navigator.geolocation.getCurrentPosition((pos)=>{
+                setPickupCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                setPickup('Current location');
+              }, ()=>{ setPickup('Current location'); });
+            }}
+            className="pointer-events-auto"
+          />
         </div>
-      </div>
+      )}
+
+      {user?.role !== 'driver' && (
+        <div className="absolute bottom-[5.5rem] left-0 right-0 z-20">
+          <div className="mx-4 rounded-t-3xl border-t bg-white/95 p-4 pb-4 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-white/75">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-sm font-semibold text-neutral-600">Choose your ride</div>
+              <div className="text-xs text-neutral-500">Upfront pricing</div>
+            </div>
+            <VehicleSelector selected={vehicle} onSelect={setVehicle} distanceKm={distanceKm ?? 0} />
+            {avgFare !== null && (
+              <div className="mt-3 text-sm text-neutral-700">Average cost from "{pickup || 'your pickup'}" to "{destination}" is ₦{avgFare.toLocaleString()}</div>
+            )}
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
