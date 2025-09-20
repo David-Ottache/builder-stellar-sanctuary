@@ -2,9 +2,8 @@ import Layout from "@/components/app/Layout";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { safeFetch, cachedFetch, haversineKm } from "@/lib/utils";
-import { RATES_PER_KM, computeFare } from "@/components/app/VehicleSelector";
 
 export default function UserVerify() {
   const { pendingTrip, selectDriver, upsertDriver, drivers } = useAppStore();
@@ -12,6 +11,17 @@ export default function UserVerify() {
   const [result, setResult] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const routeState: any = (location && (location as any).state) ? (location as any).state : null;
+  const tripDetails = {
+    pickup: routeState?.pickup ?? pendingTrip?.pickup ?? "",
+    destination: routeState?.destination ?? pendingTrip?.destination ?? "",
+    pickupCoords: routeState?.pickupCoords ?? pendingTrip?.pickupCoords ?? null,
+    destinationCoords: routeState?.destinationCoords ?? pendingTrip?.destinationCoords ?? null,
+    vehicle: routeState?.vehicle ?? pendingTrip?.vehicle ?? 'go',
+  } as const;
+  const distance = (routeState?.distanceKm != null ? routeState.distanceKm : (tripDetails.pickupCoords && tripDetails.destinationCoords ? haversineKm(tripDetails.pickupCoords, tripDetails.destinationCoords) : null));
+  const fare = (routeState?.fare != null ? routeState.fare : (distance != null ? Math.round(distance * 50) : null));
 
   // Camera / scanning state
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -251,23 +261,15 @@ export default function UserVerify() {
     <Layout>
       <div className="px-4 pt-6">
         <h1 className="text-2xl font-bold">Verify Driver</h1>
-        <p className="mt-1 text-sm text-neutral-600">Scan a QR code or enter assigned user ID.</p>
+        <p className="mt-1 text-sm text-neutral-600">Scan a QR code or enter assigned driver ID.</p>
 
-        {pendingTrip && (
+        {(tripDetails.pickup || tripDetails.destination) && (
           <div className="mt-3 rounded-2xl border bg-white p-4 text-sm">
             <div className="font-semibold">Trip</div>
-            <div className="text-neutral-700">Pickup: {pendingTrip.pickup} {pendingTrip.pickupCoords ? `(${pendingTrip.pickupCoords.lat.toFixed(4)}, ${pendingTrip.pickupCoords.lng.toFixed(4)})` : ''}</div>
-            <div className="text-neutral-700">Destination: {pendingTrip.destination} {pendingTrip.destinationCoords ? `(${pendingTrip.destinationCoords.lat.toFixed(4)}, ${pendingTrip.destinationCoords.lng.toFixed(4)})` : ''}</div>
-            <div className="text-neutral-700">Vehicle: {pendingTrip.vehicle ?? 'go'}</div>
-            {(() => {
-              const vehicleId = (pendingTrip.vehicle as string) || 'go';
-              // if we have both coords compute exact distance, otherwise fallback to 0 so computeFare returns the minimum fare for the vehicle
-              const distance = (pendingTrip.pickupCoords && pendingTrip.destinationCoords) ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : 0;
-              const fee = computeFare(distance, vehicleId as any);
-              return (
-                <div className="text-neutral-700">Amount: {`₦${fee.toLocaleString()}`}</div>
-              );
-            })()}
+            <div className="text-neutral-700">Pickup: {tripDetails.pickup} {tripDetails.pickupCoords ? `(${tripDetails.pickupCoords.lat.toFixed(4)}, ${tripDetails.pickupCoords.lng.toFixed(4)})` : ''}</div>
+            <div className="text-neutral-700">Destination: {tripDetails.destination} {tripDetails.destinationCoords ? `(${tripDetails.destinationCoords.lat.toFixed(4)}, ${tripDetails.destinationCoords.lng.toFixed(4)})` : ''}</div>
+            <div className="text-neutral-700">Vehicle: {tripDetails.vehicle ?? 'go'}</div>
+            <div className="text-neutral-700">Estimated Fare: {fare != null ? `₦${Number(fare).toLocaleString()}` : '—'}</div>
           </div>
         )}
 
@@ -313,7 +315,7 @@ export default function UserVerify() {
           </div>
 
           <div className="mt-4 flex gap-2">
-            <input value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Enter user ID e.g. d1 or QR text" className="flex-1 rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
+            <input value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Enter driver ID e.g. d1 or QR text" className="flex-1 rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
             <Button onClick={()=>check(code)} disabled={loading}>{loading ? 'Checking...' : 'Check'}</Button>
           </div>
         </div>
