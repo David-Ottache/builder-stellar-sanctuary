@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/app/Layout";
 import MapView from "@/components/app/MapView";
 import LocationInputs from "@/components/app/LocationInputs";
-import VehicleSelector, { type VehicleId } from "@/components/app/VehicleSelector";
+import { type VehicleId, computeFare } from "@/components/app/VehicleSelector";
 import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
 import Swal from 'sweetalert2';
@@ -18,7 +18,6 @@ export default function Index() {
   const [pickMode, setPickMode] = useState<'pickup' | 'destination' | null>(null);
   const navigate = useNavigate();
   const { setPendingTrip, user } = useAppStore();
-  const [avgFare, setAvgFare] = useState<number | null>(null);
 
   // attempt to read current position early so we can show pricing
   useEffect(()=>{
@@ -60,20 +59,6 @@ export default function Index() {
     return () => { mounted = false; clearTimeout(timeout); };
   }, [destination]);
 
-  useEffect(()=>{
-    const from = (pickup || '').trim();
-    const to = (destination || '').trim();
-    if (from.length < 2 || to.length < 2) { setAvgFare(null); return; }
-    const timer = setTimeout(async ()=>{
-      try {
-        const res = await fetch(`/api/trips/average?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
-        if (!res.ok) { setAvgFare(null); return; }
-        const data = await res.json().catch(()=>null);
-        setAvgFare(typeof data?.average === 'number' ? data.average : null);
-      } catch { setAvgFare(null); }
-    }, 400);
-    return ()=> clearTimeout(timer);
-  }, [pickup, destination]);
 
   const handleStart = () => {
     if (!vehicle) { Swal.fire('Missing selection', 'Please choose a vehicle type', 'warning'); return; }
@@ -191,14 +176,10 @@ export default function Index() {
       {user?.role !== 'driver' && (
         <div className="absolute bottom-[5.5rem] left-0 right-0 z-20">
           <div className="mx-4 rounded-t-3xl border-t bg-white/95 p-4 pb-4 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-white/75">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="text-sm font-semibold text-neutral-600">Choose your ride</div>
-              <div className="text-xs text-neutral-500">Upfront pricing</div>
+            <div className="mb-2 text-sm font-semibold text-neutral-600">Estimated fare</div>
+            <div className="text-2xl font-bold">
+              {distanceKm && destinationCoords ? `₦${computeFare(distanceKm, 'go').toLocaleString()}` : 'Enter destination to see estimate'}
             </div>
-            <VehicleSelector selected={vehicle} onSelect={setVehicle} distanceKm={distanceKm ?? 0} />
-            {avgFare !== null && (
-              <div className="mt-3 text-sm text-neutral-700">Average cost from "{pickup || 'your pickup'}" to "{destination}" is ₦{avgFare.toLocaleString()}</div>
-            )}
           </div>
         </div>
       )}
