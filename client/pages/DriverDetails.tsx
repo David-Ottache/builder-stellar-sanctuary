@@ -2,6 +2,7 @@ import Layout from "@/components/app/Layout";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
 import { useMemo, useState } from "react";
+import Layout from "@/components/app/Layout";
 import MapView from "@/components/app/MapView";
 import { Button } from "@/components/ui/button";
 
@@ -67,12 +68,11 @@ export default function DriverDetails() {
             <div className="flex items-start justify-between">
               <div>
                 <div className="text-sm text-neutral-500">Incoming ride</div>
-                <div className="text-lg font-bold mt-1">{incoming.pickup}</div>
-                <div className="text-sm text-neutral-600">{incoming.destination}</div>
+                <div className="text-lg font-bold mt-1">New trip request</div>
+                <div className="text-sm text-neutral-600">Details will show to the rider</div>
               </div>
               <div className="text-right">
                 <div className="text-xs text-neutral-500">{incoming.eta}</div>
-                <div className="text-2xl font-bold">${(incoming.amount/100).toFixed(2)}</div>
               </div>
             </div>
 
