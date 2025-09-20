@@ -2,7 +2,6 @@ import Layout from "@/components/app/Layout";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
 import { useMemo, useState } from "react";
-import Layout from "@/components/app/Layout";
 import MapView from "@/components/app/MapView";
 import { Button } from "@/components/ui/button";
 
