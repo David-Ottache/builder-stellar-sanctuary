@@ -27,7 +27,7 @@ export default function TripSummary() {
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <Button variant="destructive" className="h-12 rounded-full" onClick={()=>{ endTrip(); navigate('/'); }}>End Trip</Button>
+          <Button variant="destructive" className="h-12 rounded-full" onClick={()=>{ const input = window.prompt('Enter trip price (₦):', '0'); if (input===null) return; const n = Math.round(Number(input)); if (!Number.isFinite(n) || n < 0) { alert('Please enter a valid non-negative number'); return; } endTrip(n); navigate('/'); }}>End Trip</Button>
           <Button variant="outline" className="h-12 rounded-full" onClick={()=>navigate(-1)}>Back</Button>
         </div>
       </div>
