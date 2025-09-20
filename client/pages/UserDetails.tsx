@@ -1,4 +1,3 @@
-import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/app/Layout";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
@@ -107,7 +106,6 @@ export default function UserDetails() {
             <div>Destination: {pendingTrip?.destination ?? 'TBD'}</div>
           </div>
         </div>
-
 
         <div className="mt-4 flex gap-3">
           <Button className="h-12 flex-1 rounded-full" onClick={async () => {
