@@ -70,7 +70,7 @@ export default function Login() {
           <input value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
           <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
           <div className="flex items-center justify-between text-xs text-neutral-600">
-            <label className="inline-flex items-center gap-2"><input type="checkbox" className="rounded"/> Remember Me</label>
+            <label className="inline-flex items-center gap-2"><input type="checkbox" className="rounded" checked={remember} onChange={(e)=>setRemember(e.target.checked)} /> Remember Me</label>
             <Link to="#" className="font-semibold">FORGOT PASSWORD?</Link>
           </div>
           <Button className="h-12 w-full rounded-full" onClick={doLogin}>Login</Button>
