@@ -41,7 +41,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
 
     (async () => {
       try {
-        await loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleKey)}&libraries=places`);
+        await loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleKey)}&libraries=places,marker`);
         if (!mounted) return;
         if (!(window as any).google) return;
         const google = (window as any).google;
@@ -74,20 +74,34 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
             const myId = session?.id;
             // remove markers not present
             const keep = new Set(presence.map(p=>String(p.id)));
-            Object.keys(markersById).forEach(k => { if (!keep.has(k)) { markersById[k].setMap(null); delete markersById[k]; } });
+            Object.keys(markersById).forEach(k => { if (!keep.has(k)) { try { markersById[k].map = null; } catch { try { markersById[k].setMap?.(null); } catch {} } delete markersById[k]; } });
 
             presence.forEach((p:any) => {
               if (!p.lat || !p.lng) return;
               const id = String(p.id);
               const pos = new google.maps.LatLng(p.lat, p.lng);
               const isSelf = myId && id === String(myId);
-              const color = isSelf ? '#16a34a' : '#f59e0b'; // green for self (driver), yellow for others
-              const icon = { path: google.maps.SymbolPath.CIRCLE, fillColor: color, fillOpacity: 1, scale: isSelf ? 8 : 6, strokeColor: '#fff', strokeWeight: 2 } as any;
+              const color = isSelf ? '#16a34a' : '#f59e0b';
+              const size = isSelf ? 16 : 12;
+              const ensureContent = (el?: HTMLElement | null) => {
+                const e = el || document.createElement('div');
+                e.style.width = `${size}px`;
+                e.style.height = `${size}px`;
+                e.style.borderRadius = '50%';
+                e.style.background = color;
+                e.style.border = '2px solid #fff';
+                e.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.08)';
+                return e;
+              };
               if (markersById[id]) {
-                markersById[id].setPosition(pos);
-                try { markersById[id].setIcon(icon); } catch {}
+                try { markersById[id].position = pos; } catch { try { markersById[id].setPosition?.(pos); } catch {} }
+                try {
+                  const el = markersById[id].content as HTMLElement | undefined;
+                  markersById[id].content = ensureContent(el);
+                } catch {}
               } else {
-                const m = new google.maps.Marker({ position: pos, map: mapRef.current, title: id, icon });
+                const content = ensureContent(null);
+                const m = new google.maps.marker.AdvancedMarkerElement({ position: pos, map: mapRef.current, title: id, content });
                 markersById[id] = m;
               }
               // keep map roughly centered on current user
@@ -229,7 +243,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
             try { if (pollInterval) window.clearInterval(pollInterval); } catch(e){}
             try { if (es) { es.close(); es = null; } } catch(e){}
             try { if (watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(watchId); } catch(e){}
-            try { Object.values(markersById).forEach((m:any)=>m.setMap(null)); } catch(e){}
+            try { Object.values(markersById).forEach((m:any)=>{ try { m.map = null; } catch { try { m.setMap?.(null); } catch {} } }); } catch(e){}
           };
 
         } catch (e) { /* swallow presence init errors */ }
@@ -255,25 +269,39 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
       const mRef: any = (mapRef.current as any).__customMarkers || { pickup: null, dest: null };
       if (!mRef.pickup) {
         try {
-          mRef.pickup = new g.maps.Marker({ map: mapRef.current, visible: false, icon: { path: g.maps.SymbolPath.CIRCLE, fillColor: '#0ea5a5', fillOpacity: 1, scale: 7, strokeColor: '#fff', strokeWeight: 2 } });
+          const el = document.createElement('div');
+          el.style.width = '14px';
+          el.style.height = '14px';
+          el.style.borderRadius = '50%';
+          el.style.background = '#0ea5a5';
+          el.style.border = '2px solid #fff';
+          el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.08)';
+          mRef.pickup = new g.maps.marker.AdvancedMarkerElement({ map: null, position: undefined, content: el });
         } catch(e) { mRef.pickup = null; }
       }
       if (!mRef.dest) {
         try {
-          mRef.dest = new g.maps.Marker({ map: mapRef.current, visible: false, icon: { path: g.maps.SymbolPath.BACKWARD_CLOSED_ARROW, fillColor: '#ef4444', fillOpacity: 1, scale: 6, strokeColor: '#fff', strokeWeight: 2 } });
+          const el = document.createElement('div');
+          el.style.width = '14px';
+          el.style.height = '14px';
+          el.style.borderRadius = '50%';
+          el.style.background = '#ef4444';
+          el.style.border = '2px solid #fff';
+          el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.08)';
+          mRef.dest = new g.maps.marker.AdvancedMarkerElement({ map: null, position: undefined, content: el });
         } catch(e) { mRef.dest = null; }
       }
 
       try {
         if (mRef.pickup) {
           if (pickupCoords) {
-            mRef.pickup.setPosition(pickupCoords);
-            mRef.pickup.setVisible(!hidePickupMarker);
+            try { mRef.pickup.position = pickupCoords; } catch { try { mRef.pickup.setPosition?.(pickupCoords); } catch {} }
+            try { mRef.pickup.map = hidePickupMarker ? null : mapRef.current; } catch { try { mRef.pickup.setMap?.(hidePickupMarker ? null : mapRef.current); } catch {} }
             if (!hidePickupMarker) {
               try { mapRef.current.setCenter(pickupCoords); } catch(e){}
             }
           } else {
-            mRef.pickup.setVisible(false);
+            try { mRef.pickup.map = null; } catch { try { mRef.pickup.setMap?.(null); } catch {} }
           }
         }
       } catch(e) {}
@@ -281,10 +309,10 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
       try {
         if (mRef.dest) {
           if (destinationCoords) {
-            mRef.dest.setPosition(destinationCoords);
-            mRef.dest.setVisible(true);
+            try { mRef.dest.position = destinationCoords; } catch { try { mRef.dest.setPosition?.(destinationCoords); } catch {} }
+            try { mRef.dest.map = mapRef.current; } catch { try { mRef.dest.setMap?.(mapRef.current); } catch {} }
           } else {
-            mRef.dest.setVisible(false);
+            try { mRef.dest.map = null; } catch { try { mRef.dest.setMap?.(null); } catch {} }
           }
         }
       } catch(e) {}
