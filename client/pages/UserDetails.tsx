@@ -9,8 +9,7 @@ import Swal from 'sweetalert2';
 
 export default function UserDetails() {
   const { id } = useParams();
-  const { startTrip, selectedDriverId, selectDriver, drivers, pendingTrip, user: appUser, setUser: setAppUser } = useAppStore();
-  const [method, setMethod] = useState<'wallet' | 'card'>('wallet');
+  const { startTrip, selectedDriverId, selectDriver, drivers, pendingTrip } = useAppStore();
   const navigate = useNavigate();
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,90 +109,13 @@ export default function UserDetails() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl border bg-white p-4">
-          <div className="font-semibold">Payment Method</div>
-          <div className="mt-3 space-y-2">
-            <label className="flex items-center justify-between rounded-xl border p-3"><span>Wallet</span><input type="radio" name="pm-user" checked={method==='wallet'} onChange={()=>setMethod('wallet')} /></label>
-            <label className="flex items-center justify-between rounded-xl border p-3"><span>Master Card</span><input type="radio" name="pm-user" checked={method==='card'} onChange={()=>setMethod('card')} /></label>
-          </div>
-        </div>
 
         <div className="mt-4 flex gap-3">
           <Button className="h-12 flex-1 rounded-full" onClick={async () => {
-              // determine fee using pending trip coords and vehicle type
-            const vehicleId = (pendingTrip?.vehicle as string) || 'go';
-            let distance = 0;
-            if (pendingTrip?.pickupCoords && pendingTrip?.destinationCoords) {
-              try { distance = haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords); } catch (e) { distance = 0; }
-            }
-            // compute using central helper
-            const fee = computeFare(distance, vehicleId as any);
-
             if (!selectedDriverId) selectDriver(user.id);
-
-            if (method === 'wallet') {
-              if (!appUser) {
-                await Swal.fire({ icon: 'error', title: 'Not signed in', text: 'Please sign in to use wallet payments.' });
-                return;
-              }
-
-              const wallet = Number(appUser.walletBalance ?? (appUser.wallet && (appUser.wallet as any).balance) ?? (appUser as any).balance ?? 0);
-              if (wallet >= fee) {
-                const newBalance = wallet - fee;
-                // fetch latest balance from server to avoid stale client state
-                try {
-                  const uRes = await safeFetch(`/api/users/${appUser.id}`);
-                  const uData = uRes && uRes.ok ? await uRes.json().catch(()=>null) : null;
-                  const serverBal = Number(uData?.user?.walletBalance ?? appUser.walletBalance ?? 0);
-                  if (serverBal < fee) {
-                    const result = await Swal.fire({
-                      icon: 'error',
-                      title: 'Insufficient funds',
-                      html: `Your current wallet balance is ₦${serverBal.toLocaleString()}. The trip requires ₦${fee.toLocaleString()}. Would you like to top up?`,
-                      showCancelButton: true,
-                      confirmButtonText: 'Top Up',
-                    });
-                    if (result.isConfirmed) navigate('/wallet');
-                    return;
-                  }
-                } catch (e) {
-                  console.warn('failed fetching latest balance', e);
-                  await Swal.fire({ icon: 'warning', title: 'Could not verify balance', text: 'Proceeding to attempt deduction with current balance.' });
-                }
-
-                // persist deduction to server
-                try {
-                  const res = await fetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: appUser.id, amount: fee }) });
-                  if (!res.ok) {
-                    const d = await res.json().catch(()=>({}));
-                    if (d.error === 'insufficient_funds') {
-                      await Swal.fire({ icon: 'error', title: 'Insufficient funds', text: 'Your wallet has insufficient funds. Please top up or choose another payment method.' });
-                    } else {
-                      await Swal.fire({ icon: 'error', title: 'Payment failed', text: d.error || 'Could not deduct from wallet' });
-                    }
-                    return;
-                  }
-                } catch (e) {
-                  console.warn('wallet deduct failed', e);
-                  await Swal.fire({ icon: 'error', title: 'Payment failed', text: 'Could not reach server' });
-                  return;
-                }
-
-                // update app store user (persists to sessionStorage)
-                try { setAppUser({ ...appUser, walletBalance: newBalance }); } catch (e) { console.warn('Failed updating wallet in store', e); }
-
-                // start the trip with computed fee
-                startTrip({ pickup: pendingTrip?.pickup ?? 'Current location', destination: pendingTrip?.destination ?? 'TBD', driverId: user.id, fee });
-                navigate('/');
-              } else {
-                await Swal.fire({ icon: 'error', title: 'Insufficient funds', text: 'You have insufficient funds in your wallet. Please top up or choose another payment method.' });
-              }
-            } else {
-              // card payment - proceed without wallet deduction
-              startTrip({ pickup: pendingTrip?.pickup ?? 'Current location', destination: pendingTrip?.destination ?? 'TBD', driverId: user.id, fee });
-              navigate('/');
-            }
-          }}>Request</Button>
+            startTrip({ pickup: pendingTrip?.pickup ?? 'Current location', destination: pendingTrip?.destination ?? 'TBD', driverId: user.id, fee: 0 });
+            navigate('/');
+          }}>Start Trip</Button>
         </div>
       </div>
     </Layout>

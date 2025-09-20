@@ -50,7 +50,11 @@ export default function BottomNav({ className }: Props) {
         <button
           onClick={() => {
             try {
-              if (window.confirm('End current trip?')) endTrip();
+              const input = window.prompt('Enter trip price (₦):', '0');
+              if (input === null) return; // cancelled
+              const n = Math.round(Number(input));
+              if (!Number.isFinite(n) || n < 0) { alert('Please enter a valid non-negative number'); return; }
+              endTrip(n);
             } catch (e) { console.warn('failed ending trip from nav', e); }
           }}
           className="absolute -top-10 right-4 rounded-full bg-red-600 text-white px-3 py-2 text-sm"

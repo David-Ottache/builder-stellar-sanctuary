@@ -60,9 +60,9 @@ export default function Login() {
     <Layout hideTopBar hideBottomNav>
       <div className="mx-4 mt-4 rounded-3xl bg-white p-6 shadow-soft">
         <h1 className="mb-6 text-2xl font-bold">Welcome Back</h1>
-        <div className="mb-4 flex gap-2">
-          <button onClick={()=>setRole('driver')} className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${role==='driver' ? 'bg-primary text-white' : 'border bg-neutral-100'}`}>Driver</button>
-          <button onClick={()=>setRole('user')} className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium ${role==='user' ? 'bg-primary text-white' : 'border bg-neutral-100'}`}>User</button>
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          <button onClick={()=>setRole('driver')} className={`rounded-xl px-3 py-2 text-sm font-semibold ${role==='driver' ? 'bg-primary text-white' : 'border bg-neutral-100'}`}>Driver</button>
+          <button onClick={()=>setRole('user')} className={`rounded-xl px-3 py-2 text-sm font-semibold ${role==='user' ? 'bg-primary text-white' : 'border bg-neutral-100'}`}>Rider</button>
         </div>
         <div className="space-y-3">
           <input value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
@@ -72,6 +72,11 @@ export default function Login() {
             <Link to="#" className="font-semibold">FORGOT PASSWORD?</Link>
           </div>
           <Button className="h-12 w-full rounded-full" onClick={doLogin}>Login</Button>
+          <div className="my-3 flex items-center gap-3"><div className="h-px flex-1 bg-neutral-200"/><div className="text-xs text-neutral-500">or</div><div className="h-px flex-1 bg-neutral-200"/></div>
+          <div className="grid grid-cols-1 gap-2">
+            <button onClick={async ()=>{ await Swal.fire({ icon:'info', title:'Google sign-in not configured', text:'Connect authentication (e.g., Supabase or Firebase Auth) to enable Google login.' }); }} className="w-full rounded-xl border bg-white px-4 py-3 text-sm font-medium">Continue with Google</button>
+            <button onClick={async ()=>{ await Swal.fire({ icon:'info', title:'Social sign-in not configured', text:'Connect an auth provider to enable social login.' }); }} className="w-full rounded-xl border bg-white px-4 py-3 text-sm font-medium">Continue with Facebook</button>
+          </div>
           <div className="text-center text-sm">Dont Have An Account? <Link to={role==='driver' ? "/register/name" : "/user/register/name"} className="font-semibold">Sign Up</Link></div>
         </div>
       </div>

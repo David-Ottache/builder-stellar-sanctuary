@@ -141,6 +141,8 @@ export const rateTrip: RequestHandler = async (req, res) => {
 export const endTrip: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
+    const bodyFee = Number((req.body && (req.body as any).fee) ?? 0);
+    const fee = Number.isFinite(bodyFee) && bodyFee >= 0 ? Math.round(bodyFee) : 0;
     if (!id) return res.status(400).json({ error: 'id required' });
     if (!isInitialized()) {
       const init = await initializeFirebaseAdmin();
@@ -149,102 +151,53 @@ export const endTrip: RequestHandler = async (req, res) => {
     const db = getFirestore();
     if (!db) return res.status(503).json({ error: 'database not available' });
 
-    // run as transaction to update trip and credit driver atomically
-    const result = await db.runTransaction(async (t: any) => {
-      const docRef = db.collection('trips').doc(id);
-      const doc = await t.get(docRef);
-      if (!doc.exists) throw new Error('Trip not found');
-      const tripData: any = doc.data();
-      if (tripData.status === 'completed') {
-        return { alreadyCompleted: true, trip: { id: doc.id, ...tripData } };
-      }
-      const fee = Number(tripData.fee || 0);
-      const driverId = tripData.driverId;
-      let payoutTx: any = null;
-      let commissionTx: any = null;
+    const docRef = db.collection('trips').doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) return res.status(404).json({ error: 'Trip not found' });
+    const data = doc.data() as any;
+    if (data.status === 'completed') return res.json({ trip: { id: doc.id, ...data } });
 
-      // Commission rate (fraction). Make configurable via env var COMMISSION_RATE (e.g., 0.2 for 20%)
-      const commissionRate = Number(process.env.COMMISSION_RATE ?? 0.2);
+    const endedAt = new Date().toISOString();
+    const updates: any = { status: 'completed', endedAt };
+    if (fee > 0) updates.fee = fee;
+    await docRef.update(updates).catch(()=>{});
+    const updated = { id: doc.id, ...data, ...updates } as any;
 
-      // Prepare refs
-      const driverRef = driverId ? db.collection('drivers').doc(driverId) : null;
-      const userRef = driverId ? db.collection('users').doc(driverId) : null;
-      const platformRef = db.collection('wallets').doc('platform');
-
-      // READ PHASE: read driver/user/platform before performing any writes
-      const driverDoc = driverRef ? await t.get(driverRef) : null;
-      const userDoc = userRef ? await t.get(userRef) : null;
-      const platformDoc = await t.get(platformRef);
-
-      // now perform writes
-      const endedAt = new Date().toISOString();
-      t.update(docRef, { status: 'completed', endedAt });
-
-      if (driverId && fee > 0) {
-        const commission = Math.round((fee * commissionRate));
-        const driverShare = Math.max(0, fee - commission);
-
-        if (driverDoc && driverDoc.exists) {
-          const d = driverDoc.data() as any;
-          const prev = Number(d.walletBalance ?? 0);
-          t.update(driverRef, { walletBalance: prev + driverShare });
-          const txRef = db.collection('walletTransactions').doc();
-          const tx = { to: driverId, amount: driverShare, ts: new Date().toISOString(), type: 'trip_payout', tripId: id } as any;
-          t.set(txRef, tx);
-          payoutTx = tx;
-        } else if (userDoc && userDoc.exists) {
-          const u = userDoc.data() as any;
-          const prev = Number(u.walletBalance ?? 0);
-          t.update(userRef, { walletBalance: prev + driverShare });
-          const txRef = db.collection('walletTransactions').doc();
-          const tx = { to: driverId, amount: driverShare, ts: new Date().toISOString(), type: 'trip_payout', tripId: id } as any;
-          t.set(txRef, tx);
-          payoutTx = tx;
-        } else {
-          const txRef = db.collection('walletTransactions').doc();
-          const tx = { to: driverId, amount: driverShare, ts: new Date().toISOString(), type: 'trip_payout', tripId: id, note: 'driver record missing' } as any;
-          t.set(txRef, tx);
-          payoutTx = tx;
-        }
-
-        if (platformDoc && platformDoc.exists) {
-          const p = platformDoc.data() as any;
-          const prev = Number(p.balance ?? 0);
-          t.update(platformRef, { balance: prev + commission });
-        } else {
-          t.set(platformRef, { balance: commission });
-        }
-        const commTxRef = db.collection('walletTransactions').doc();
-        const ctx = { to: 'platform', amount: commission, ts: new Date().toISOString(), type: 'commission', tripId: id } as any;
-        t.set(commTxRef, ctx);
-        commissionTx = ctx;
-      }
-
-      // Construct updated trip without performing additional reads (reads-before-writes enforced by Firestore)
-      const updatedTrip = { id: doc.id, ...(tripData as any), status: 'completed', endedAt } as any;
-      const result = { alreadyCompleted: false, trip: updatedTrip, payout: payoutTx, commission: commissionTx };
-      return result;
-    });
-
-    // best-effort notifications (outside transaction)
     try {
       const ts = new Date().toISOString();
-      // notify driver
-      if (result.payout && result.trip.driverId) {
-        await db.collection('notifications').add({ userId: result.trip.driverId, title: 'Trip completed', body: `You received ₦${result.payout.amount.toLocaleString()}`, ts, read: false });
-      }
-      // notify passenger/user
-      if (result.trip.userId) {
-        await db.collection('notifications').add({ userId: result.trip.userId, title: 'Trip completed', body: `Your trip ${result.trip.id} completed. Total: ₦${result.trip.fee?.toLocaleString() || 0}`, ts, read: false });
-      }
-    } catch (e) {
-      console.warn('Failed creating notifications', e);
-    }
+      if (updated.userId) await db.collection('notifications').add({ userId: updated.userId, title: 'Trip completed', body: `Trip ${updated.id} completed. Total: ₦${Number(updated.fee||0).toLocaleString()}` , ts, read: false });
+      if (updated.driverId) await db.collection('notifications').add({ userId: updated.driverId, title: 'Trip completed', body: `Trip ${updated.id} completed.` , ts, read: false });
+    } catch {}
 
-    if (result && result.alreadyCompleted) return res.json({ trip: result.trip });
-    return res.json({ trip: result.trip, payout: result.payout, commission: result.commission });
+    return res.json({ trip: updated });
   } catch (e) {
     console.error('endTrip error', e);
     res.status(500).json({ error: 'Internal error' });
+  }
+};
+
+export const averageCost: RequestHandler = async (req, res) => {
+  try {
+    const from = String(req.query.from || '').toLowerCase();
+    const to = String(req.query.to || '').toLowerCase();
+    if (!from || !to) return res.status(400).json({ error: 'from and to required' });
+
+    if (!isInitialized()) {
+      const init = await initializeFirebaseAdmin();
+      if (!init.initialized) return res.status(503).json({ error: 'database not available' });
+    }
+    const db = getFirestore();
+    if (!db) return res.status(503).json({ error: 'database not available' });
+
+    const q = await db.collection('trips').limit(500).get();
+    const trips = q.docs.map(d=> ({ id: d.id, ...(d.data() as any) }));
+    const matches = trips.filter((t:any)=> typeof t.pickup==='string' && typeof t.destination==='string' && String(t.pickup).toLowerCase().includes(from) && String(t.destination).toLowerCase().includes(to) && Number(t.fee||0) > 0);
+    if (!matches.length) return res.json({ average: null, count: 0 });
+    const sum = matches.reduce((acc:number,t:any)=> acc + Number(t.fee||0), 0);
+    const avg = Math.round(sum / matches.length);
+    return res.json({ average: avg, count: matches.length });
+  } catch (e) {
+    console.error('averageCost error', e);
+    return res.status(500).json({ error: 'Internal error' });
   }
 };

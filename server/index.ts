@@ -163,6 +163,7 @@ export async function createServer() {
   app.get('/api/trips/:userId', tripController.listTrips as any);
   app.get('/api/trip/:id', tripController.getTripById as any);
   app.get('/api/trips/driver/:driverId', tripController.listTripsByDriver as any);
+  app.get('/api/trips/average', tripController.averageCost as any);
   app.post('/api/trips/:id/end', tripController.endTrip as any);
   app.post('/api/trips/:id/rate', tripController.rateTrip as any);
 
@@ -176,6 +177,12 @@ export async function createServer() {
   // Lookup endpoint: search both drivers and users by id (document id or stored 'id' field)
   const lookupController = await import('./controllers/lookupController');
   app.get('/api/lookup/:id', lookupController.lookupById as any);
+
+  // Admin endpoints (no auth applied here)
+  const adminController = await import('./controllers/adminController');
+  app.get('/api/admin/users', adminController.listUsers as any);
+  app.get('/api/admin/drivers', adminController.listDrivers as any);
+  app.get('/api/admin/trips', adminController.listTrips as any);
 
   return app;
 }
