@@ -107,10 +107,7 @@ export default function UserVerify() {
     return (
       <div className="flex items-center gap-2">
         {scanning ? (
-          <>
-            <button className="rounded-xl px-3 py-2 bg-red-500 text-white" onClick={()=>stopCamera()}>Stop Camera</button>
-            <video ref={videoRef} className="w-32 h-20 rounded border" playsInline muted />
-          </>
+          <button className="rounded-xl px-3 py-2 bg-red-500 text-white" onClick={()=>stopCamera()}>Stop Camera</button>
         ) : (
           <button className="rounded-xl px-3 py-2 border bg-white" onClick={()=>startCamera()}>Use Camera</button>
         )}
@@ -263,8 +260,24 @@ export default function UserVerify() {
         <h1 className="text-2xl font-bold">Verify Driver</h1>
         <p className="mt-1 text-sm text-neutral-600">Scan a QR code or enter assigned driver ID.</p>
 
+        {scanning && (
+          <div className="mt-4">
+            <div className="relative overflow-hidden rounded-2xl border bg-black">
+              <video ref={videoRef} className="h-full max-h-80 w-full object-cover" playsInline autoPlay muted />
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="h-40 w-40 rounded-md border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+              </div>
+              <div className="absolute right-2 top-2">
+                <button className="rounded-full bg-red-500 px-3 py-1 text-sm text-white" onClick={()=>stopCamera()}>Stop</button>
+              </div>
+            </div>
+            {cameraError && <div className="mt-2 text-xs text-red-600">{cameraError}</div>}
+            <div className="mt-2 text-center text-xs text-neutral-500">Align the QR inside the square</div>
+          </div>
+        )}
+
         {(tripDetails.pickup || tripDetails.destination) && (
-          <div className="mt-3 rounded-2xl border bg-white p-4 text-sm">
+          <div className="mt-4 rounded-2xl border bg-white p-4 text-sm">
             <div className="font-semibold">Trip</div>
             <div className="text-neutral-700">Pickup: {tripDetails.pickup} {tripDetails.pickupCoords ? `(${tripDetails.pickupCoords.lat.toFixed(4)}, ${tripDetails.pickupCoords.lng.toFixed(4)})` : ''}</div>
             <div className="text-neutral-700">Destination: {tripDetails.destination} {tripDetails.destinationCoords ? `(${tripDetails.destinationCoords.lat.toFixed(4)}, ${tripDetails.destinationCoords.lng.toFixed(4)})` : ''}</div>
