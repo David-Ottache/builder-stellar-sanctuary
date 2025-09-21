@@ -286,7 +286,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
           el.style.background = '#0ea5a5';
           el.style.border = '2px solid #fff';
           el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.08)';
-          mRef.pickup = new g.maps.marker.AdvancedMarkerElement({ map: null, position: undefined, content: el });
+          mRef.pickup = new g.maps.marker.AdvancedMarkerElement({ map: mapRef.current, position: undefined, content: el });
         } catch(e) { mRef.pickup = null; }
       }
       if (!mRef.dest) {
@@ -298,7 +298,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
           el.style.background = '#ef4444';
           el.style.border = '2px solid #fff';
           el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.08)';
-          mRef.dest = new g.maps.marker.AdvancedMarkerElement({ map: null, position: undefined, content: el });
+          mRef.dest = new g.maps.marker.AdvancedMarkerElement({ map: mapRef.current, position: undefined, content: el });
         } catch(e) { mRef.dest = null; }
       }
 
