@@ -42,12 +42,12 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
 
     (async () => {
       try {
-        await loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleKey)}&libraries=places,marker`);
+        await loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleKey)}&v=weekly&libraries=places,marker`);
         if (!mounted) return;
         if (!(window as any).google) return;
         const google = (window as any).google;
         mapRef.current = new google.maps.Map(containerRef.current, {
-          mapId: googleMapId || 'DEMO_MAP_ID',
+          ...(googleMapId ? { mapId: googleMapId } : {}),
           center,
           zoom: 13,
           disableDefaultUI: true,
@@ -74,6 +74,8 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
             if (!mapRef.current) return;
             const session = getSession();
             const myId = session?.id;
+            const Advanced = (window as any).google?.maps?.marker?.AdvancedMarkerElement;
+            const canUseAdvanced = !!Advanced && !!googleMapId;
             // remove markers not present
             const keep = new Set(presence.map(p=>String(p.id)));
             Object.keys(markersById).forEach(k => { if (!keep.has(k)) { try { markersById[k].map = null; } catch { try { markersById[k].setMap?.(null); } catch {} } delete markersById[k]; } });
@@ -97,22 +99,33 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
               };
               if (markersById[id]) {
                 try { markersById[id].position = pos; } catch { try { markersById[id].setPosition?.(pos); } catch {} }
-                try {
-                  const el = markersById[id].content as HTMLElement | undefined;
-                  markersById[id].content = ensureContent(el);
-                } catch {}
+                if (canUseAdvanced) {
+                  try {
+                    const el = markersById[id].content as HTMLElement | undefined;
+                    markersById[id].content = ensureContent(el);
+                  } catch {}
+                } else {
+                  try {
+                    const icon = { path: google.maps.SymbolPath.CIRCLE, fillColor: color, fillOpacity: 1, scale: isSelf ? 8 : 6, strokeColor: '#fff', strokeWeight: 2 } as any;
+                    markersById[id].setIcon?.(icon);
+                  } catch {}
+                }
               } else {
-                const content = ensureContent(null);
-                const m = new google.maps.marker.AdvancedMarkerElement({ position: pos, map: mapRef.current, title: id, content });
-                markersById[id] = m;
+                if (canUseAdvanced) {
+                  const content = ensureContent(null);
+                  const m = new google.maps.marker.AdvancedMarkerElement({ position: pos, map: mapRef.current, title: id, content });
+                  markersById[id] = m;
+                } else {
+                  const icon = { path: google.maps.SymbolPath.CIRCLE, fillColor: color, fillOpacity: 1, scale: isSelf ? 8 : 6, strokeColor: '#fff', strokeWeight: 2 } as any;
+                  const m = new google.maps.Marker({ position: pos, map: mapRef.current, title: id, icon });
+                  markersById[id] = m;
+                }
               }
-              // keep map roughly centered on current user
               if (isSelf) {
                 try { mapRef.current.setCenter(pos); } catch {}
               }
             });
 
-            // convert to array for cleanup reference
             markersRef.current = Object.values(markersById);
           };
 
@@ -277,28 +290,38 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
       if (!mapRef.current) return;
       // keep refs on mapRef to store markers
       const mRef: any = (mapRef.current as any).__customMarkers || { pickup: null, dest: null };
+      const Advanced = g.maps?.marker?.AdvancedMarkerElement;
+      const canUseAdvanced = !!Advanced && !!(import.meta.env as any).VITE_GOOGLE_MAPS_MAP_ID;
       if (!mRef.pickup) {
         try {
-          const el = document.createElement('div');
-          el.style.width = '14px';
-          el.style.height = '14px';
-          el.style.borderRadius = '50%';
-          el.style.background = '#0ea5a5';
-          el.style.border = '2px solid #fff';
-          el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.08)';
-          mRef.pickup = new g.maps.marker.AdvancedMarkerElement({ map: mapRef.current, position: undefined, content: el });
+          if (canUseAdvanced) {
+            const el = document.createElement('div');
+            el.style.width = '14px';
+            el.style.height = '14px';
+            el.style.borderRadius = '50%';
+            el.style.background = '#0ea5a5';
+            el.style.border = '2px solid #fff';
+            el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.08)';
+            mRef.pickup = new g.maps.marker.AdvancedMarkerElement({ map: mapRef.current, position: undefined, content: el });
+          } else {
+            mRef.pickup = new g.maps.Marker({ map: mapRef.current, visible: false, icon: { path: g.maps.SymbolPath.CIRCLE, fillColor: '#0ea5a5', fillOpacity: 1, scale: 7, strokeColor: '#fff', strokeWeight: 2 } });
+          }
         } catch(e) { mRef.pickup = null; }
       }
       if (!mRef.dest) {
         try {
-          const el = document.createElement('div');
-          el.style.width = '14px';
-          el.style.height = '14px';
-          el.style.borderRadius = '50%';
-          el.style.background = '#ef4444';
-          el.style.border = '2px solid #fff';
-          el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.08)';
-          mRef.dest = new g.maps.marker.AdvancedMarkerElement({ map: mapRef.current, position: undefined, content: el });
+          if (canUseAdvanced) {
+            const el = document.createElement('div');
+            el.style.width = '14px';
+            el.style.height = '14px';
+            el.style.borderRadius = '50%';
+            el.style.background = '#ef4444';
+            el.style.border = '2px solid #fff';
+            el.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.08)';
+            mRef.dest = new g.maps.marker.AdvancedMarkerElement({ map: mapRef.current, position: undefined, content: el });
+          } else {
+            mRef.dest = new g.maps.Marker({ map: mapRef.current, visible: false, icon: { path: g.maps.SymbolPath.BACKWARD_CLOSED_ARROW, fillColor: '#ef4444', fillOpacity: 1, scale: 6, strokeColor: '#fff', strokeWeight: 2 } });
+          }
         } catch(e) { mRef.dest = null; }
       }
 
