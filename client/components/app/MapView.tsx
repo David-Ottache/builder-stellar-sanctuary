@@ -16,6 +16,7 @@ interface Props {
 
 export default function MapView({ className, pickupCoords, destinationCoords, onPickDestination, onPick, pickMode, hidePickupMarker }: Props) {
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+  const googleMapId = (import.meta.env as any).VITE_GOOGLE_MAPS_MAP_ID as string | undefined;
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const mapRef = React.useRef<any>(null);
   const markersRef = React.useRef<any[]>([]);
@@ -46,6 +47,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
         if (!(window as any).google) return;
         const google = (window as any).google;
         mapRef.current = new google.maps.Map(containerRef.current, {
+          mapId: googleMapId || 'DEMO_MAP_ID',
           center,
           zoom: 13,
           disableDefaultUI: true,
