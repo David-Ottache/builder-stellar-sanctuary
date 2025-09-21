@@ -131,10 +131,9 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
               let res: Response | null = null;
               for (const url of endpoints) {
                 try {
-                  res = await fetch(url, { headers: hdr, cache: 'no-store' });
+                  res = await fetch(url, { headers: hdr, cache: 'no-store', credentials: 'same-origin', mode: 'cors' as RequestMode });
                   if (res && res.ok) break;
                 } catch (err) {
-                  // try next
                   res = null;
                   continue;
                 }
@@ -143,7 +142,7 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
               const data = await res.json().catch(()=>null);
               if (!data) return;
               renderPresence(data.presence || []);
-            } catch (e) { console.warn('fetchPresence failed', e); }
+            } catch (e) { /* silent */ }
           };
 
           // try SSE first
@@ -151,22 +150,31 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
             if ((window as any).EventSource) {
               try {
                 const origin = window.location.origin;
-                es = new EventSource(`${origin}/api/presence/stream`);
+                try { es = new EventSource(`${origin}/api/presence/stream`); } catch (e1) {
+                  try { es = new EventSource(`${origin}/.netlify/functions/api/presence/stream`); } catch (e2) {
+                    es = new EventSource('/api/presence/stream');
+                  }
+                }
               } catch(e) {
-                es = new EventSource('/api/presence/stream');
+                try { es = new EventSource('/.netlify/functions/api/presence/stream'); } catch(e2) { es = null; }
               }
-              es.onmessage = (ev: MessageEvent) => {
-                try {
-                  const payload = JSON.parse(ev.data || '{}');
-                  if (payload && payload.presence) renderPresence(payload.presence || []);
-                } catch (e) { /* ignore parse errors */ }
-              };
-              es.onerror = () => {
-                try { es?.close(); } catch (e) {}
-                es = null;
-                // fallback to polling
-                fetchPresence().then(()=> { pollInterval = window.setInterval(fetchPresence, 5000); });
-              };
+              if (es) {
+                es.onmessage = (ev: MessageEvent) => {
+                  try {
+                    const payload = JSON.parse(ev.data || '{}');
+                    if (payload && payload.presence) renderPresence(payload.presence || []);
+                  } catch (e) { }
+                };
+                es.onerror = () => {
+                  try { es?.close(); } catch (e) {}
+                  es = null;
+                  // fallback to polling
+                  fetchPresence().then(()=> { pollInterval = window.setInterval(fetchPresence, 5000); }).catch(()=>{});
+                };
+              } else {
+                await fetchPresence();
+                pollInterval = window.setInterval(fetchPresence, 5000);
+              }
             } else {
               // no EventSource, start polling
               await fetchPresence();
