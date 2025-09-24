@@ -1,6 +1,7 @@
 import Layout from "@/components/app/Layout";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
+import Swal from 'sweetalert2';
 
 export default function Trips() {
   const { trips, setTrips, user, upsertDriver } = useAppStore();
@@ -52,26 +53,33 @@ export default function Trips() {
 
   const endTrip = async (tripId: string) => {
     if (!tripId) return;
-    const ok = window.confirm('Are you sure you want to end this trip?');
-    if (!ok) return;
+    const { isConfirmed } = await Swal.fire({
+      title: 'End trip?',
+      text: 'Are you sure you want to end this trip?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, end trip',
+      cancelButtonText: 'Cancel',
+    });
+    if (!isConfirmed) return;
     try {
       const res = await fetch(`/api/trips/${tripId}/end`, { method: 'POST' });
       if (!res.ok) {
         const d = await res.json().catch(()=>({}));
-        alert(d.error || 'Failed ending trip');
+        await Swal.fire({ icon: 'error', title: 'Error', text: d.error || 'Failed ending trip' });
         return;
       }
       const data = await res.json().catch(()=>null);
       if (!data?.trip) {
-        alert('Failed updating trip');
+        await Swal.fire('Error', 'Failed updating trip', 'error');
         return;
       }
       // update local trips
       setTrips(trips.map(t=> t.id === tripId ? data.trip : t));
-      alert('Trip ended');
+      await Swal.fire('Success', 'Trip ended', 'success');
     } catch (e) {
       console.warn('endTrip failed', e);
-      alert('Failed ending trip');
+      await Swal.fire('Error', 'Failed ending trip', 'error');
     }
   };
 
