@@ -47,12 +47,45 @@ export default function UserVerify() {
       return;
     }
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      streamRef.current = s;
-      if (videoRef.current) {
-        videoRef.current.srcObject = s;
-        await videoRef.current.play();
+      // stop any previous stream before starting a new one
+      stopCamera();
+
+      // Prefer a real back camera when available
+      let constraints: MediaStreamConstraints = { video: { facingMode: { ideal: 'environment' } as any } };
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices().catch(()=>[]);
+        const cams = (devices || []).filter(d=>d.kind==='videoinput');
+        const back = cams.find(d=> /back|rear|environment/i.test(d.label));
+        if (back && back.deviceId) constraints = { video: { deviceId: { exact: back.deviceId } as any } };
+      } catch {}
+
+      let s: MediaStream | null = null;
+      try {
+        s = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch {
+        // fallback to any available camera
+        try { s = await navigator.mediaDevices.getUserMedia({ video: true }); } catch (err) { throw err; }
       }
+      if (!s) throw new Error('No camera stream');
+      streamRef.current = s;
+
+      if (videoRef.current) {
+        const v = videoRef.current;
+        v.srcObject = s;
+        // ensure inline playback on iOS
+        try { (v as any).playsInline = true; } catch {}
+        try { v.muted = true; } catch {}
+        await new Promise<void>((resolve)=>{
+          const onLoaded = () => { v.removeEventListener('loadedmetadata', onLoaded); resolve(); };
+          v.addEventListener('loadedmetadata', onLoaded);
+          // in case loadedmetadata already fired
+          if ((v as any).readyState >= 1) resolve();
+        });
+        try { await v.play(); } catch {}
+        // retry play shortly (Safari quirk)
+        setTimeout(()=>{ try { v.play(); } catch {} }, 100);
+      }
+
       setScanning(true);
       const detector = (window as any).BarcodeDetector ? new (window as any).BarcodeDetector({ formats: ['qr_code'] }) : null;
 
@@ -84,7 +117,10 @@ export default function UserVerify() {
       rafRef.current = requestAnimationFrame(scanLoop);
     } catch (e:any) {
       console.warn('startCamera failed', e);
-      setCameraError(String(e?.message || e));
+      const name = e?.name || '';
+      if (name === 'NotAllowedError') setCameraError('Permission denied. Please allow camera access.');
+      else if (name === 'NotFoundError') setCameraError('No camera found on this device.');
+      else setCameraError(String(e?.message || e));
     }
   };
 
