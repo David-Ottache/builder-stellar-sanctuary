@@ -442,8 +442,18 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   const sendSOS: StoreState["sendSOS"] = (message) => {
     const count = contacts.length;
-    // Here you would integrate SMS/Push provider. For now we just log.
-    console.warn("SOS sent to contacts", { count, message });
+    try {
+      const origin = window.location.origin;
+      contacts.forEach((c) => {
+        try {
+          fetch(`${origin}/api/safety`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to: c.phone, message: message || 'SOS' }),
+          }).catch(()=>{});
+        } catch (e) {}
+      });
+    } catch (e) {}
     return count;
   };
 

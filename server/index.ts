@@ -184,5 +184,9 @@ export async function createServer() {
   app.get('/api/admin/drivers', adminController.listDrivers as any);
   app.get('/api/admin/trips', adminController.listTrips as any);
 
+  // Safety: send test SOS via SMS (Twilio)
+  const safetyController = await import('./controllers/safetyController');
+  app.post('/api/safety', safetyController.sendTestSOS as any);
+
   return app;
 }
