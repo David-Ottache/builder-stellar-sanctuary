@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Home, Clock, Wallet, User, Scan } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
+import Swal from 'sweetalert2';
 
 interface Props {
   className?: string;
@@ -48,12 +49,20 @@ export default function BottomNav({ className }: Props) {
       })}
       {trip && (
         <button
-          onClick={() => {
+          onClick={async () => {
             try {
-              const input = window.prompt('Enter trip price (₦):', '0');
-              if (input === null) return; // cancelled
-              const n = Math.round(Number(input));
-              if (!Number.isFinite(n) || n < 0) { alert('Please enter a valid non-negative number'); return; }
+              const { isConfirmed, value } = await Swal.fire({
+                title: 'Enter trip price (₦)',
+                input: 'number',
+                inputLabel: 'Price',
+                inputValue: '0',
+                inputAttributes: { min: '0', step: '1' },
+                showCancelButton: true,
+                confirmButtonText: 'End Trip',
+              }) as any;
+              if (!isConfirmed) return;
+              const n = Math.round(Number(value));
+              if (!Number.isFinite(n) || n < 0) { await Swal.fire('Invalid amount', 'Please enter a valid non-negative number', 'warning'); return; }
               endTrip(n);
             } catch (e) { console.warn('failed ending trip from nav', e); }
           }}
