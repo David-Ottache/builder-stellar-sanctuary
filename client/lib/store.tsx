@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect, type ReactNode } from "react";
 import { haversineKm } from "@/lib/utils";
+import Swal from 'sweetalert2';
 
 // Relax Gender to accept any string to avoid strict mismatches across forms
 export type Gender = string;
@@ -290,24 +291,34 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     // rider payment choice
     try {
       if (user && user.role === 'user' && amount > 0) {
-        const payWithWallet = window.confirm(`Trip completed. Total ₦${amount.toLocaleString()}\nPress OK to pay with wallet, or Cancel for cash.`);
-        if (payWithWallet) {
-          (async () => {
-            try {
-              const res = await fetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
-              if (res && res.ok) {
-                try { setUser({ ...user, walletBalance: Math.max(0, Number(user.walletBalance ?? 0) - amount) }); } catch {}
-                try { alert('Payment successful from wallet'); } catch {}
-              } else {
-                try { alert('Wallet payment failed. Please pay cash.'); } catch {}
-              }
-            } catch {
-              try { alert('Could not reach server. Please pay cash.'); } catch {}
+        try {
+          void Swal.fire({
+            title: 'Trip completed',
+            text: `Total ₦${amount.toLocaleString()}`,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Pay with wallet',
+            cancelButtonText: 'Pay cash',
+          }).then((res) => {
+            if (res.isConfirmed) {
+              (async () => {
+                try {
+                  const res2 = await fetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
+                  if (res2 && res2.ok) {
+                    try { setUser({ ...user, walletBalance: Math.max(0, Number(user.walletBalance ?? 0) - amount) }); } catch {}
+                    try { void Swal.fire({ icon: 'success', title: 'Payment successful', text: 'Wallet charged.' }); } catch {}
+                  } else {
+                    try { void Swal.fire({ icon: 'error', title: 'Wallet payment failed', text: 'Please pay cash.' }); } catch {}
+                  }
+                } catch {
+                  try { void Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not reach server. Please pay cash.' }); } catch {}
+                }
+              })();
+            } else {
+              try { void Swal.fire({ icon: 'info', title: 'Pay cash', text: 'Please pay cash to the driver.' }); } catch {}
             }
-          })();
-        } else {
-          try { alert('Please pay cash to the driver'); } catch {}
-        }
+          });
+        } catch {}
       }
     } catch {}
 
