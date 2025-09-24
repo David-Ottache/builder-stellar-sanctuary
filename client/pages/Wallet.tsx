@@ -80,20 +80,23 @@ export default function Wallet() {
             setNamesMap((prev)=> ({ ...prev, ...mapUpdates }));
           }
 
-          // For trip payouts without 'from', try to resolve passenger by tripId
+          // For trip-linked transactions, resolve participant from trip. Prefer driver for deductions (payments to driver), else prefer counterpart.
           for (const t of annotated) {
-            if (!t.participantId && t.tripId) {
+            if (t.tripId) {
               try {
                 const r = await cachedFetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
                 if (r && r.ok) {
                   const td = await r.json().catch(()=>null);
                   const trip = td?.trip;
                   if (trip) {
-                    const uid = trip.userId as string || trip.driverId as string || null;
+                    const driverId: string | null = trip.driverId || null;
+                    const userId: string | null = trip.userId || null;
+                    // If this is a deduction (payment) from the current user, show driver as participant
+                    const uid = (t.type === 'deduct' || t.from === appUser?.id) ? (driverId || userId) : (userId || driverId);
                     if (uid) {
-                      // set namesMap for uid if missing
                       if (!namesMap[uid]) {
                         try {
+                          // Try user first
                           const ru = await safeFetch(`/api/users/${encodeURIComponent(uid)}`);
                           if (ru && ru.ok) {
                             const ud = await ru.json().catch(()=>null);
@@ -102,7 +105,6 @@ export default function Wallet() {
                             const avatar = (user && (user.profilePhoto || user.avatar || user.photoUrl)) || undefined;
                             setNamesMap(prev => ({ ...prev, [uid]: { name: name || uid, avatar } }));
                           } else {
-                            // try drivers
                             const rd = await safeFetch(`/api/drivers/${encodeURIComponent(uid)}`);
                             if (rd && rd.ok) {
                               const dd = await rd.json().catch(()=>null);
@@ -114,7 +116,6 @@ export default function Wallet() {
                           }
                         } catch(e){}
                       }
-                      // annotate transaction participantId
                       setTransactions(prev => prev.map(pt => pt.id === t.id ? { ...pt, participantId: uid } : pt));
                     }
                   }
@@ -302,7 +303,7 @@ export default function Wallet() {
             const isOutgoing = t.from === appUser?.id;
             let title = '';
             if (isTopUp) title = 'Top Up';
-            else if (t.type === 'deduct') title = 'Payment';
+            else if (t.type === 'deduct') title = t.participantId ? `Payment to ${(namesMap[t.participantId]?.name || t.participantId)}` : 'Payment';
             else if (t.from && t.to) title = `Transfer (${(namesMap[t.from] && namesMap[t.from].name) || t.from} → ${(namesMap[t.to] && namesMap[t.to].name) || t.to})`;
             else if (t.participantId && isIncoming) title = `From ${(namesMap[t.participantId] && namesMap[t.participantId].name) || t.participantId || ''}`;
             else if (t.participantId && isOutgoing) title = `To ${(namesMap[t.participantId] && namesMap[t.participantId].name) || t.participantId || ''}`;
