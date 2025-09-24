@@ -145,7 +145,7 @@ export default function UserVerify() {
         {scanning ? (
           <button className="rounded-xl px-3 py-2 bg-red-500 text-white" onClick={()=>stopCamera()}>Stop Camera</button>
         ) : (
-          <button className="rounded-xl px-3 py-2 border bg-white" onClick={()=>startCamera()}>Use Camera</button>
+          <button className="rounded-xl px-3 py-2 border bg-white" onClick={()=>startCamera()}>Scan QR Code</button>
         )}
         {cameraError && <div className="text-xs text-red-600">{cameraError}</div>}
       </div>
