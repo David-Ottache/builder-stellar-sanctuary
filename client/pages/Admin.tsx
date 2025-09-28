@@ -1,7 +1,7 @@
 import Layout from "@/components/app/Layout";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, Users, Car, Route, BarChart3, Settings } from "lucide-react";
+import { Menu, Users, Car, Route, BarChart3, Settings, Percent } from "lucide-react";
 
 export default function Admin() {
   const { pathname } = useLocation();
@@ -12,6 +12,7 @@ export default function Admin() {
     { to: "/admin/drivers", label: "Drivers" },
     { to: "/admin/trips", label: "Trips" },
     { to: "/admin/reports", label: "Reports" },
+    { to: "/admin/commissions", label: "Commissions" },
     { to: "/admin/settings", label: "Settings" },
   ];
   const bottom = [
@@ -19,6 +20,7 @@ export default function Admin() {
     { to: "/admin/drivers", label: "Drivers", Icon: Car },
     { to: "/admin/trips", label: "Trips", Icon: Route },
     { to: "/admin/reports", label: "Reports", Icon: BarChart3 },
+    { to: "/admin/commissions", label: "Comms", Icon: Percent },
     { to: "/admin/settings", label: "Settings", Icon: Settings },
   ];
   return (
@@ -62,7 +64,7 @@ export default function Admin() {
 
       {/* Admin bottom nav (mobile) */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-white/95 px-3 py-2 backdrop-blur md:hidden">
-        <div className="grid grid-cols-5 gap-1">
+        <div className="grid grid-cols-6 gap-1">
           {bottom.map(({ to, label, Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => `flex flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs ${isActive ? 'text-primary' : 'text-neutral-600'}`}>
               <Icon className="h-5 w-5" />
