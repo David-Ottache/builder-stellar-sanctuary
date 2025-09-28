@@ -27,7 +27,7 @@ export default function AdminCommissions() {
             <div className="text-sm font-semibold text-neutral-600">Total entries: {commissions.length.toLocaleString()}</div>
             <div className="text-sm font-semibold text-neutral-600">Total commission: ₦{commissions.reduce((s,c)=>s+Number(c.amount||0),0).toLocaleString()}</div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border">
             <table className="min-w-[720px] w-full text-sm">
               <thead>
                 <tr className="bg-neutral-50 text-left text-xs text-neutral-600">
@@ -35,7 +35,7 @@ export default function AdminCommissions() {
                   <th className="p-2">Trip</th>
                   <th className="p-2">Rider</th>
                   <th className="p-2">Driver</th>
-                  <th className="p-2">Commission</th>
+                  <th className="p-2">Commission (₦)</th>
                 </tr>
               </thead>
               <tbody>
@@ -43,14 +43,14 @@ export default function AdminCommissions() {
                   const dt = c.ts ? new Date(c.ts) : new Date();
                   const rider = userNameById[String(c.from||'')] || shortId(String(c.from||''));
                   const driver = c.driverId ? shortId(String(c.driverId)) : '—';
-                  const trip = c.tripId ? shortId(String(c.tripId)) : '��';
+                  const trip = c.tripId ? shortId(String(c.tripId)) : '—';
                   return (
                     <tr key={c.id||i} className="border-t">
                       <td className="p-2 whitespace-nowrap">{dt.toLocaleString()}</td>
                       <td className="p-2">{trip}</td>
                       <td className="p-2">{rider}</td>
                       <td className="p-2">{driver}</td>
-                      <td className="p-2 font-semibold">₦{Number(c.amount||0).toLocaleString()}</td>
+                      <td className="p-2 font-semibold">{Number(c.amount||0).toLocaleString()}</td>
                     </tr>
                   );
                 })}
