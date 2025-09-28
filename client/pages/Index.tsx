@@ -29,7 +29,7 @@ export default function Index() {
   }, []);
 
   const distanceKm = (pickupCoords && destinationCoords) ? haversineKm(pickupCoords, destinationCoords) : null;
-  const estimatedFare = distanceKm ? Math.round(distanceKm * 50) : null; // 50 naira per km
+  const estimatedFare = distanceKm != null ? computeFare(distanceKm) : null;
 
   // if user picks a destination but pickup is unknown, try to fetch current location to enable estimate
   useEffect(() => {
