@@ -110,7 +110,7 @@ export default function Index() {
       () => {
         setPendingTrip({ pickup: 'Current location', destination, destinationCoords, vehicle });
         const dist = (pickupCoords && destinationCoords) ? haversineKm(pickupCoords, destinationCoords) : null;
-        const fare = dist ? Math.round(dist * 50) : null;
+        const fare = dist != null ? computeFare(dist) : null;
         navigate('/user/verify', { state: { pickup: 'Current location', destination, pickupCoords, destinationCoords, distanceKm: dist, fare, vehicle } });
       },
       { enableHighAccuracy: true, timeout: 5000 }
