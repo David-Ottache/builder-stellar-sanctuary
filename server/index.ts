@@ -191,6 +191,7 @@ export async function createServer() {
   app.get('/api/admin/users', adminController.listUsers as any);
   app.get('/api/admin/drivers', adminController.listDrivers as any);
   app.get('/api/admin/trips', adminController.listTrips as any);
+  app.get('/api/admin/commissions', adminController.listCommissions as any);
 
   // Safety: send test SOS via SMS (Twilio)
   const safetyController = await import('./controllers/safetyController');
