@@ -14,10 +14,10 @@ export default function AdminLogin() {
   const doLogin = async () => {
     try {
       if (email === 'abarcosltd@gmail.com' && password === 'admin') {
-        const user = { id: 'admin', firstName: 'Admin', lastName: '', email, phone: '', countryCode: '+234', gender: 'N/A', location: '', walletBalance: 0, role: 'user' as const };
+        const user = { id: 'admin', firstName: 'Admin', lastName: '', email, phone: '', countryCode: '+234', gender: 'N/A', location: '', walletBalance: 0, role: 'admin' as const };
         setUser(user as any);
         await Swal.fire({ icon: 'success', title: 'Welcome Admin', text: 'Signed in as admin.' });
-        navigate('/admin/dashboard');
+        navigate('/admin');
         return;
       }
       // Reuse user login endpoint for non-admin credentials
