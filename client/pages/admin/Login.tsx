@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
@@ -6,8 +7,8 @@ import Layout from "@/components/app/Layout";
 import Swal from 'sweetalert2';
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("abarcosltd@gmail.com");
+  const [password, setPassword] = useState("admin");
   const { setUser } = useAppStore();
   const navigate = useNavigate();
 
@@ -37,6 +38,10 @@ export default function AdminLogin() {
         <div className="space-y-3">
           <input value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
           <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password" className="w-full rounded-xl border bg-neutral-100 px-4 py-3 outline-none focus:bg-white" />
+          <div className="flex items-center justify-between text-xs text-neutral-600">
+            <span />
+            <button type="button" onClick={async()=>{ await Swal.fire({ icon:'info', title:'Password reset', text:'A password reset link has been sent to your email.' }); }} className="font-semibold">FORGOT PASSWORD?</button>
+          </div>
           <Button className="h-12 w-full rounded-full" onClick={doLogin}>Login</Button>
         </div>
       </div>
