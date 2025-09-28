@@ -196,5 +196,10 @@ export async function createServer() {
   const safetyController = await import('./controllers/safetyController');
   app.post('/api/safety', safetyController.sendTestSOS as any);
 
+  // Settings (admin-configurable, with in-memory fallback)
+  const settingsController = await import('./controllers/settingsController');
+  app.get('/api/settings', settingsController.getSettings as any);
+  app.put('/api/settings', settingsController.updateSettings as any);
+
   return app;
 }
