@@ -16,6 +16,23 @@ export async function safeFetch(input: RequestInfo, init?: RequestInit) {
 }
 
 // Simple GET cache using sessionStorage. Returns Response-like object with json() method.
+export async function apiFetch(path: string, init?: RequestInit) {
+  try {
+    const primary = path;
+    const res1 = await safeFetch(primary, init as any);
+    if (res1 && res1.ok) return res1;
+    const fallback = path.startsWith('/api/') ? (`/.netlify/functions${path}`) : path;
+    if (fallback !== primary) {
+      const res2 = await safeFetch(fallback, init as any);
+      if (res2 && res2.ok) return res2;
+      return res2;
+    }
+    return res1;
+  } catch {
+    return null as any;
+  }
+}
+
 export async function cachedFetch(input: string, init?: RequestInit, ttl = 5 * 60 * 1000) {
   // only cache GET requests
   const method = (init && init.method) ? init.method.toUpperCase() : 'GET';
