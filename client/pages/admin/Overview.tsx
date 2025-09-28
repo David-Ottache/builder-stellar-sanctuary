@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+import { apiFetch } from '@/lib/utils';
+
 export default function AdminOverview() {
   const [users, setUsers] = useState<any[]>([]);
   const [drivers, setDrivers] = useState<any[]>([]);
@@ -9,11 +11,14 @@ export default function AdminOverview() {
   useEffect(()=>{
     (async()=>{
       try {
-        const [u,d,t] = await Promise.all([
-          fetch('/api/admin/users').then(r=>r.ok?r.json():{users:[]}).catch(()=>({users:[]})),
-          fetch('/api/admin/drivers').then(r=>r.ok?r.json():{drivers:[]}).catch(()=>({drivers:[]})),
-          fetch('/api/admin/trips').then(r=>r.ok?r.json():{trips:[]}).catch(()=>({trips:[]})),
+        const [uRes,dRes,tRes] = await Promise.all([
+          apiFetch('/api/admin/users'),
+          apiFetch('/api/admin/drivers'),
+          apiFetch('/api/admin/trips'),
         ]);
+        const u = await uRes?.json().catch(()=>({users:[]})) || {users:[]};
+        const d = await dRes?.json().catch(()=>({drivers:[]})) || {drivers:[]};
+        const t = await tRes?.json().catch(()=>({trips:[]})) || {trips:[]};
         setUsers(u.users||[]); setDrivers(d.drivers||[]); setTrips(t.trips||[]);
       } finally { setLoading(false); }
     })();
