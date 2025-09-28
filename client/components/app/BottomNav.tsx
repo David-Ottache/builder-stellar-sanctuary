@@ -8,13 +8,25 @@ interface Props {
   className?: string;
 }
 
-const items = [
-  { to: "/", label: "Home", Icon: Home },
-  { to: "/trips", label: "Trips", Icon: Clock },
-  { to: "/user/verify", label: "Verify", Icon: Scan },
-  { to: "/wallet", label: "Wallet", Icon: Wallet },
-  { to: "/profile", label: "Profile", Icon: User },
-];
+function getItems(user: any) {
+  if (user && user.role === 'driver') {
+    const home = user.id ? `/driver/${encodeURIComponent(String(user.id))}` : '/driver/me';
+    return [
+      { to: home, label: "Home", Icon: Home },
+      { to: "/driver/trips", label: "Trips", Icon: Clock },
+      // hide Verify for drivers
+      { to: "/driver/wallet", label: "Wallet", Icon: Wallet },
+      { to: "/driver/profile", label: "Profile", Icon: User },
+    ];
+  }
+  return [
+    { to: "/", label: "Home", Icon: Home },
+    { to: "/trips", label: "Trips", Icon: Clock },
+    { to: "/user/verify", label: "Verify", Icon: Scan },
+    { to: "/wallet", label: "Wallet", Icon: Wallet },
+    { to: "/profile", label: "Profile", Icon: User },
+  ];
+}
 
 export default function BottomNav({ className }: Props) {
   const location = useLocation();
