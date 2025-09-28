@@ -39,6 +39,8 @@ import AdminOverview from "./pages/admin/Overview";
 import AdminUsers from "./pages/admin/Users";
 import AdminDrivers from "./pages/admin/Drivers";
 import AdminTrips from "./pages/admin/Trips";
+import AdminReports from "./pages/admin/Reports";
+import AdminSettings from "./pages/admin/Settings";
 import { AppStoreProvider } from "./lib/store";
 
 const queryClient = new QueryClient();
@@ -83,6 +85,8 @@ const App = () => (
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="drivers" element={<AdminDrivers />} />
                 <Route path="trips" element={<AdminTrips />} />
+                <Route path="reports" element={<AdminReports />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
 
               {/* catch-all */}
