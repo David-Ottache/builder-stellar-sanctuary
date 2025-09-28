@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { apiFetch } from '@/lib/utils';
+
 export default function AdminCommissions() {
   const [commissions, setCommissions] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -7,10 +9,12 @@ export default function AdminCommissions() {
 
   useEffect(()=>{ (async()=>{
     try {
-      const [c,u] = await Promise.all([
-        fetch('/api/admin/commissions').then(r=>r.ok?r.json():{commissions:[]}).catch(()=>({commissions:[]})),
-        fetch('/api/admin/users').then(r=>r.ok?r.json():{users:[]}).catch(()=>({users:[]})),
+      const [cRes,uRes] = await Promise.all([
+        apiFetch('/api/admin/commissions'),
+        apiFetch('/api/admin/users'),
       ]);
+      const c = await cRes?.json().catch(()=>({commissions:[]})) || {commissions:[]};
+      const u = await uRes?.json().catch(()=>({users:[]})) || {users:[]};
       setCommissions(c.commissions||[]);
       setUsers(u.users||[]);
     } finally { setLoading(false); }
