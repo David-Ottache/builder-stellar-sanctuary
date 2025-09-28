@@ -1,7 +1,7 @@
 import Layout from "@/components/app/Layout";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import MapView from "@/components/app/MapView";
 import { Button } from "@/components/ui/button";
 
@@ -10,26 +10,52 @@ export default function DriverDetails() {
   const { drivers, startTrip, selectedDriverId, selectDriver } = useAppStore();
   const navigate = useNavigate();
   const [online, setOnline] = useState(true);
-  const [incoming, setIncoming] = useState<any | null>({
-    id: 'req1',
-    pickup: '123 Main St',
-    destination: '456 Elm St',
-    eta: '15s',
-    amount: 1840,
-  });
+  const [incoming, setIncoming] = useState<any | null>(null);
 
   const driver = useMemo(()=> drivers.find(d=>d.id===id) || drivers[0], [drivers, id]);
   const avatar = driver?.avatar || 'https://cdn.builder.io/api/v1/image/assets%2Ffe9fd683ebc34eeab1db912163811d62%2Fab35a1634e2a43acab653d0184b25d6d?format=webp&width=800';
 
-  const accept = () => {
+  useEffect(()=>{
+    let iv: number | null = null;
+    if (!id || !online) { setIncoming(null); return; }
+    const origin = window.location.origin;
+    const poll = async () => {
+      try {
+        const res = await fetch(`${origin}/api/ride-requests?driverId=${encodeURIComponent(String(id))}&status=pending`);
+        if (!res.ok) return;
+        const data = await res.json().catch(()=>null);
+        const list = data?.requests || [];
+        if (list.length) {
+          const r = list[0];
+          setIncoming({ id: r.id, pickup: r.pickup, destination: r.destination, fare: r.fare ?? null });
+        } else {
+          setIncoming(null);
+        }
+      } catch (e) { /* ignore */ }
+    };
+    poll();
+    iv = window.setInterval(poll, 3000);
+    return () => { if (iv) window.clearInterval(iv); };
+  }, [id, online]);
+
+  const accept = async () => {
     if (!driver) return;
-    // start trip
+    try {
+      const origin = window.location.origin;
+      await fetch(`${origin}/api/ride-requests/${encodeURIComponent(incoming.id)}/accept`, { method: 'POST' }).catch(()=>{});
+    } catch {}
     if(!selectedDriverId) selectDriver(driver.id);
-    startTrip({ pickup: incoming.pickup, destination: incoming.destination, driverId: driver.id, fee: Math.round(incoming.amount/100) });
+    startTrip({ pickup: incoming.pickup, destination: incoming.destination, driverId: driver.id, fee: typeof incoming.fare === 'number' ? incoming.fare : 0 });
     setIncoming(null);
     navigate('/trips');
   };
-  const decline = () => { setIncoming(null); };
+  const decline = async () => {
+    try {
+      const origin = window.location.origin;
+      await fetch(`${origin}/api/ride-requests/${encodeURIComponent(incoming.id)}/decline`, { method: 'POST' }).catch(()=>{});
+    } catch {}
+    setIncoming(null);
+  };
 
   return (
     <Layout>
@@ -68,10 +94,10 @@ export default function DriverDetails() {
               <div>
                 <div className="text-sm text-neutral-500">Incoming ride</div>
                 <div className="text-lg font-bold mt-1">New trip request</div>
-                <div className="text-sm text-neutral-600">Details will show to the rider</div>
+                <div className="text-sm text-neutral-600">{incoming.pickup} → {incoming.destination}</div>
               </div>
               <div className="text-right">
-                <div className="text-xs text-neutral-500">{incoming.eta}</div>
+                <div className="text-xs text-neutral-500">now</div>
               </div>
             </div>
 
