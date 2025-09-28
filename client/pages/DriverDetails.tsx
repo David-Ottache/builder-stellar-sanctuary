@@ -80,6 +80,10 @@ export default function DriverDetails() {
               </div>
             </label>
           </div>
+          <div className="mt-3 flex gap-2">
+            <button className="flex-1 rounded-xl border px-3 py-2 text-sm font-medium hover:bg-neutral-50" onClick={()=>navigate('/trips')}>Trips</button>
+            <button className="flex-1 rounded-xl border px-3 py-2 text-sm font-medium hover:bg-neutral-50" onClick={()=>navigate('/wallet')}>Wallet</button>
+          </div>
         </div>
       </div>
 
