@@ -22,7 +22,7 @@ export default function AdminDrivers() {
   }
   function exportPDF(rows:any[], tripsByDriver:Record<string,number>){
     const pageW=595, pageH=842; const margin=40; let y = pageH - margin; const lineH=14; const left=margin;
-    function esc(s:string){ return String(s).replace(/\\(/g,'\\\\(').replace(/\\)/g,'\\\\)'); }
+    function esc(s:string){ return String(s).split('(').join('\\(').split(')').join('\\)').split('\r').join(' ').split('\n').join(' '); }
     const header = ['ID','Name','Phone','Rating','Rides','Trips'];
     const allLines = [header, ...rows.map((d:any)=>{
       const id = d.id || d.uid || d.email || d.phone || '';
