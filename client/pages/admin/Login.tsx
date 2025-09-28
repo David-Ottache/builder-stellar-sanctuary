@@ -13,7 +13,14 @@ export default function AdminLogin() {
 
   const doLogin = async () => {
     try {
-      // Reuse user login endpoint for admin sign-in; access control can be refined server-side
+      if (email === 'abarcosltd@gmail.com' && password === 'admin') {
+        const user = { id: 'admin', firstName: 'Admin', lastName: '', email, phone: '', countryCode: '+234', gender: 'N/A', location: '', walletBalance: 0, role: 'user' as const };
+        setUser(user as any);
+        await Swal.fire({ icon: 'success', title: 'Welcome Admin', text: 'Signed in as admin.' });
+        navigate('/admin/dashboard');
+        return;
+      }
+      // Reuse user login endpoint for non-admin credentials
       const res = await fetch('/api/users/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -22,7 +29,7 @@ export default function AdminLogin() {
       }
       const data = await res.json();
       const user = data.user;
-      await Swal.fire({ icon: 'success', title: `Welcome ${user.firstName || ''}`, text: 'Signed in as admin.' });
+      await Swal.fire({ icon: 'success', title: `Welcome ${user.firstName || ''}`, text: 'Signed in.' });
       setUser(user);
       navigate('/admin');
     } catch (e) {
