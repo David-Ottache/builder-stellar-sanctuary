@@ -31,6 +31,16 @@ export default function Index() {
   const distanceKm = (pickupCoords && destinationCoords) ? haversineKm(pickupCoords, destinationCoords) : null;
   const estimatedFare = distanceKm ? Math.round(distanceKm * 50) : null; // 50 naira per km
 
+  // if user picks a destination but pickup is unknown, try to fetch current location to enable estimate
+  useEffect(() => {
+    if (destinationCoords && !pickupCoords && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setPickupCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        if (!pickup) setPickup('Current location');
+      }, () => { /* ignore */ }, { enableHighAccuracy: false, timeout: 3000 });
+    }
+  }, [destinationCoords, pickupCoords]);
+
   // geocode destination text into coordinates
   useEffect(() => {
     if (!destination || destination.trim().length === 0) {
