@@ -82,7 +82,7 @@ export default function Index() {
             const pickup = { lat: pos.coords.latitude, lng: pos.coords.longitude };
             setPendingTrip({ pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords, vehicle });
             const dist = (pickup && destinationCoords) ? haversineKm(pickup, destinationCoords) : null;
-            const fare = dist ? Math.round(dist * 50) : null;
+            const fare = dist != null ? computeFare(dist) : null;
             navigate('/user/verify', { state: { pickup: 'Current location', destination, pickupCoords: pickup, destinationCoords, distanceKm: dist, fare, vehicle } });
           }, ()=>{
             Swal.fire('Location unavailable', 'Unable to access current location. Please pick a location on the map.', 'error');
