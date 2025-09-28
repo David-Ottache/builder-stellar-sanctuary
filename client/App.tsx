@@ -85,6 +85,7 @@ const App = () => (
               <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
               <Route path="/admin" element={<AuthGate><Admin /></AuthGate>}>
                 <Route index element={<AdminOverview />} />
+                <Route path="dashboard" element={<AdminOverview />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="drivers" element={<AdminDrivers />} />
                 <Route path="trips" element={<AdminTrips />} />
