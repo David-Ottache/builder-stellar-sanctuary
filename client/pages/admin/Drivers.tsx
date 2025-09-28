@@ -90,8 +90,8 @@ function BarChart({ data, labelFormatter }:{ data:{label:string; value:number}[]
   const max=Math.max(1,...data.map(d=>d.value));
   return (
     <div className="space-y-2">
-      {data.map((d)=> (
-        <div key={d.label} className="flex items-center gap-2">
+      {data.map((d, i)=> (
+        <div key={`${String(d.label)}-${i}`} className="flex items-center gap-2">
           <div className="w-24 text-xs text-neutral-600">{labelFormatter?labelFormatter(d.label):d.label}</div>
           <div className="h-2 flex-1 rounded bg-neutral-200">
             <div className="h-2 rounded bg-primary" style={{ width: `${(d.value/max)*100}%` }} />
