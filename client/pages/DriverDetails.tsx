@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
 import { useMemo, useState, useEffect } from "react";
 import MapView from "@/components/app/MapView";
+import { apiFetch } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export default function DriverDetails() {
@@ -21,8 +22,8 @@ export default function DriverDetails() {
     const origin = window.location.origin;
     const poll = async () => {
       try {
-        const res = await fetch(`${origin}/api/ride-requests?driverId=${encodeURIComponent(String(id))}&status=pending`);
-        if (!res.ok) return;
+        const res = await apiFetch(`/api/ride-requests?driverId=${encodeURIComponent(String(id))}&status=pending`);
+        if (!res || !res.ok) return;
         const data = await res.json().catch(()=>null);
         const list = data?.requests || [];
         if (list.length) {
@@ -41,8 +42,7 @@ export default function DriverDetails() {
   const accept = async () => {
     if (!driver) return;
     try {
-      const origin = window.location.origin;
-      await fetch(`${origin}/api/ride-requests/${encodeURIComponent(incoming.id)}/accept`, { method: 'POST' }).catch(()=>{});
+      await apiFetch(`/api/ride-requests/${encodeURIComponent(incoming.id)}/accept`, { method: 'POST' }).catch(()=>{});
     } catch {}
     if(!selectedDriverId) selectDriver(driver.id);
     startTrip({ pickup: incoming.pickup, destination: incoming.destination, driverId: driver.id, fee: typeof incoming.fare === 'number' ? incoming.fare : 0 });
@@ -51,8 +51,7 @@ export default function DriverDetails() {
   };
   const decline = async () => {
     try {
-      const origin = window.location.origin;
-      await fetch(`${origin}/api/ride-requests/${encodeURIComponent(incoming.id)}/decline`, { method: 'POST' }).catch(()=>{});
+      await apiFetch(`/api/ride-requests/${encodeURIComponent(incoming.id)}/decline`, { method: 'POST' }).catch(()=>{});
     } catch {}
     setIncoming(null);
   };
