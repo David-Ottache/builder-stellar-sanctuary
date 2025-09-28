@@ -184,6 +184,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     }
   });
   const [onboarding, setOnboardingState] = useState<Partial<UserProfile>>({ countryCode: "+234" });
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [selectedDriverId, selectDriver] = useState<string | null>(null);
   const [trip, setTrip] = useState<TripDetails | null>(null);
   const [trips, setTrips] = useState<TripDetails[]>(() => {
