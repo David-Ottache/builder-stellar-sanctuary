@@ -2,12 +2,20 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 export default function AdminTrips() {
   const [trips, setTrips] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(()=>{
     (async()=>{
       try {
-        const t = await fetch('/api/admin/trips').then(r=>r.ok?r.json():{trips:[]}).catch(()=>({trips:[]}));
+        const [u,d,t] = await Promise.all([
+          fetch('/api/admin/users').then(r=>r.ok?r.json():{users:[]}).catch(()=>({users:[]})),
+          fetch('/api/admin/drivers').then(r=>r.ok?r.json():{drivers:[]}).catch(()=>({drivers:[]})),
+          fetch('/api/admin/trips').then(r=>r.ok?r.json():{trips:[]}).catch(()=>({trips:[]})),
+        ]);
+        setUsers(u.users||[]);
+        setDrivers(d.drivers||[]);
         setTrips(t.trips||[]);
       } finally { setLoading(false); }
     })();
@@ -17,6 +25,25 @@ export default function AdminTrips() {
   const topRoutes = useMemo(()=> routeCounts(trips).slice(0,5), [trips]);
   const costs = useMemo(()=> byDay.map(d=>d.value), [byDay]);
   const total = trips.reduce((s,t)=> s + Number(t.fee||0), 0);
+
+  const userNameById = useMemo(()=>{
+    const m: Record<string,string> = {};
+    users.forEach((u:any)=>{
+      const id = String(u.id || u.uid || u.email || u.phone || '');
+      const name = (`${u.firstName||''} ${u.lastName||''}`.trim()) || u.name || id;
+      if (id) m[id] = name;
+    });
+    return m;
+  },[users]);
+  const driverNameById = useMemo(()=>{
+    const m: Record<string,string> = {};
+    drivers.forEach((d:any)=>{
+      const id = String(d.id || d.uid || d.email || d.phone || '');
+      const name = (`${d.firstName||''} ${d.lastName||''}`.trim()) || d.name || id;
+      if (id) m[id] = name;
+    });
+    return m;
+  },[drivers]);
 
   return (
     <div>
@@ -44,8 +71,8 @@ export default function AdminTrips() {
                     <tr key={t.id} className="border-t">
                       <td className="p-2">{t.id}</td>
                       <td className="p-2">{t.pickup} → {t.destination}</td>
-                      <td className="p-2">{t.driverId||'—'}</td>
-                      <td className="p-2">{t.userId||'—'}</td>
+                      <td className="p-2">{driverNameById[String(t.driverId||'')] || t.driverName || String(t.driverId||'—')}</td>
+                      <td className="p-2">{userNameById[String(t.userId||'')] || t.userName || String(t.userId||'—')}</td>
                       <td className="p-2">{Number(t.fee||0).toLocaleString()}</td>
                       <td className="p-2">{new Date(t.startedAt||t.ts||Date.now()).toLocaleString()}</td>
                     </tr>
