@@ -220,6 +220,42 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   const [drivers, setDrivers] = useState<DriverInfo[]>(MOCK_DRIVERS);
 
+  // fetch settings
+  React.useEffect(()=>{
+    (async()=>{
+      try {
+        const res = await fetch('/api/settings').catch(()=>null);
+        const data = await res?.json().catch(()=>null);
+        if (data?.settings) setSettings((prev)=> ({ ...prev, ...data.settings, ride: { ...prev.ride, ...(data.settings.ride||{}) }, payments: { ...prev.payments, ...(data.settings.payments||{}) } }));
+      } catch {}
+    })();
+  },[]);
+
+  const updateSettings: StoreState['updateSettings'] = async (partial) => {
+    try {
+      const res = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(partial) }).catch(()=>null);
+      const data = await res?.json().catch(()=>null);
+      if (res && res.ok && data?.settings) {
+        setSettings(data.settings);
+        try { await Swal.fire({ icon: 'success', title: 'Settings saved' }); } catch {}
+      } else {
+        setSettings((prev)=> ({ ...prev, ...partial, ride: { ...prev.ride, ...(partial.ride||{}) }, payments: { ...prev.payments, ...(partial.payments||{}) } }));
+      }
+    } catch {
+      setSettings((prev)=> ({ ...prev, ...partial, ride: { ...prev.ride, ...(partial.ride||{}) }, payments: { ...prev.payments, ...(partial.payments||{}) } }));
+    }
+  };
+
+  const computeFare: StoreState['computeFare'] = (distanceKm: number, durationMin = 0) => {
+    const r = settings.ride || DEFAULT_SETTINGS.ride;
+    const base = Number(r.baseFare||0);
+    const perKm = Number(r.costPerKm||0) * Math.max(0, distanceKm || 0);
+    const perMin = Number(r.costPerMinute||0) * Math.max(0, durationMin || 0);
+    let total = base + perKm + perMin;
+    if (r.surgeEnabled && Number(r.surgeMultiplier||1) > 1) total *= Number(r.surgeMultiplier||1);
+    return Math.round(total);
+  };
+
   const setOnboarding = (updates: Partial<UserProfile>) =>
     setOnboardingState((prev) => ({ ...prev, ...updates }));
 
