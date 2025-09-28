@@ -35,6 +35,10 @@ import UserVerify from "./pages/UserVerify";
 import UserDetails from "./pages/UserDetails";
 import Safety from "./pages/Safety";
 import Admin from "./pages/Admin";
+import AdminOverview from "./pages/admin/Overview";
+import AdminUsers from "./pages/admin/Users";
+import AdminDrivers from "./pages/admin/Drivers";
+import AdminTrips from "./pages/admin/Trips";
 import { AppStoreProvider } from "./lib/store";
 
 const queryClient = new QueryClient();
@@ -74,7 +78,12 @@ const App = () => (
               <Route path="/trips" element={<AuthGate><Trips /></AuthGate>} />
               <Route path="/wallet" element={<AuthGate><Wallet /></AuthGate>} />
               <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
-              <Route path="/admin" element={<AuthGate><Admin /></AuthGate>} />
+              <Route path="/admin" element={<AuthGate><Admin /></AuthGate>}>
+                <Route index element={<AdminOverview />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="drivers" element={<AdminDrivers />} />
+                <Route path="trips" element={<AdminTrips />} />
+              </Route>
 
               {/* catch-all */}
               <Route path="*" element={<AuthGate><NotFound /></AuthGate>} />
