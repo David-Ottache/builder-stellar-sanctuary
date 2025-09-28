@@ -54,7 +54,7 @@ export default function AdminSettings() {
           <Field label="Withdrawal min (₦)"><NumberInput value={local.payments?.withdrawalMin||0} onChange={(v)=>onChange('payments.withdrawalMin', v)} /></Field>
           <Field label="Withdrawal fee (₦)"><NumberInput value={local.payments?.withdrawalFee||0} onChange={(v)=>onChange('payments.withdrawalFee', v)} /></Field>
           <Field label="Wallet top-up max (₦)"><NumberInput value={local.payments?.walletTopupMax||0} onChange={(v)=>onChange('payments.walletTopupMax', v)} /></Field>
-          <Field label="Default methods (comma-separated)"><input className="input" value={(local.payments?.defaultMethods||[]).join(', ')} onChange={(e)=>onChange('payments.defaultMethods', e.target.value.split(',').map(s=>s.trim()).filter(Boolean))} /></Field>
+          <Field label="Default methods (comma-separated)"><input className="h-9 w-full rounded-lg border px-3 text-sm outline-none focus:border-primary" value={(local.payments?.defaultMethods||[]).join(', ')} onChange={(e)=>onChange('payments.defaultMethods', e.target.value.split(',').map(s=>s.trim()).filter(Boolean))} /></Field>
         </div>
       </Section>
 
