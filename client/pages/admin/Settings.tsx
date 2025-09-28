@@ -26,9 +26,9 @@ export default function AdminSettings() {
       {/* General */}
       <Section title="General Application Settings">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Field label="App name"><input className="input" value={local.appName||''} onChange={(e)=>onChange('appName', e.target.value)} /></Field>
-          <Field label="Time zone"><input className="input" value={local.timezone||''} onChange={(e)=>onChange('timezone', e.target.value)} /></Field>
-          <Field label="Currency"><input className="input" value={local.currency||''} onChange={(e)=>onChange('currency', e.target.value)} /></Field>
+          <Field label="App name"><input className="h-9 w-full rounded-lg border px-3 text-sm outline-none focus:border-primary" value={local.appName||''} onChange={(e)=>onChange('appName', e.target.value)} /></Field>
+          <Field label="Time zone"><input className="h-9 w-full rounded-lg border px-3 text-sm outline-none focus:border-primary" value={local.timezone||''} onChange={(e)=>onChange('timezone', e.target.value)} /></Field>
+          <Field label="Currency"><input className="h-9 w-full rounded-lg border px-3 text-sm outline-none focus:border-primary" value={local.currency||''} onChange={(e)=>onChange('currency', e.target.value)} /></Field>
         </div>
       </Section>
 
