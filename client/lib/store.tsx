@@ -611,6 +611,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     openRatingPrompt,
     closeRatingPrompt,
     submitRating,
+    settings,
+    updateSettings,
+    computeFare,
   };
 
   return <AppStore.Provider value={value}>{children}</AppStore.Provider>;
