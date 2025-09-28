@@ -4,6 +4,7 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
 
   useEffect(()=>{
     (async()=>{
@@ -19,8 +20,17 @@ export default function AdminUsers() {
 
   const tripsByUser = useMemo(()=>countBy(trips,'userId'),[trips]);
   const spendByUser = useMemo(()=>sumBy(trips,'userId','fee'),[trips]);
-  const topUsers = useMemo(()=> Object.entries(tripsByUser).map(([k,v])=>({label:k,value:v as number})).sort((a,b)=>b.value-a.value).slice(0,5),[tripsByUser]);
-  const topSpend = useMemo(()=> Object.entries(spendByUser).map(([k,v])=>({label:k,value:Number(v)})).sort((a,b)=>b.value-a.value).slice(0,5),[spendByUser]);
+  const nameById = useMemo(()=>{ const m:Record<string,string>={}; users.forEach((u:any)=>{ const id=String(u.id||u.uid||u.email||u.phone||''); const nm=((`${u.firstName||''} ${u.lastName||''}`).trim())||u.name||id; if(id) m[id]=nm; }); return m; },[users]);
+  const topUsers = useMemo(()=> Object.entries(tripsByUser).map(([k,v])=>({label:nameById[String(k)]||String(k),value:v as number})).sort((a,b)=>b.value-a.value).slice(0,5),[tripsByUser,nameById]);
+  const topSpend = useMemo(()=> Object.entries(spendByUser).map(([k,v])=>({label:nameById[String(k)]||String(k),value:Number(v)})).sort((a,b)=>b.value-a.value).slice(0,5),[spendByUser,nameById]);
+  const filtered = useMemo(()=>{
+    const query = q.trim().toLowerCase();
+    if (!query) return users;
+    return users.filter((u:any)=>{
+      const name = ((`${u.firstName||''} ${u.lastName||''}`).trim()) || u.name || '';
+      return [name, u.email, u.phone].some(v=> String(v||'').toLowerCase().includes(query));
+    });
+  },[users,q]);
 
   return (
     <div>
@@ -28,12 +38,15 @@ export default function AdminUsers() {
       {loading ? (<div className="text-sm text-neutral-600">Loading…</div>) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border bg-white p-4 lg:col-span-2">
-            <div className="mb-2 text-sm font-semibold text-neutral-600">All users</div>
+            <div className="mb-2 flex items-center justify-between text-sm font-semibold text-neutral-600">
+              <span>All users</span>
+              <input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search users" className="h-9 w-56 rounded-lg border px-3 text-xs font-normal outline-none" />
+            </div>
             <div className="overflow-x-auto rounded-xl border">
               <table className="min-w-full text-sm">
                 <thead><tr className="bg-neutral-50"><th className="p-2 text-left">Name</th><th className="p-2 text-left">Phone</th><th className="p-2 text-left">Email</th><th className="p-2 text-left">Trips</th><th className="p-2 text-left">Spend (₦)</th></tr></thead>
                 <tbody>
-                  {users.map((u:any)=>{
+                  {filtered.map((u:any)=>{
                     const id = u.id || u.uid || u.email || u.phone;
                     const tripsCount = tripsByUser[id] || 0;
                     const spend = spendByUser[id] || 0;
@@ -54,9 +67,9 @@ export default function AdminUsers() {
           </div>
           <div className="rounded-2xl border bg-white p-4">
             <div className="mb-2 text-sm font-semibold text-neutral-600">Top users by trips</div>
-            <BarChart data={topUsers} labelFormatter={short} />
+            <BarChart data={topUsers} />
             <div className="mt-4 mb-2 text-sm font-semibold text-neutral-600">Top spenders</div>
-            <BarChart data={topSpend} labelFormatter={short} />
+            <BarChart data={topSpend} />
           </div>
         </div>
       )}
