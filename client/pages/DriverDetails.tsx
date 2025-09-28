@@ -69,21 +69,6 @@ export default function DriverDetails() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl bg-white p-4">
-          <div className="flex items-center justify-between">
-            <div className="text-lg font-semibold">Online</div>
-            <label className="inline-flex items-center gap-2">
-              <input type="checkbox" checked={online} onChange={(e)=>setOnline(e.target.checked)} className="sr-only" />
-              <div className={`h-6 w-11 rounded-full ${online ? 'bg-green-500' : 'bg-neutral-200'}`}>
-                <div className={`h-5 w-5 rounded-full bg-white shadow transform ${online ? 'translate-x-6' : 'translate-x-0'}`} />
-              </div>
-            </label>
-          </div>
-          <div className="mt-3 flex gap-2">
-            <button className="flex-1 rounded-xl border px-3 py-2 text-sm font-medium hover:bg-neutral-50" onClick={()=>navigate('/driver/trips')}>Trips</button>
-            <button className="flex-1 rounded-xl border px-3 py-2 text-sm font-medium hover:bg-neutral-50" onClick={()=>navigate('/driver/wallet')}>Wallet</button>
-          </div>
-        </div>
       </div>
 
       <div className="mt-4 h-[60vh]">
