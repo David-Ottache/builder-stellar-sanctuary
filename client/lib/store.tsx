@@ -225,7 +225,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   React.useEffect(()=>{
     (async()=>{
       try {
-        const res = await fetch('/api/settings').catch(()=>null);
+        const res = await apiFetch('/api/settings');
         const data = await res?.json().catch(()=>null);
         if (data?.settings) setSettings((prev)=> ({ ...prev, ...data.settings, ride: { ...prev.ride, ...(data.settings.ride||{}) }, payments: { ...prev.payments, ...(data.settings.payments||{}) } }));
       } catch {}
