@@ -75,9 +75,12 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (user.role === 'driver' && isUserRoute) {
-      navigate('/register/name');
-      return;
+    if (user.role === 'driver') {
+      const target = `/driver/${encodeURIComponent(String(user.id || 'me'))}`;
+      if (isUserRoute || !isDriverRoute) {
+        navigate(target);
+        return;
+      }
     }
 
     if (user.role === 'user' && isDriverRoute) {
