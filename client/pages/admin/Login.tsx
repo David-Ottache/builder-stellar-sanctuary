@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Button } from "@/components/ui/button";
+import { Button as UIButton } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
@@ -42,7 +41,7 @@ export default function AdminLogin() {
             <span />
             <button type="button" onClick={async()=>{ await Swal.fire({ icon:'info', title:'Password reset', text:'A password reset link has been sent to your email.' }); }} className="font-semibold">FORGOT PASSWORD?</button>
           </div>
-          <Button className="h-12 w-full rounded-full" onClick={doLogin}>Login</Button>
+          <UIButton className="h-12 w-full rounded-full" onClick={doLogin}>Login</UIButton>
         </div>
       </div>
     </Layout>
