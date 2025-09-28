@@ -24,7 +24,7 @@ export default function UserVerify() {
     vehicle: routeState?.vehicle ?? pendingTrip?.vehicle ?? 'go',
   } as const;
   const distance = (routeState?.distanceKm != null ? routeState.distanceKm : (tripDetails.pickupCoords && tripDetails.destinationCoords ? haversineKm(tripDetails.pickupCoords, tripDetails.destinationCoords) : null));
-  const fare = (routeState?.fare != null ? routeState.fare : (distance != null ? Math.round(distance * 50) : null));
+  const fare = (routeState?.fare != null ? routeState.fare : (distance != null ? computeFare(distance) : null));
 
   // Camera / scanning state
   const videoRef = useRef<HTMLVideoElement | null>(null);
