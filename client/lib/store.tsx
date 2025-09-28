@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo, useState, useEffect, type ReactNode } from "react";
 import { haversineKm } from "@/lib/utils";
 import Swal from 'sweetalert2';
+import { apiFetch } from '@/lib/utils';
 
 // Relax Gender to accept any string to avoid strict mismatches across forms
 export type Gender = string;
