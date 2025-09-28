@@ -22,7 +22,7 @@ Prefered Vehicle</h1>
           </button>
           <button className={`w-full rounded-2xl border p-4 text-left ${choice==="bike"?"border-primary bg-primary/5":""}`} onClick={()=>{ setChoice("bike"); setOnboarding({ vehicleType: 'bike' }); mergeOnboardingToDriver({ vehicleType: 'bike' }); }}>
             <div className="flex items-center justify-between">
-              <div><span className="mr-2 rounded bg-neutral-900/5 px-2 py-1 text-xs font-bold text-neutral-700">Deliver</span> Deliver On A Motorcycle</div>
+              <div><span className="mr-2 rounded bg-neutral-900/5 px-2 py-1 text-xs font-bold text-neutral-700">Take Trips</span> Drive A Auto Rickshaw</div>
               <div className="h-12 w-20 rounded bg-neutral-200" />
             </div>
           </button>
