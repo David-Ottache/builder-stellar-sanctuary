@@ -94,7 +94,7 @@ export default function Index() {
     if (!navigator.geolocation) {
       setPendingTrip({ pickup: 'Unknown location', destination, destinationCoords, vehicle });
       const dist = (pickupCoords && destinationCoords) ? haversineKm(pickupCoords, destinationCoords) : null;
-      const fare = dist ? Math.round(dist * 50) : null;
+      const fare = dist != null ? computeFare(dist) : null;
       navigate('/user/verify', { state: { pickup: 'Unknown location', destination, pickupCoords, destinationCoords, distanceKm: dist, fare, vehicle } });
       return;
     }
