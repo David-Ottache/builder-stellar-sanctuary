@@ -17,8 +17,8 @@ export default function AdminReports() {
   const tripsByDriver = useMemo(()=> countBy(trips,'driverId'), [trips]);
   const userNameById = useMemo(()=> mapNames(users), [users]);
   const driverNameById = useMemo(()=> mapNames(drivers), [drivers]);
-  const daySeries30 = useMemo(()=> aggregateByDayTime(trips, 'day', 30), [trips]);
-  const nightSeries30 = useMemo(()=> aggregateByDayTime(trips, 'night', 30), [trips]);
+  const daySeriesMonth = useMemo(()=> aggregateByMonthDay(trips, 'day'), [trips]);
+  const nightSeriesMonth = useMemo(()=> aggregateByMonthDay(trips, 'night'), [trips]);
 
   return (
     <div>
@@ -51,12 +51,12 @@ export default function AdminReports() {
 
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border bg-white p-4">
-              <div className="mb-2 text-sm font-semibold text-neutral-600">Day-time trips (last 30 days)</div>
-              <LineChart data={daySeries30} />
+              <div className="mb-2 text-sm font-semibold text-neutral-600">Day-time trips (this month by day)</div>
+              <LineChart data={daySeriesMonth} />
             </div>
             <div className="rounded-2xl border bg-white p-4">
-              <div className="mb-2 text-sm font-semibold text-neutral-600">Night-time trips (last 30 days)</div>
-              <LineChart data={nightSeries30} />
+              <div className="mb-2 text-sm font-semibold text-neutral-600">Night-time trips (this month by day)</div>
+              <LineChart data={nightSeriesMonth} />
             </div>
           </div>
         </>
@@ -73,25 +73,24 @@ function aggregateByDay(rows:any[]) {
 function countBy(rows:any[], key:string){ const m:Record<string,number>={}; rows.forEach(r=>{ const k=String(r[key]||'—'); m[k]=(m[k]||0)+1;}); return m; }
 function mapNames(list:any[]){ const m:Record<string,string>={}; list.forEach((x:any)=>{ const id=String(x.id||x.uid||x.email||x.phone||''); const nm=((`${x.firstName||''} ${x.lastName||''}`).trim())||x.name||id; if(id) m[id]=nm; }); return m; }
 function topN(counts:Record<string,number>, names:Record<string,string>){ return Object.entries(counts).map(([k,v])=>({label:names[String(k)]||String(k), value:v})).sort((a,b)=>b.value-a.value).slice(0,5); }
-function aggregateByDayTime(rows:any[], period:'day'|'night', days=30){
-  const keys: string[] = [];
-  const today = new Date();
-  for (let i = days-1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate()-i);
-    keys.push(`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`);
-  }
-  const map = new Map(keys.map(k=>[k,0] as [string,number]));
+function aggregateByMonthDay(rows:any[], period:'day'|'night'){
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const keys = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
+  const map = new Map(keys.map(k => [k, 0] as [string, number]));
   rows.forEach((r:any)=>{
     const dt = new Date(r.startedAt || r.ts || Date.now());
+    if (dt.getFullYear() !== y || dt.getMonth() !== m) return;
     const hour = dt.getHours();
     const isDay = hour >= 6 && hour < 18;
     if ((period === 'day' && isDay) || (period === 'night' && !isDay)) {
-      const k = `${dt.getFullYear()}-${dt.getMonth()+1}-${dt.getDate()}`;
-      if (map.has(k)) map.set(k, (map.get(k) || 0) + 1);
+      const k = String(dt.getDate());
+      map.set(k, (map.get(k) || 0) + 1);
     }
   });
-  return keys.map(k=> ({ label: k, value: map.get(k) || 0 }));
+  return keys.map(k => ({ label: k, value: map.get(k) || 0 }));
 }
 
 function LineChart({ data }:{ data:{label:string; value:number}[] }){
