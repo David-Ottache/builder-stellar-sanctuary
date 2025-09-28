@@ -119,6 +119,10 @@ interface StoreState {
   openRatingPrompt: (driverId: string | null, tripId?: string | null) => void;
   closeRatingPrompt: () => void;
   submitRating: (driverId: string, stars: number) => void;
+  // app settings
+  settings: AppSettings;
+  updateSettings: (partial: Partial<AppSettings>) => Promise<void>;
+  computeFare: (distanceKm: number, durationMin?: number) => number;
 }
 
 const AppStore = createContext<StoreState | null>(null);
