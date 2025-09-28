@@ -21,7 +21,7 @@ export interface UserProfile {
   identificationPhoto?: string; // data URL
   vehicleType?: string;
   password?: string;
-  role?: 'driver' | 'user';
+  role?: 'driver' | 'user' | 'admin';
   // optional wallet fields used in app
   walletBalance?: number;
   wallet?: { balance?: number } | null;
