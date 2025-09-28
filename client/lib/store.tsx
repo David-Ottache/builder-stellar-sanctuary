@@ -61,6 +61,30 @@ export interface TripDetails {
 export interface Coords { lat: number; lng: number }
 export interface PendingTrip { pickup: string; destination: string; pickupCoords?: Coords | null; destinationCoords?: Coords | null; vehicle?: 'go' | 'comfort' | 'xl' | 'prestige' }
 
+export interface AppSettings {
+  appName?: string;
+  timezone?: string;
+  currency?: string;
+  ride: {
+    baseFare: number;
+    costPerKm: number;
+    costPerMinute?: number;
+    surgeEnabled?: boolean;
+    surgeMultiplier?: number;
+    minDistanceKm?: number;
+    maxDistanceKm?: number;
+    cancelFee?: number;
+    waitingPerMinute?: number;
+  };
+  payments?: {
+    defaultMethods?: string[];
+    commissionPercent?: number;
+    withdrawalMin?: number;
+    withdrawalFee?: number;
+    walletTopupMax?: number;
+  };
+}
+
 export interface EmergencyContact {
   id: string;
   name: string;
