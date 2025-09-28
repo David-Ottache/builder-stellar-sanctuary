@@ -4,11 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
 import { safeFetch, cachedFetch, haversineKm } from "@/lib/utils";
+import Swal from 'sweetalert2';
 
 export default function UserVerify() {
-  const { pendingTrip, selectDriver, upsertDriver, drivers } = useAppStore();
+  const { pendingTrip, selectDriver, upsertDriver, drivers, startTrip } = useAppStore();
   const [code, setCode] = useState("");
   const [result, setResult] = useState<any | null>(null);
+  const [waitingId, setWaitingId] = useState<string | null>(null);
+  const [waiting, setWaiting] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,6 +42,40 @@ export default function UserVerify() {
       } catch(e){}
     };
   }, []);
+
+  useEffect(() => {
+    if (!waitingId) return;
+    let active = true;
+    const origin = window.location.origin;
+    const iv = window.setInterval(async () => {
+      try {
+        const res = await fetch(`${origin}/api/ride-requests/${encodeURIComponent(waitingId)}`);
+        if (!res.ok) return;
+        const data = await res.json().catch(()=>null);
+        const status = data?.request?.status;
+        if (!active || !status) return;
+        if (status === 'accepted') {
+          window.clearInterval(iv);
+          setWaiting(false);
+          // start trip for rider
+          try {
+            const driverId = (result && result.id) ? result.id : null;
+            if (driverId) selectDriver(driverId);
+            startTrip({ pickup: tripDetails.pickup || 'Current location', destination: tripDetails.destination || 'TBD', driverId: driverId || 'unknown', fee: fare || 0 });
+          } catch {}
+          navigate('/');
+        }
+        if (status === 'declined') {
+          window.clearInterval(iv);
+          setWaiting(false);
+          setWaitingId(null);
+          await Swal.fire('Driver declined', 'Please enter another driver ID.', 'warning');
+          setResult(null);
+        }
+      } catch (e) { /* ignore */ }
+    }, 2000);
+    return () => { active = false; try { window.clearInterval(iv); } catch {} };
+  }, [waitingId]);
 
   const startCamera = async () => {
     setCameraError(null);
@@ -379,11 +416,31 @@ export default function UserVerify() {
               </div>
             </div>
             <div className="mt-3 text-sm text-green-700">User verified • ID matched</div>
-            <Button className="mt-3 w-full rounded-full" onClick={()=>{
-              upsertDriver({ id: result.id, name: result.name, avatar: result.avatar, rides: result.rides, rating: result.rating });
-              selectDriver(result.id);
-              navigate(`/user/${result.id}`);
-            }}>Continue</Button>
+            {!waiting ? (
+              <Button className="mt-3 w-full rounded-full" onClick={async ()=>{
+                upsertDriver({ id: result.id, name: result.name, avatar: result.avatar, rides: result.rides, rating: result.rating });
+                selectDriver(result.id);
+                try {
+                  setWaiting(true);
+                  const origin = window.location.origin;
+                  const res = await fetch(`${origin}/api/ride-requests`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ driverId: result.id, riderId: (sessionStorage.getItem('session.user') ? JSON.parse(String(sessionStorage.getItem('session.user'))).id : null), pickup: tripDetails.pickup, destination: tripDetails.destination, pickupCoords: tripDetails.pickupCoords, destinationCoords: tripDetails.destinationCoords, fare }) });
+                  const data = await res.json().catch(()=>null);
+                  const id = data?.id;
+                  if (!res.ok || !id) {
+                    setWaiting(false);
+                    await Swal.fire('Request failed', 'Could not notify driver. Please try again.', 'error');
+                    return;
+                  }
+                  setWaitingId(id);
+                } catch (e) {
+                  setWaiting(false);
+                  await Swal.fire('Network error', 'Could not notify driver. Check your connection.', 'error');
+                  return;
+                }
+              }}>Notify Driver</Button>
+            ) : (
+              <div className="mt-3 text-sm text-neutral-600">Waiting for driver to accept…</div>
+            )}
           </div>
         ) : (
           <div className="mt-4 rounded-2xl border bg-white p-4 text-sm text-red-600">No user found for provided code.</div>
