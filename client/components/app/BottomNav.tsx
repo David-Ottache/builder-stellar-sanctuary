@@ -31,7 +31,7 @@ function getItems(user: any) {
 export default function BottomNav({ className }: Props) {
   const location = useLocation();
   const { trip, endTrip, user } = useAppStore();
-  const itemsToRender = items.filter(i => !(user && user.role === 'driver' && i.to === '/user/verify'));
+  const itemsToRender = getItems(user);
   return (
     <nav
       className={cn(
