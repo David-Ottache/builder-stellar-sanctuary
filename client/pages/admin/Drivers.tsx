@@ -4,6 +4,7 @@ export default function AdminDrivers() {
   const [drivers, setDrivers] = useState<any[]>([]);
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState('');
 
   useEffect(()=>{
     (async()=>{
@@ -24,7 +25,16 @@ export default function AdminDrivers() {
     return Object.entries(buckets).map(([label,value])=>({label,value}));
   },[drivers]);
 
-  const topDrivers = useMemo(()=> Object.entries(tripsByDriver).map(([k,v])=>({label:k,value:v as number})).sort((a,b)=>b.value-a.value).slice(0,5),[tripsByDriver]);
+  const nameById = useMemo(()=>{ const m:Record<string,string>={}; drivers.forEach((d:any)=>{ const id=String(d.id||d.uid||d.email||d.phone||''); const nm=((`${d.firstName||''} ${d.lastName||''}`).trim())||d.name||id; if(id) m[id]=nm; }); return m; },[drivers]);
+  const topDrivers = useMemo(()=> Object.entries(tripsByDriver).map(([k,v])=>({label:nameById[String(k)]||String(k),value:v as number})).sort((a,b)=>b.value-a.value).slice(0,5),[tripsByDriver,nameById]);
+  const filtered = useMemo(()=>{
+    const query = q.trim().toLowerCase();
+    if (!query) return drivers;
+    return drivers.filter((d:any)=>{
+      const name = ((`${d.firstName||''} ${d.lastName||''}`).trim()) || d.name || '';
+      return [name, d.email, d.phone].some(v=> String(v||'').toLowerCase().includes(query));
+    });
+  },[drivers,q]);
 
   return (
     <div>
@@ -32,12 +42,15 @@ export default function AdminDrivers() {
       {loading ? (<div className="text-sm text-neutral-600">Loading…</div>) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border bg-white p-4 lg:col-span-2">
-            <div className="mb-2 text-sm font-semibold text-neutral-600">All drivers</div>
+            <div className="mb-2 flex items-center justify-between text-sm font-semibold text-neutral-600">
+              <span>All drivers</span>
+              <input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search drivers" className="h-9 w-56 rounded-lg border px-3 text-xs font-normal outline-none" />
+            </div>
             <div className="overflow-x-auto rounded-xl border">
               <table className="min-w-full text-sm">
                 <thead><tr className="bg-neutral-50"><th className="p-2 text-left">Name</th><th className="p-2 text-left">Phone</th><th className="p-2 text-left">Rating</th><th className="p-2 text-left">Rides</th><th className="p-2 text-left">Trips</th></tr></thead>
                 <tbody>
-                  {drivers.map((d:any)=>{
+                  {filtered.map((d:any)=>{
                     const id = d.id || d.uid || d.email || d.phone;
                     const name = (`${d.firstName||''} ${d.lastName||''}`.trim()) || d.name || id;
                     const tripsCount = tripsByDriver[id] || 0;
@@ -58,7 +71,7 @@ export default function AdminDrivers() {
           <div className="space-y-4">
             <div className="rounded-2xl border bg-white p-4">
               <div className="mb-2 text-sm font-semibold text-neutral-600">Top drivers by trips</div>
-              <BarChart data={topDrivers} labelFormatter={short} />
+              <BarChart data={topDrivers} />
             </div>
             <div className="rounded-2xl border bg-white p-4">
               <div className="mb-2 text-sm font-semibold text-neutral-600">Ratings distribution</div>
