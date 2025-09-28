@@ -57,6 +57,9 @@ export default function Admin() {
                 </NavLink>
               ))}
             </nav>
+            <div className="mt-4 border-t pt-3">
+              <button onClick={logout} className="w-full rounded-lg border px-3 py-2 text-sm font-medium hover:bg-neutral-50">Log out</button>
+            </div>
           </aside>
         </div>
 
