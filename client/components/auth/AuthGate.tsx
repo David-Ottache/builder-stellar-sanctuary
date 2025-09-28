@@ -7,6 +7,7 @@ const INACTIVITY_MS = 30 * 60 * 1000; // 30 minutes
 const PUBLIC_PATHS = [
   '/splash',
   '/login',
+  '/admin/login',
   '/register',
   '/register/name',
   '/register/contact',
