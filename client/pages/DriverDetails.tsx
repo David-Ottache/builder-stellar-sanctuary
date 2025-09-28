@@ -59,16 +59,6 @@ export default function DriverDetails() {
   return (
     <Layout>
       <div className="px-4 pt-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center text-green-600 font-bold">⚡</div>
-            <div className="font-bold text-lg">VoltGo</div>
-          </div>
-          <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-primary/30">
-            <img src={avatar} alt="driver" className="h-full w-full object-cover" />
-          </div>
-        </div>
-
       </div>
 
       <div className="mt-4 h-[60vh]">
