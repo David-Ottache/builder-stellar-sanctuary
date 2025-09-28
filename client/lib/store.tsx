@@ -514,18 +514,67 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   const sendSOS: StoreState["sendSOS"] = (message) => {
     const count = contacts.length;
-    try {
-      const origin = window.location.origin;
-      contacts.forEach((c) => {
-        try {
-          fetch(`${origin}/api/safety`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: c.phone, message: message || 'SOS' }),
-          }).catch(()=>{});
-        } catch (e) {}
-      });
-    } catch (e) {}
+    // Fire-and-forget async workflow so UI isn't blocked
+    (async () => {
+      try {
+        // Gather user, trip, driver, and location
+        const fullName = user ? (`${user.firstName || ''} ${user.lastName || ''}`).trim() || (user.email || 'Passenger') : 'Passenger';
+        // Try browser geolocation
+        const coords = await new Promise<{ lat: number; lng: number } | null>((resolve) => {
+          try {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+              () => resolve(null),
+              { enableHighAccuracy: true, timeout: 3000 }
+            );
+          } catch { resolve(null); }
+        });
+        const locText = coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : 'Unavailable';
+
+        // Determine current driver
+        let driverId: string | null = null;
+        if (trip && trip.driverId) driverId = trip.driverId;
+        else {
+          const ongoing = trips.find((t) => t.status === 'ongoing' && t.driverId);
+          if (ongoing) driverId = ongoing.driverId as string;
+        }
+        let driverName = 'Unknown';
+        let driverPhone = 'Unknown';
+        let vehicleText = 'Unknown';
+        let plate = 'Unknown';
+        if (driverId) {
+          try {
+            const res = await apiFetch(`/api/drivers/${encodeURIComponent(driverId)}`);
+            const data = await res?.json().catch(() => null);
+            const d = data?.driver || null;
+            if (d) {
+              driverName = (`${d.firstName || ''} ${d.lastName || ''}`).trim() || d.name || 'Unknown';
+              driverPhone = d.phone || 'Unknown';
+              const make = (d.vehicleMake || d.vehicleBrand || '').toString();
+              const model = (d.vehicleModel || '').toString();
+              vehicleText = [make, model].filter(Boolean).join(' ').trim() || 'Unknown';
+              plate = (d.plateNumber || d.plate || '').toString() || 'Unknown';
+            }
+          } catch {}
+        }
+
+        const body = message && message.trim().length
+          ? message
+          : `🚨 EMERGENCY ALERT 🚨\n\n${fullName} has triggered an SOS alert on reCab.\n\n📍 Last Known Location: ${locText}\n🚗 Driver Details:\n- Name: ${driverName}\n- Phone: ${driverPhone}\n- Vehicle: ${vehicleText}, Plate No: ${plate}\n\n⚠️ Please check on ${fullName} immediately. If in danger, contact local emergency services.\n\n— reCab Safety System`;
+
+        // Send to each contact
+        for (const c of contacts) {
+          try {
+            await apiFetch('/api/safety', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ to: c.phone, message: body }),
+            });
+          } catch {}
+        }
+      } catch {}
+    })();
+
     return count;
   };
 
