@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { apiFetch } from '@/lib/utils';
+
 export default function AdminUsers() {
   function exportCSV(rows:any[], tripsByUser:Record<string,number>, spendByUser:Record<string,number>){
     const header = ["ID","Name","Phone","Email","Trips","Spend (NGN)"];
