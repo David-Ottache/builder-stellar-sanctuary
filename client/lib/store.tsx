@@ -82,6 +82,7 @@ export interface AppSettings {
     withdrawalMin?: number;
     withdrawalFee?: number;
     walletTopupMax?: number;
+    adminUserId?: string;
   };
 }
 
@@ -167,7 +168,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const DEFAULT_SETTINGS: AppSettings = {
     appName: 'reCab', timezone: 'Africa/Lagos', currency: 'NGN',
     ride: { baseFare: 200, costPerKm: 50, costPerMinute: 0, surgeEnabled: false, surgeMultiplier: 1, minDistanceKm: 0, maxDistanceKm: 1000, cancelFee: 0, waitingPerMinute: 0 },
-    payments: { defaultMethods: ['cash','wallet'], commissionPercent: 10, withdrawalMin: 1000, withdrawalFee: 0, walletTopupMax: 200000 },
+    payments: { defaultMethods: ['cash','wallet'], commissionPercent: 5, withdrawalMin: 1000, withdrawalFee: 0, walletTopupMax: 200000, adminUserId: '' },
   };
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
