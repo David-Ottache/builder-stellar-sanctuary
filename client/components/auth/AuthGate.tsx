@@ -47,14 +47,44 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // When route changes, if user is missing and route is protected, go to splash
-    if (!user && !isPublic(location.pathname)) {
-      navigate('/splash');
+    const path = location.pathname;
+    // When route changes, if user is missing and route is protected, go to splash or admin login
+    if (!user && !isPublic(path)) {
+      if (path.startsWith('/admin')) navigate('/admin/login'); else navigate('/splash');
+      return;
     }
-    // if user is present and currently on splash or login, redirect to home
-    if (user && (location.pathname === '/splash' || location.pathname === '/login' || location.pathname === '/welcome')) {
+    if (!user) return;
+
+    // If logged in and on splash/login, redirect to appropriate home
+    if (path === '/splash' || path === '/login' || path === '/welcome') {
       navigate('/');
+      return;
     }
+
+    // Admin can access everything
+    if (user.role === 'admin') return;
+
+    // Role-based route restrictions
+    const isAdminRoute = path.startsWith('/admin');
+    const isDriverRoute = path.startsWith('/driver') || path.startsWith('/register') || path.startsWith('/documents') || path.startsWith('/register') || path.startsWith('/Driver');
+    const isUserRoute = path === '/' || path.startsWith('/user') || path.startsWith('/search') || path.startsWith('/wallet') || path.startsWith('/trips') || path.startsWith('/profile') || path.startsWith('/safety') || path.startsWith('/trip');
+
+    if (isAdminRoute) {
+      // Only admin allowed
+      navigate('/admin/login');
+      return;
+    }
+
+    if (user.role === 'driver' && isUserRoute) {
+      navigate('/register/name');
+      return;
+    }
+
+    if (user.role === 'user' && isDriverRoute) {
+      navigate('/');
+      return;
+    }
+    // else allowed
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, user]);
 
