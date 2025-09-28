@@ -68,5 +68,5 @@ function LineChart({ data }:{ data:{label:string; value:number}[] }){
 }
 function BarChart({ data }:{ data:{label:string; value:number}[] }){
   const max=Math.max(1,...data.map(d=>d.value));
-  return (<div className="space-y-2">{data.map((d)=>(<div key={d.label} className="flex items-center gap-2"><div className="w-40 text-xs text-neutral-600">{d.label}</div><div className="h-2 flex-1 rounded bg-neutral-200"><div className="h-2 rounded bg-primary" style={{ width: `${(d.value/max)*100}%` }} /></div><div className="w-10 text-right text-xs">{d.value}</div></div>))}</div>);
+  return (<div className="space-y-2">{data.map((d,i)=>(<div key={`${String(d.label)}-${i}`} className="flex items-center gap-2"><div className="w-40 text-xs text-neutral-600">{d.label}</div><div className="h-2 flex-1 rounded bg-neutral-200"><div className="h-2 rounded bg-primary" style={{ width: `${(d.value/max)*100}%` }} /></div><div className="w-10 text-right text-xs">{d.value}</div></div>))}</div>);
 }
