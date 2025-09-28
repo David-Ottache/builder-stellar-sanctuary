@@ -78,6 +78,9 @@ const App = () => (
               <Route path="/user/:id" element={<AuthGate><UserDetails /></AuthGate>} />
               <Route path="/safety" element={<AuthGate><Safety /></AuthGate>} />
               <Route path="/driver/:id" element={<AuthGate><DriverDetails /></AuthGate>} />
+              <Route path="/driver/trips" element={<AuthGate><Trips /></AuthGate>} />
+              <Route path="/driver/wallet" element={<AuthGate><Wallet /></AuthGate>} />
+              <Route path="/driver/profile" element={<AuthGate><Profile /></AuthGate>} />
               <Route path="/trip/summary" element={<AuthGate><TripSummary /></AuthGate>} />
               <Route path="/app" element={<AuthGate><FigmaApp /></AuthGate>} />
               <Route path="/trips" element={<AuthGate><Trips /></AuthGate>} />
