@@ -59,10 +59,12 @@ export default function AdminUsers() {
   useEffect(()=>{
     (async()=>{
       try {
-        const [u,t] = await Promise.all([
-          fetch('/api/admin/users').then(r=>r.ok?r.json():{users:[]}).catch(()=>({users:[]})),
-          fetch('/api/admin/trips').then(r=>r.ok?r.json():{trips:[]}).catch(()=>({trips:[]})),
+        const [uRes,tRes] = await Promise.all([
+          apiFetch('/api/admin/users'),
+          apiFetch('/api/admin/trips'),
         ]);
+        const u = await uRes?.json().catch(()=>({users:[]})) || {users:[]};
+        const t = await tRes?.json().catch(()=>({trips:[]})) || {trips:[]};
         setUsers(u.users||[]); setTrips(t.trips||[]);
       } finally { setLoading(false); }
     })();
