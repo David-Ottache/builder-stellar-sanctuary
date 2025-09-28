@@ -17,7 +17,7 @@ export default function Index() {
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [pickMode, setPickMode] = useState<'pickup' | 'destination' | null>(null);
   const navigate = useNavigate();
-  const { setPendingTrip, user } = useAppStore();
+  const { setPendingTrip, user, computeFare } = useAppStore();
 
   // auto-select current location for pickup on load
   useEffect(()=>{
