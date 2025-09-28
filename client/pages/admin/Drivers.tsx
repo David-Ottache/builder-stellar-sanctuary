@@ -1,6 +1,74 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 export default function AdminDrivers() {
+  function exportCSV(rows:any[], tripsByDriver:Record<string,number>){
+    const header = ["ID","Name","Phone","Rating","Rides","Trips"];
+    const lines = rows.map((d:any)=>{
+      const id = d.id || d.uid || d.email || d.phone || '';
+      const name = ((`${d.firstName||''} ${d.lastName||''}`).trim()) || d.name || '';
+      const phone = d.phone || '';
+      const rating = (typeof d.rating==='number'? d.rating: '');
+      const rides = (typeof d.rides==='number'? d.rides: '');
+      const trips = tripsByDriver[id] || 0;
+      const vals = [id,name,phone,rating,rides,trips].map(v=>`"${String(v).replace(/"/g,'""')}"`);
+      return vals.join(',');
+    });
+    const csv = [header.join(','), ...lines].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `drivers-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+  function exportPDF(rows:any[], tripsByDriver:Record<string,number>){
+    const pageW=595, pageH=842; const margin=40; let y = pageH - margin; const lineH=14; const left=margin;
+    function esc(s:string){ return String(s).replace(/\\(/g,'\\\\(').replace(/\\)/g,'\\\\)'); }
+    const header = ['ID','Name','Phone','Rating','Rides','Trips'];
+    const allLines = [header, ...rows.map((d:any)=>{
+      const id = d.id || d.uid || d.email || d.phone || '';
+      const name = ((`${d.firstName||''} ${d.lastName||''}`).trim()) || d.name || '';
+      const phone = d.phone || '';
+      const rating = (typeof d.rating==='number'? String(d.rating): '');
+      const rides = (typeof d.rides==='number'? String(d.rides): '');
+      const trips = String(tripsByDriver[id] || 0);
+      return [id,name,phone,rating,rides,trips];
+    })];
+    const colX = [left, left+80, left+240, left+360, left+420, left+470];
+    let textStream = 'BT /F1 10 Tf';
+    function addRow(cols:string[]){
+      cols.forEach((t, i)=>{ textStream += ` ${colX[i]} ${y} Td (${esc(t)}) Tj T*`; });
+      y -= lineH; textStream += ` 0 ${-lineH} Td`;
+    }
+    addRow(allLines[0]);
+    y -= 6;
+    for(let i=1;i<allLines.length;i++){
+      if (y < margin+40) { break; }
+      addRow(allLines[i]);
+    }
+    textStream += ' ET';
+    const objects: string[] = [];
+    const o = (s:string)=>{ objects.push(s); };
+    o('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+    o('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+    o(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n`);
+    const stream = `<< /Length ${textStream.length} >>\nstream\n${textStream}\nendstream\n`;
+    o(`4 0 obj\n${stream}endobj\n`);
+    o('5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n');
+    let pdf = '%PDF-1.4\n';
+    const xref: number[] = [0];
+    objects.forEach(s=>{ xref.push(pdf.length); pdf += s; });
+    const xrefStart = pdf.length;
+    pdf += `xref\n0 ${objects.length+1}\n0000000000 65535 f \n`;
+    for(let i=1;i<=objects.length;i++){
+      const off = String(xref[i]).padStart(10,'0');
+      pdf += `${off} 00000 n \n`;
+    }
+    pdf += `trailer\n<< /Size ${objects.length+1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+    const blob = new Blob([pdf], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `drivers-${new Date().toISOString().slice(0,10)}.pdf`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
   const [drivers, setDrivers] = useState<any[]>([]);
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,11 +112,15 @@ export default function AdminDrivers() {
           <div className="rounded-2xl border bg-white p-4 lg:col-span-2">
             <div className="mb-2 flex items-center justify-between text-sm font-semibold text-neutral-600">
               <span>All drivers</span>
-              <input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search drivers" className="h-9 w-56 rounded-lg border px-3 text-xs font-normal outline-none" />
+              <div className="flex items-center gap-2">
+                <button onClick={() => exportPDF(filtered, tripsByDriver)} className="hidden sm:inline-flex h-9 items-center rounded-lg border bg-white px-3 text-xs font-medium hover:bg-neutral-50">Export PDF</button>
+                <button onClick={() => exportCSV(filtered, tripsByDriver)} className="hidden sm:inline-flex h-9 items-center rounded-lg border bg-white px-3 text-xs font-medium hover:bg-neutral-50">Export CSV</button>
+                <input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search drivers" className="h-9 w-56 rounded-lg border px-3 text-xs font-normal outline-none" />
+              </div>
             </div>
             <div className="overflow-x-auto rounded-xl border">
               <table className="min-w-full text-sm">
-                <thead><tr className="bg-neutral-50"><th className="p-2 text-left">Name</th><th className="p-2 text-left">Phone</th><th className="p-2 text-left">Rating</th><th className="p-2 text-left">Rides</th><th className="p-2 text-left">Trips</th></tr></thead>
+                <thead><tr className="bg-neutral-50"><th className="p-2 text-left">ID</th><th className="p-2 text-left">Name</th><th className="p-2 text-left">Phone</th><th className="p-2 text-left">Rating</th><th className="p-2 text-left">Rides</th><th className="p-2 text-left">Trips</th></tr></thead>
                 <tbody>
                   {filtered.map((d:any)=>{
                     const id = d.id || d.uid || d.email || d.phone;
@@ -56,6 +128,7 @@ export default function AdminDrivers() {
                     const tripsCount = tripsByDriver[id] || 0;
                     return (
                       <tr key={id} className="border-t">
+                        <td className="p-2 whitespace-nowrap">{id}</td>
                         <td className="p-2">{name}</td>
                         <td className="p-2">{d.phone||'—'}</td>
                         <td className="p-2">{typeof d.rating==='number'? d.rating:'—'}</td>
