@@ -29,7 +29,6 @@ export default function AdminOverview() {
             <div className="text-xl font-bold">Admin Dashboard</div>
             <div className="text-sm text-neutral-600">Overview</div>
           </div>
-          <img src="https://cdn.builder.io/api/v1/image/assets%2Ffe9fd683ebc34eeab1db912163811d62%2F0be8c8cef6034257998354241d06454d?format=webp&width=800" alt="dashboard preview" className="hidden h-20 rounded-lg object-cover md:block" />
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Stat title="Users" value={users.length.toLocaleString()} />
