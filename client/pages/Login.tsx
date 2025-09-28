@@ -50,8 +50,10 @@ export default function Login() {
       await Swal.fire({ icon: 'success', title: `Welcome ${user.firstName || ''}`, text: 'You are now logged in.' });
       setUser(user);
       try { if (remember) localStorage.setItem('session.remember','1'); else localStorage.removeItem('session.remember'); } catch {}
-      // navigate to appropriate home
-      navigate('/');
+      // navigate to appropriate home by role
+      if (user.role === 'driver') navigate(`/driver/${encodeURIComponent(String(user.id || 'me'))}`);
+      else if (user.role === 'admin') navigate('/admin');
+      else navigate('/');
     } catch (e) {
       console.error('Login error', e);
       await Swal.fire({ icon: 'error', title: 'Login failed', text: 'An error occurred.' });
