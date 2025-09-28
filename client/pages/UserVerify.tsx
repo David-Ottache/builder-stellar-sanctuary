@@ -7,7 +7,7 @@ import { safeFetch, cachedFetch, haversineKm } from "@/lib/utils";
 import Swal from 'sweetalert2';
 
 export default function UserVerify() {
-  const { pendingTrip, selectDriver, upsertDriver, drivers, startTrip } = useAppStore();
+  const { pendingTrip, selectDriver, upsertDriver, drivers, startTrip, computeFare } = useAppStore();
   const [code, setCode] = useState("");
   const [result, setResult] = useState<any | null>(null);
   const [waitingId, setWaitingId] = useState<string | null>(null);
