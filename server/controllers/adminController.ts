@@ -48,3 +48,17 @@ export const listTrips: RequestHandler = async (req, res) => {
     return res.json({ trips: [] });
   }
 };
+
+export const listCommissions: RequestHandler = async (_req, res) => {
+  try {
+    const db = await ensureDb();
+    if (!db) return res.json({ commissions: [] });
+    const q = await db.collection('walletTransactions').where('type','==','commission').limit(500).get().catch(()=>({docs:[]} as any));
+    const commissions = (q.docs || []).map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
+    commissions.sort((a:any,b:any)=> (b.ts? new Date(b.ts).getTime():0) - (a.ts? new Date(a.ts).getTime():0));
+    return res.json({ commissions });
+  } catch (e) {
+    console.warn('listCommissions error', e);
+    return res.json({ commissions: [] });
+  }
+};
