@@ -102,7 +102,7 @@ export const requestFunds: RequestHandler = async (req, res) => {
 
 export const deductFunds: RequestHandler = async (req, res) => {
   try {
-    const { userId, amount } = req.body || {};
+    const { userId, amount, tripId, driverId: driverIdBody, note } = req.body || {};
     const a = Number(amount || 0);
     if (!userId) return res.status(400).json({ error: 'userId required' });
     if (!a || a <= 0) return res.status(400).json({ error: 'amount must be positive' });
@@ -112,22 +112,72 @@ export const deductFunds: RequestHandler = async (req, res) => {
     }
     const db = getFirestore();
     if (!db) return res.status(503).json({ error: 'database not available' });
+
+    // Resolve driverId from explicit field or note (format: "driver:<id>")
+    let driverId: string | null = driverIdBody || null;
+    if (!driverId && typeof note === 'string' && note.startsWith('driver:')) {
+      driverId = note.split(':')[1] || null;
+    }
+
+    // Load settings for commission
+    let commissionPercent = 5;
+    let adminUserId: string | undefined;
+    try {
+      const cfg = await db.collection('config').doc('settings').get();
+      const data = (cfg.exists ? (cfg.data() as any) : {}) || {};
+      commissionPercent = Number(data?.payments?.commissionPercent ?? 5);
+      adminUserId = data?.payments?.adminUserId || undefined;
+    } catch {}
+
     const userRef = db.collection('users').doc(userId);
+    const driverRef = driverId ? db.collection('drivers').doc(driverId) : null;
+    const adminRef = adminUserId ? db.collection('users').doc(adminUserId) : null;
+
     await db.runTransaction(async (t: any) => {
-      const doc = await t.get(userRef);
-      if (!doc.exists) throw new Error('user not found');
-      const data: any = doc.data();
-      const bal = Number(data.walletBalance ?? 0);
-      if (bal < a) throw new Error('insufficient funds');
-      t.update(userRef, { walletBalance: bal - a });
-      const txRef = db.collection('walletTransactions').doc();
-      // include optional tripId when provided in body
-      const meta: any = { from: userId, amount: a, ts: new Date().toISOString(), type: 'deduct' };
-      if (req.body && (req.body.tripId || req.body.note)) {
-        if (req.body.tripId) meta.tripId = req.body.tripId;
-        if (req.body.note) meta.note = req.body.note;
+      const userDoc = await t.get(userRef);
+      if (!userDoc.exists) throw new Error('user not found');
+      const userData: any = userDoc.data();
+      const userBal = Number(userData.walletBalance ?? 0);
+      if (userBal < a) throw new Error('insufficient funds');
+
+      // Calculate commission and driver payout
+      const commission = driverRef && adminRef ? Math.floor((commissionPercent / 100) * a) : 0;
+      const payout = driverRef ? (a - commission) : 0;
+
+      // Deduct from rider
+      t.update(userRef, { walletBalance: userBal - a });
+      const deductTxRef = db.collection('walletTransactions').doc();
+      const baseMeta: any = { from: userId, amount: a, ts: new Date().toISOString(), type: 'deduct' };
+      if (tripId) baseMeta.tripId = tripId;
+      if (note) baseMeta.note = note;
+      t.set(deductTxRef, baseMeta);
+
+      // Credit driver with payout when driverId present
+      if (driverRef) {
+        const dDoc = await t.get(driverRef);
+        if (!dDoc.exists) throw new Error('driver not found');
+        const dData: any = dDoc.data();
+        const dBal = Number(dData.walletBalance ?? dData.balance ?? 0);
+        t.update(driverRef, { walletBalance: dBal + payout });
+        const payTxRef = db.collection('walletTransactions').doc();
+        const payMeta: any = { from: userId, to: driverId, amount: payout, ts: new Date().toISOString(), type: 'payment' };
+        if (tripId) payMeta.tripId = tripId;
+        t.set(payTxRef, payMeta);
       }
-      t.set(txRef, meta);
+
+      // Send commission to admin when configured
+      if (adminRef && driverRef && commission > 0) {
+        const aDoc = await t.get(adminRef);
+        if (!aDoc.exists) throw new Error('admin wallet user not found');
+        const aData: any = aDoc.data();
+        const aBal = Number(aData.walletBalance ?? 0);
+        t.update(adminRef, { walletBalance: aBal + commission });
+        const comTxRef = db.collection('walletTransactions').doc();
+        const comMeta: any = { from: userId, to: adminUserId, amount: commission, ts: new Date().toISOString(), type: 'commission' };
+        if (tripId) comMeta.tripId = tripId;
+        if (driverId) comMeta.driverId = driverId;
+        t.set(comTxRef, comMeta);
+      }
     });
     return res.json({ message: 'deducted' });
   } catch (e: any) {
