@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Zap } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { useLocation } from "react-router-dom";
 
 interface Props {
   className?: string;
@@ -8,6 +9,8 @@ interface Props {
 
 export default function TopBar({ className }: Props) {
   const { user } = useAppStore();
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith('/admin');
   const avatar = user?.profilePhoto
     ? user.profilePhoto
     : user?.email
@@ -27,15 +30,17 @@ export default function TopBar({ className }: Props) {
         </div>
         <span className="text-lg font-extrabold tracking-tight">reCab</span>
       </div>
-      <div className="pointer-events-auto flex items-center gap-3 text-sm">
-        <div className="h-9 w-9 overflow-hidden rounded-full ring-2 ring-primary/30">
-          <img
-            src={avatar}
-            alt="Profile"
-            className="h-full w-full object-cover"
-          />
+      {!isAdmin && (
+        <div className="pointer-events-auto flex items-center gap-3 text-sm">
+          <div className="h-9 w-9 overflow-hidden rounded-full ring-2 ring-primary/30">
+            <img
+              src={avatar}
+              alt="Profile"
+              className="h-full w-full object-cover"
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
