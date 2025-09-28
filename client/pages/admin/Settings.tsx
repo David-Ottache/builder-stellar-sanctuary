@@ -94,7 +94,7 @@ function Field({ label, children }:{ label: string; children: React.ReactNode })
 
 function NumberInput({ value, onChange, step=1 }:{ value: number; onChange: (v:number)=>void; step?: number }){
   return (
-    <input type="number" className="input" value={Number(value)} step={step} onChange={(e)=>onChange(parseFloat(e.target.value || '0'))} />
+    <input type="number" className="h-9 w-full rounded-lg border px-3 text-sm outline-none focus:border-primary" value={Number(value)} step={step} onChange={(e)=>onChange(parseFloat(e.target.value || '0'))} />
   );
 }
 
@@ -105,9 +105,3 @@ function Toggle({ checked, onChange }:{ checked: boolean; onChange:(v:boolean)=>
     </button>
   );
 }
-
-// Tailwind input style helper
-declare module 'react' { interface HTMLAttributes<T> { className?: string } }
-const inputBase = 'h-9 w-full rounded-lg border px-3 text-sm outline-none focus:border-primary';
-// @ts-ignore
-const input = document.createElement('style'); input.innerHTML = `.input{ ${['height:2.25rem','width:100%','border-radius:0.5rem','padding:0 0.75rem','font-size:0.875rem','outline:none'].join(';')} }`; document.head && document.head.appendChild(input);
