@@ -42,7 +42,7 @@ export default function BottomNav({ className }: Props) {
       aria-label="Primary"
     >
       {itemsToRender.map(({ to, label, Icon }) => {
-        const active = location.pathname === to;
+        const active = location.pathname === to || location.pathname.startsWith(to + '/')
         return (
           <NavLink
             key={to}
