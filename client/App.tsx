@@ -41,6 +41,8 @@ import AdminDrivers from "./pages/admin/Drivers";
 import AdminTrips from "./pages/admin/Trips";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
+import AdminCommissions from "./pages/admin/Commissions";
+import AdminLogin from "./pages/admin/Login";
 import { AppStoreProvider } from "./lib/store";
 
 const queryClient = new QueryClient();
@@ -57,6 +59,7 @@ const App = () => (
               <Route path="/splash" element={<Splash />} />
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/register/name" element={<RegisterName />} />
               <Route path="/register/contact" element={<RegisterContact />} />
               <Route path="/user/register/name" element={<UserRegisterName />} />
@@ -86,6 +89,7 @@ const App = () => (
                 <Route path="drivers" element={<AdminDrivers />} />
                 <Route path="trips" element={<AdminTrips />} />
                 <Route path="reports" element={<AdminReports />} />
+                <Route path="commissions" element={<AdminCommissions />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 
