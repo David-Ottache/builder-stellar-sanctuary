@@ -1,11 +1,25 @@
 import Layout from "@/components/app/Layout";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Menu, Users, Car, Route, BarChart3, Settings, Percent } from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 export default function Admin() {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const { setUser } = useAppStore();
+  const logout = () => {
+    try { setUser(null); } catch {}
+    try {
+      sessionStorage.removeItem('session.user');
+      sessionStorage.removeItem('session.lastActivity');
+      localStorage.removeItem('session.user');
+      localStorage.removeItem('session.remember');
+    } catch {}
+    setOpen(false);
+    navigate('/admin/login');
+  };
   const tabs = [
     { to: "/admin", label: "Dashboard", exact: true },
     { to: "/admin/users", label: "Users" },
