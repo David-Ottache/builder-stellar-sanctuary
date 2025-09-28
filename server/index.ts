@@ -174,6 +174,14 @@ export async function createServer() {
   // SSE stream for low-latency presence updates
   app.get('/api/presence/stream', presenceController.streamPresence as any);
 
+  // Ride request routes
+  const rideRequestController = await import('./controllers/rideRequestController');
+  app.post('/api/ride-requests', rideRequestController.createRequest as any);
+  app.get('/api/ride-requests', rideRequestController.listRequestsByDriver as any);
+  app.get('/api/ride-requests/:id', rideRequestController.getRequest as any);
+  app.post('/api/ride-requests/:id/accept', rideRequestController.acceptRequest as any);
+  app.post('/api/ride-requests/:id/decline', rideRequestController.declineRequest as any);
+
   // Lookup endpoint: search both drivers and users by id (document id or stored 'id' field)
   const lookupController = await import('./controllers/lookupController');
   app.get('/api/lookup/:id', lookupController.lookupById as any);
