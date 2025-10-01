@@ -149,30 +149,30 @@ export default function Wallet() {
       const mapUpdates: Record<string,{ name: string; avatar?: string }> = {};
       await Promise.all(missing.map(async (id)=>{
         try {
-          const r1 = await cachedFetch(`/api/users/${encodeURIComponent(id)}`);
-      if (r1 && r1.ok) {
-        const dd = await r1.json().catch(()=>null);
-        if (dd && (dd.user || dd.firstName || dd.name)) {
-          const user = dd.user || dd;
-          const name = user ? `${user.firstName||''} ${user.lastName||''}`.trim() : (dd.firstName || dd.name || id);
-          const avatar = (user && (user.profilePhoto || user.avatar || user.photoUrl)) || undefined;
-          mapUpdates[id] = { name: name || id, avatar };
-          return;
-        }
-      }
+          const r1 = await apiFetch(`/api/users/${encodeURIComponent(id)}`);
+          if (r1 && r1.ok) {
+            const dd = await r1.json().catch(()=>null);
+            if (dd && (dd.user || dd.firstName || dd.name)) {
+              const user = dd.user || dd;
+              const name = user ? `${user.firstName||''} ${user.lastName||''}`.trim() : (dd.firstName || dd.name || id);
+              const avatar = (user && (user.profilePhoto || user.avatar || user.photoUrl)) || undefined;
+              mapUpdates[id] = { name: name || id, avatar };
+              return;
+            }
+          }
         } catch(e){}
         try {
-          const r2 = await cachedFetch(`/api/drivers/${encodeURIComponent(id)}`);
-      if (r2 && r2.ok) {
-        const dd = await r2.json().catch(()=>null);
-        if (dd && dd.driver) {
-          const driver = dd.driver;
-          const name = `${driver.firstName||''} ${driver.lastName||''}`.trim() || driver.name || id;
-          const avatar = driver.avatar || driver.profilePhoto || undefined;
-          mapUpdates[id] = { name: name || id, avatar };
-          return;
-        }
-      }
+          const r2 = await apiFetch(`/api/drivers/${encodeURIComponent(id)}`);
+          if (r2 && r2.ok) {
+            const dd = await r2.json().catch(()=>null);
+            if (dd && dd.driver) {
+              const driver = dd.driver;
+              const name = `${driver.firstName||''} ${driver.lastName||''}`.trim() || driver.name || id;
+              const avatar = driver.avatar || driver.profilePhoto || undefined;
+              mapUpdates[id] = { name: name || id, avatar };
+              return;
+            }
+          }
         } catch(e){}
         mapUpdates[id] = { name: id, avatar: undefined };
       }));
