@@ -186,11 +186,18 @@ export const deductFunds: RequestHandler = async (req, res) => {
           const dData: any = dDoc.data();
           dBal = Number(dData.walletBalance ?? dData.balance ?? 0);
         }
-        t.update(driverRef, { walletBalance: dBal + payout });
+        const newDriverBal = dBal + payout;
+        t.update(driverRef, { walletBalance: newDriverBal });
         const payTxRef = db.collection('walletTransactions').doc();
         const payMeta: any = { from: userId, to: driverId, amount: payout, ts: new Date().toISOString(), type: 'payment' };
         if (tripId) payMeta.tripId = tripId;
         t.set(payTxRef, payMeta);
+        // lightweight notification for the driver
+        try {
+          const notifRef = db.collection('notifications').doc();
+          const body = tripId ? `Wallet credited ₦${payout} for trip ${tripId}` : `Wallet credited ₦${payout}`;
+          t.set(notifRef, { userId: driverId, title: 'Payment received', body, ts: new Date().toISOString(), read: false });
+        } catch {}
       }
 
       // Send commission to admin when configured. If admin wallet doc doesn't exist, upsert instead of failing.
