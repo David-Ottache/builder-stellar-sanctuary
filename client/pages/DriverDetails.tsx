@@ -4,7 +4,6 @@ import { useAppStore } from "@/lib/store";
 import { useMemo, useState, useEffect } from "react";
 import MapView from "@/components/app/MapView";
 import { apiFetch } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 export default function DriverDetails() {
   const { id } = useParams();
@@ -12,16 +11,14 @@ export default function DriverDetails() {
   const navigate = useNavigate();
   const [online, setOnline] = useState(true);
   const [incoming, setIncoming] = useState<any | null>(null);
-  const [assigned, setAssigned] = useState<any[]>([]);
 
   const driver = useMemo(()=> drivers.find(d=>d.id===id) || drivers[0], [drivers, id]);
   const avatar = driver?.avatar || 'https://cdn.builder.io/api/v1/image/assets%2Ffe9fd683ebc34eeab1db912163811d62%2Fab35a1634e2a43acab653d0184b25d6d?format=webp&width=800';
 
   useEffect(()=>{
     let iv: number | null = null;
-    let iv2: number | null = null;
-    if (!id || !online) { setIncoming(null); setAssigned([]); return; }
-    const pollRequests = async () => {
+    if (!id || !online) { setIncoming(null); return; }
+    const poll = async () => {
       try {
         const res = await apiFetch(`/api/ride-requests?driverId=${encodeURIComponent(String(id))}&status=pending`);
         if (!res || !res.ok) return;
@@ -35,19 +32,9 @@ export default function DriverDetails() {
         }
       } catch (e) { /* ignore */ }
     };
-    const pollTrips = async () => {
-      try {
-        const r = await apiFetch(`/api/trips/driver/${encodeURIComponent(String(id))}`);
-        const d = await r?.json().catch(()=>null);
-        const items = (d?.trips || []).filter((t:any)=> t && t.status === 'ongoing');
-        setAssigned(items);
-      } catch {}
-    };
-    pollRequests();
-    pollTrips();
-    iv = window.setInterval(pollRequests, 4000);
-    iv2 = window.setInterval(pollTrips, 5000);
-    return () => { if (iv) window.clearInterval(iv); if (iv2) window.clearInterval(iv2); };
+    poll();
+    iv = window.setInterval(poll, 4000);
+    return () => { if (iv) window.clearInterval(iv); };
   }, [id, online]);
 
   const accept = async () => {
@@ -75,28 +62,6 @@ export default function DriverDetails() {
       <div className="mt-4 h-[60vh]">
         <MapView />
       </div>
-
-      {assigned && assigned.length > 0 && (
-        <div className="fixed left-4 right-4 bottom-36 z-40">
-          <div className="rounded-2xl bg-white p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="font-semibold">Assigned trips</div>
-              <Button size="sm" onClick={()=>navigate('/driver/trips')}>View all</Button>
-            </div>
-            <div className="mt-3 max-h-48 overflow-auto space-y-2">
-              {assigned.map((t:any)=> (
-                <div key={t.id} className="rounded-xl border p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium">{t.pickup} → {t.destination}</div>
-                    <div className="text-sm font-semibold">₦{Number(t.fee||0).toLocaleString()}</div>
-                  </div>
-                  <div className="mt-1 text-xs text-neutral-600">{t.startedAt ? new Date(t.startedAt).toLocaleString() : ''} • {t.status}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {incoming && (
         <div className="fixed left-4 right-4 bottom-20 z-40">
