@@ -161,21 +161,23 @@ export default function UserVerify() {
     if (!value) return setResult(null);
     // if value is a URL, try to extract code query param or last path segment
     try {
-      if (value.startsWith('http://') || value.startsWith('https://') || value.includes('/user/')) {
+      if (value.startsWith('http://') || value.startsWith('https://') || value.includes('/user/') || value.includes('/driver/')) {
         try {
           const u = new URL(value, window.location.origin);
-          const code = u.searchParams.get('code');
+          const code = u.searchParams.get('code') || u.searchParams.get('id') || u.searchParams.get('driverId');
           if (code) value = code;
           else {
             const parts = u.pathname.split('/').filter(Boolean);
             if (parts.length) value = parts[parts.length-1];
           }
         } catch(e) {
-          // fallback: take last segment after slash
           const parts = value.split('/').filter(Boolean);
           if (parts.length) value = parts[parts.length-1];
         }
       }
+      const m = value.match(/^(driver|did|id)\s*[:=]\s*(.+)$/i);
+      if (m && m[2]) value = m[2].trim();
+      value = value.replace(/^"|^'|"$|'$/g, '').trim();
     } catch (e) {}
 
     // quick local store lookup to speed up checks
@@ -229,7 +231,8 @@ export default function UserVerify() {
           if (!data) continue;
           if (data.user) {
             const u = data.user;
-            const out = { id: u.id, name: `${u.firstName||''} ${u.lastName||''}`.trim() || u.email || u.phone, avatar: u.profilePhoto || 'https://i.pravatar.cc/80', rides: u.rides || 0, rating: u.rating || 0 };
+            const full = `${u.firstName||''} ${u.lastName||''}`.trim();
+            const out = { id: u.id, name: full || u.name || u.displayName || u.email || u.phone || u.id, avatar: u.profilePhoto || u.avatar || 'https://i.pravatar.cc/80', rides: u.rides || 0, rating: u.rating || 0 };
             try {
               const raw = sessionStorage.getItem('lookup.cache');
               const parsed = raw ? JSON.parse(raw) : {};
@@ -241,7 +244,8 @@ export default function UserVerify() {
           }
           if (data.driver) {
             const d = data.driver;
-            const out = { id: d.id, name: `${d.firstName||''} ${d.lastName||''}`.trim() || d.email || d.phone, avatar: d.profilePhoto || 'https://i.pravatar.cc/80', rides: d.rides || 0, rating: d.rating || 0 };
+            const full = `${d.firstName||''} ${d.lastName||''}`.trim();
+            const out = { id: d.id, name: full || d.name || d.displayName || d.email || d.phone || d.id, avatar: d.profilePhoto || d.avatar || 'https://i.pravatar.cc/80', rides: d.rides || 0, rating: d.rating || 0 };
             try {
               const raw = sessionStorage.getItem('lookup.cache');
               const parsed = raw ? JSON.parse(raw) : {};
@@ -321,7 +325,7 @@ export default function UserVerify() {
             <div className="text-neutral-700">Pickup: {tripDetails.pickup} {tripDetails.pickupCoords ? `(${tripDetails.pickupCoords.lat.toFixed(4)}, ${tripDetails.pickupCoords.lng.toFixed(4)})` : ''}</div>
             <div className="text-neutral-700">Destination: {tripDetails.destination} {tripDetails.destinationCoords ? `(${tripDetails.destinationCoords.lat.toFixed(4)}, ${tripDetails.destinationCoords.lng.toFixed(4)})` : ''}</div>
             <div className="text-neutral-700">Vehicle: {tripDetails.vehicle ?? 'go'}</div>
-            <div className="text-neutral-700">Estimated Fare: {fare != null ? `₦${Number(fare).toLocaleString()}` : '��'}</div>
+            <div className="text-neutral-700">Estimated Fare: {fare != null ? `₦${Number(fare).toLocaleString()}` : '—'}</div>
           </div>
         )}
 
