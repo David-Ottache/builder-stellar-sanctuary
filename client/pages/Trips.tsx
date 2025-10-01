@@ -15,8 +15,8 @@ export default function Trips() {
         // if driver, fetch trips assigned to driver
         const isDriver = user.role === 'driver' || !!user.vehicleType;
         const endpoint = isDriver ? `/api/trips/driver/${user.id}` : `/api/trips/${user.id}`;
-        const res = await fetch(endpoint);
-        if (!res.ok) return;
+        const res = await (await import('@/lib/utils')).apiFetch(endpoint);
+        if (!res || !res.ok) return;
         const data = await res.json().catch(()=>null);
         if (data?.trips) {
           setTrips(data.trips);
