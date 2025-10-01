@@ -203,6 +203,9 @@ export async function createServer() {
   app.get("/api/trips/average", tripController.averageCost as any);
   app.post("/api/trips/:id/end", tripController.endTrip as any);
   app.post("/api/trips/:id/rate", tripController.rateTrip as any);
+  app.post("/api/trips/:id/loc", tripController.trackLocation as any);
+  app.get("/api/trips/:id/track", tripController.getTrack as any);
+  app.post("/api/trips/:id/share", tripController.shareTracking as any);
 
   // Presence (online users/drivers)
   const presenceController = await import("./controllers/presenceController");
