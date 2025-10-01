@@ -922,14 +922,15 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`
           : "Unavailable";
 
-        // Determine current driver
+        // Determine current driver and current trip
         let driverId: string | null = null;
-        if (trip && trip.driverId) driverId = trip.driverId;
+        let currentTripId: string | null = null;
+        if (trip && trip.driverId) { driverId = trip.driverId; currentTripId = trip.id || null; }
         else {
           const ongoing = trips.find(
             (t) => t.status === "ongoing" && t.driverId,
           );
-          if (ongoing) driverId = ongoing.driverId as string;
+          if (ongoing) { driverId = ongoing.driverId as string; currentTripId = ongoing.id || null; }
         }
         let driverName = "Unknown";
         let driverPhone = "Unknown";
@@ -957,10 +958,20 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           } catch {}
         }
 
+        // Generate shareable live tracking link
+        let trackUrl = '';
+        try {
+          if (currentTripId) {
+            const r = await apiFetch(`/api/trips/${encodeURIComponent(String(currentTripId))}/share`, { method: 'POST' });
+            const d = await r?.json().catch(()=>null);
+            if (d?.url) trackUrl = d.url as string;
+          }
+        } catch {}
+
         const body =
           message && message.trim().length
             ? message
-            : `🚨 EMERGENCY ALERT 🚨\n\n${fullName} has triggered an SOS alert on reCab.\n\n📍 Last Known Location: ${locText}\n🚗 Driver Details:\n- Name: ${driverName}\n- Phone: ${driverPhone}\n- Vehicle: ${vehicleText}, Plate No: ${plate}\n\n⚠️ Please check on ${fullName} immediately. If in danger, contact local emergency services.\n\n— reCab Safety System`;
+            : `🚨 EMERGENCY ALERT 🚨\n\n${fullName} has triggered an SOS alert on reCab.\n\n📍 Last Known Location: ${locText}\n🚗 Driver Details:\n- Name: ${driverName}\n- Phone: ${driverPhone}\n- Vehicle: ${vehicleText}, Plate No: ${plate}\n${trackUrl ? `\n📡 Live tracking: ${trackUrl}\n` : ''}\n⚠️ Please check on ${fullName} immediately. If in danger, contact local emergency services.\n\n— reCab Safety System`;
 
         // Send to each contact
         for (const c of contacts) {
@@ -1054,6 +1065,34 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       }
     })();
   }, [user]);
+
+  // Driver: while a trip is ongoing, send GPS updates periodically
+  React.useEffect(() => {
+    let watchId: number | null = null;
+    let lastSent = 0;
+    const send = async (lat: number, lng: number, speed?: number) => {
+      try {
+        if (!trip || !trip.id) return;
+        const now = Date.now();
+        if (now - lastSent < 2500) return; // throttle
+        lastSent = now;
+        await apiFetch(`/api/trips/${encodeURIComponent(String(trip.id))}/loc`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat, lng, speed: speed || 0 })
+        });
+      } catch {}
+    };
+    if (user && user.role === 'driver' && trip && trip.id) {
+      try {
+        if ('geolocation' in navigator) {
+          watchId = navigator.geolocation.watchPosition((pos)=>{
+            send(pos.coords.latitude, pos.coords.longitude, pos.coords.speed || 0);
+          }, ()=>{}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 });
+        }
+      } catch {}
+    }
+    return () => { try { if (watchId != null) navigator.geolocation.clearWatch(watchId); } catch {} };
+  }, [user?.role, trip?.id]);
 
   const value: StoreState = {
     user,
