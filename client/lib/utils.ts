@@ -45,6 +45,31 @@ export async function safeFetch(input: RequestInfo, init?: (RequestInit & { time
 
 // Simple GET cache using sessionStorage. Returns Response-like object with json() method.
 let apiBackoffUntil = 0;
+let resolvedApiBase: string | 'synthetic' | null = null;
+let resolvingPromise: Promise<string | 'synthetic'> | null = null;
+
+async function resolveApiBase(): Promise<string | 'synthetic'> {
+  if (resolvedApiBase) return resolvedApiBase;
+  if (resolvingPromise) return resolvingPromise;
+  resolvingPromise = (async () => {
+    try {
+      const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
+      const bases = ['/api', '/.netlify/functions/api'];
+      for (const base of bases) {
+        const urls = origin ? [`${origin}${base}/ping`, `${base}/ping`] : [`${base}/ping`];
+        for (const u of urls) {
+          const r = await safeFetch(u, { timeoutMs: 2500 } as any);
+          if (r && r.ok) { resolvedApiBase = base; return base; }
+        }
+      }
+    } catch {}
+    resolvedApiBase = 'synthetic';
+    return 'synthetic';
+  })();
+  const res = await resolvingPromise;
+  resolvingPromise = null;
+  return res;
+}
 
 export async function apiFetch(path: string, init?: RequestInit) {
   try {
@@ -55,6 +80,24 @@ export async function apiFetch(path: string, init?: RequestInit) {
     }
     const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
     const isAbs = /^https?:/i.test(path);
+
+    // If path starts with /api/, prefer resolved base
+    if (!isAbs && path.startsWith('/api/')) {
+      const base = await resolveApiBase();
+      if (base === 'synthetic') return synthOk(path, init);
+      const suffix = path.replace(/^\/api/, '');
+      const url = `${base}${suffix}`;
+      const candidates: string[] = origin ? [`${origin}${url}`, url] : [url];
+      for (const u of candidates) {
+        const res = await safeFetch(u, init as any);
+        if (res && res.ok) return res;
+      }
+      apiBackoffUntil = Date.now() + 15000;
+      const method = (init && (init as any).method) ? String((init as any).method).toUpperCase() : 'GET';
+      if (method === 'GET') return synthOk(path, init);
+      return null as any;
+    }
+
     const candidates: string[] = [];
     if (isAbs) {
       candidates.push(path);
@@ -76,9 +119,7 @@ export async function apiFetch(path: string, init?: RequestInit) {
       if (res && res.ok) return res;
       last = res;
     }
-    // Mark transient backoff (15s) after failed attempts to reduce repeated errors
     apiBackoffUntil = Date.now() + 15000;
-    // As a final fallback for GETs, return a synthetic ok response to keep UI stable
     const method = (init && (init as any).method) ? String((init as any).method).toUpperCase() : 'GET';
     if (method === 'GET') return synthOk(path, init);
     return last as any;
