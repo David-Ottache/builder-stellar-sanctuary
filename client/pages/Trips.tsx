@@ -127,6 +127,7 @@ export default function Trips() {
                     <div><strong>Distance:</strong> {t.distanceKm != null ? `${t.distanceKm.toFixed(2)} km` : '—'}</div>
                     <div><strong>Vehicle:</strong> {t.vehicle ?? '—'}</div>
                     <div><strong>Fee:</strong> N{(t.fee || 0).toLocaleString()}</div>
+                    <div><strong>Payment:</strong> {t.paymentMethod ? (t.paymentMethod === 'wallet' ? 'Wallet' : 'Cash') : (t.status === 'completed' && (t.fee||0) > 0 ? 'Cash' : '—')}</div>
                     <div><strong>Rating:</strong> {typeof t.rating === 'number' ? `${t.rating} / 5` : 'Not rated'}</div>
                   </div>
                 )}
