@@ -41,39 +41,7 @@ export default function UserVerify() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!waitingId) return;
-    let active = true;
-    const origin = window.location.origin;
-    const iv = window.setInterval(async () => {
-      try {
-        const res = await fetch(`${origin}/api/ride-requests/${encodeURIComponent(waitingId)}`);
-        if (!res.ok) return;
-        const data = await res.json().catch(()=>null);
-        const status = data?.request?.status;
-        if (!active || !status) return;
-        if (status === 'accepted') {
-          window.clearInterval(iv);
-          setWaiting(false);
-          // start trip for rider
-          try {
-            const driverId = (result && result.id) ? result.id : null;
-            if (driverId) selectDriver(driverId);
-            startTrip({ pickup: tripDetails.pickup || 'Current location', destination: tripDetails.destination || 'TBD', driverId: driverId || 'unknown', fee: fare || 0 });
-          } catch {}
-          navigate('/');
-        }
-        if (status === 'declined') {
-          window.clearInterval(iv);
-          setWaiting(false);
-          setWaitingId(null);
-          await Swal.fire('Driver declined', 'Please enter another driver ID.', 'warning');
-          setResult(null);
-        }
-      } catch (e) { /* ignore */ }
-    }, 2000);
-    return () => { active = false; try { window.clearInterval(iv); } catch {} };
-  }, [waitingId]);
+  // Removed driver notification polling; trips are booked immediately after verification
 
   const startCamera = async () => {
     setCameraError(null);
