@@ -193,12 +193,16 @@ export const deductFunds: RequestHandler = async (req, res) => {
         t.set(payTxRef, payMeta);
       }
 
-      // Send commission to admin when configured
+      // Send commission to admin when configured. If admin wallet doc doesn't exist, upsert instead of failing.
       if (adminRef && driverRef && commission > 0) {
         const aDoc = await t.get(adminRef);
-        if (!aDoc.exists) throw new Error('admin wallet user not found');
-        const aData: any = aDoc.data();
-        const aBal = Number(aData.walletBalance ?? 0);
+        let aBal = 0;
+        if (!aDoc.exists) {
+          t.set(adminRef, { id: adminUserId, walletBalance: 0 }, { merge: true });
+        } else {
+          const aData: any = aDoc.data();
+          aBal = Number(aData.walletBalance ?? 0);
+        }
         t.update(adminRef, { walletBalance: aBal + commission });
         const comTxRef = db.collection('walletTransactions').doc();
         const comMeta: any = { from: userId, to: adminUserId, amount: commission, ts: new Date().toISOString(), type: 'commission' };
