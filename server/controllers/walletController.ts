@@ -81,7 +81,7 @@ export const topUp: RequestHandler = async (req, res) => {
 
 export const requestFunds: RequestHandler = async (req, res) => {
   try {
-    const { fromId, toId, amount, note } = req.body || {};
+    const { fromId, toId, amount, note, tripId } = req.body || {};
     const a = Number(amount || 0);
     if (!fromId || !toId) return res.status(400).json({ error: 'fromId and toId required' });
     if (!a || a <= 0) return res.status(400).json({ error: 'amount must be a positive number' });
@@ -92,10 +92,33 @@ export const requestFunds: RequestHandler = async (req, res) => {
     const db = getFirestore();
     if (!db) return res.status(503).json({ error: 'database not available' });
     const reqRef = db.collection('walletRequests').doc();
-    await reqRef.set({ from: fromId, to: toId, amount: a, note: note || null, status: 'pending', ts: new Date().toISOString() });
+    await reqRef.set({ from: fromId, to: toId, amount: a, note: note || null, tripId: tripId || null, status: 'pending', ts: new Date().toISOString() });
     return res.json({ message: 'request created', id: reqRef.id });
   } catch (e) {
     console.error('requestFunds error', e);
+    return res.status(500).json({ error: 'Internal error' });
+  }
+};
+
+export const listRequests: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    if (!isInitialized()) {
+      const init = await initializeFirebaseAdmin();
+      if (!init.initialized) return res.status(503).json({ error: 'database not available' });
+    }
+    const db = getFirestore();
+    if (!db) return res.status(503).json({ error: 'database not available' });
+    const toQ = await db.collection('walletRequests').where('to','==', userId).limit(100).get().catch(()=>({ docs: [] } as any));
+    const fromQ = await db.collection('walletRequests').where('from','==', userId).limit(100).get().catch(()=>({ docs: [] } as any));
+    const toReq = (toQ.docs || []).map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
+    const fromReq = (fromQ.docs || []).map((d:any)=> ({ id: d.id, ...(d.data() as any) }));
+    const reqs = [...toReq, ...fromReq];
+    reqs.sort((a:any,b:any)=> String(b.ts||'').localeCompare(String(a.ts||'')));
+    return res.json({ requests: reqs.slice(0,200) });
+  } catch (e) {
+    console.error('listRequests error', e);
     return res.status(500).json({ error: 'Internal error' });
   }
 };
