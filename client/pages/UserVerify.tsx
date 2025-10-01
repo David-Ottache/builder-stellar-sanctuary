@@ -10,8 +10,6 @@ export default function UserVerify() {
   const { pendingTrip, selectDriver, upsertDriver, drivers, startTrip, computeFare } = useAppStore();
   const [code, setCode] = useState("");
   const [result, setResult] = useState<any | null>(null);
-  const [waitingId, setWaitingId] = useState<string | null>(null);
-  const [waiting, setWaiting] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
