@@ -384,7 +384,13 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
                   if (localBal >= amount) {
                     try { setUser({ ...user, walletBalance: localBal - amount }); } catch {}
                     try { await (await import('@/lib/utils')).apiFetch(`/api/trips/${encodeURIComponent(String(tripIdForRating||''))}/end`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fee: amount, paymentMethod: 'wallet' }) }); } catch {}
-                    try { void Swal.fire({ icon: 'success', title: 'Payment processed', text: 'Server unreachable, recorded locally.' }); } catch {}
+                    // create a pending wallet request visible to both rider and driver
+                    try {
+                      if (driverIdForRating) {
+                        await (await import('@/lib/utils')).apiFetch('/api/wallet/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: user.id, toId: driverIdForRating, amount, note: 'wallet processing', tripId: tripIdForRating }) });
+                      }
+                    } catch {}
+                    try { void Swal.fire({ icon: 'success', title: 'Payment processing', text: 'Recorded and marked as processing.' }); } catch {}
                   } else {
                     try { void Swal.fire({ icon: 'error', title: 'Wallet payment failed', text: 'Please pay cash.' }); } catch {}
                   }
