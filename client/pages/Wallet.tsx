@@ -36,11 +36,16 @@ export default function Wallet() {
         }
 
         const res = await cachedFetch(`/api/wallet/transactions/${appUser.id}`);
-        if (!res || !res.ok) return;
-        const data = await res.json().catch(()=>null);
-        if (data?.transactions) {
+        const reqRes = await safeFetch(`/api/wallet/requests/${appUser.id}`);
+        const data = await res?.json().catch(()=>null);
+        const reqData = await reqRes?.json().catch(()=>null);
+        const serverTx = Array.isArray(data?.transactions) ? data.transactions : [];
+        const serverReq = Array.isArray(reqData?.requests) ? reqData.requests : [];
+        // map requests to pending tx entries
+        const mappedReq = serverReq.map((r:any)=> ({ id: `req_${r.id}`, ts: r.ts, status: r.status || 'pending', type: 'request', from: r.from, to: r.to, amount: r.amount, participantId: r.from === appUser.id ? r.to : r.from, tripId: r.tripId || (typeof r.note === 'string' && r.note.startsWith('trip:') ? r.note.split(':')[1] : undefined), note: r.note || undefined }));
+        if (serverTx.length || mappedReq.length) {
           // annotate transactions with a participantId (from or to) to simplify UI
-          const annotated = (data.transactions || []).map((t:any) => ({ ...t, participantId: t.from || t.to || null }));
+          const annotated = [...mappedReq, ...serverTx].map((t:any) => ({ ...t, participantId: t.participantId || t.from || t.to || null }));
           setTransactions(annotated);
           // prefetch participant names for transactions
           const ids = new Set<string>();
