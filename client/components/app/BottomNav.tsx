@@ -2,15 +2,17 @@ import { cn } from "@/lib/utils";
 import { Home, Clock, Wallet, User, Scan } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAppStore } from "@/lib/store";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
 interface Props {
   className?: string;
 }
 
 function getItems(user: any) {
-  if (user && user.role === 'driver') {
-    const home = user.id ? `/driver/${encodeURIComponent(String(user.id))}` : '/driver/me';
+  if (user && user.role === "driver") {
+    const home = user.id
+      ? `/driver/${encodeURIComponent(String(user.id))}`
+      : "/driver/me";
     return [
       { to: home, label: "Home", Icon: Home },
       { to: "/driver/trips", label: "Trips", Icon: Clock },
@@ -42,7 +44,8 @@ export default function BottomNav({ className }: Props) {
       aria-label="Primary"
     >
       {itemsToRender.map(({ to, label, Icon }) => {
-        const active = location.pathname === to || location.pathname.startsWith(to + '/')
+        const active =
+          location.pathname === to || location.pathname.startsWith(to + "/");
         return (
           <NavLink
             key={to}
@@ -54,7 +57,7 @@ export default function BottomNav({ className }: Props) {
                 : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200",
             )}
           >
-            <Icon className={cn("h-5 w-5", active && "fill-primary/10")}/>
+            <Icon className={cn("h-5 w-5", active && "fill-primary/10")} />
             {label}
           </NavLink>
         );
