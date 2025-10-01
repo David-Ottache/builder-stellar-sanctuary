@@ -311,11 +311,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   const startTrip: StoreState["startTrip"] = ({ pickup, destination, driverId, fee }) => {
     const driver = drivers.find((d) => d.id === driverId) || drivers[0];
-    const computedFee = 0;
+    const distanceKm = pendingTrip && pendingTrip.pickupCoords && pendingTrip.destinationCoords ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : undefined;
+    const computedFee = typeof fee === 'number' ? Math.max(0, Math.round(fee)) : (typeof distanceKm === 'number' ? computeFare(distanceKm) : 0);
     const id = `t_${Date.now()}`;
     const startedAt = new Date().toISOString();
     const vehicle = pendingTrip?.vehicle;
-    const distanceKm = pendingTrip && pendingTrip.pickupCoords && pendingTrip.destinationCoords ? haversineKm(pendingTrip.pickupCoords, pendingTrip.destinationCoords) : undefined;
     const record: TripDetails = { id, pickup, destination, fee: computedFee, driverId: driver.id, status: 'ongoing', startedAt, vehicle, distanceKm };
 
     // optimistic local update
