@@ -386,6 +386,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
                 try { void Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not reach server. Please pay cash.' }); } catch {}
               }
             } else {
+              try {
+                await (await import('@/lib/utils')).apiFetch(`/api/trips/${encodeURIComponent(String(tripIdForRating||''))}/end`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fee: amount, paymentMethod: 'cash' }) });
+              } catch {}
               try { void Swal.fire({ icon: 'info', title: 'Pay cash', text: 'Please pay cash to the driver.' }); } catch {}
             }
           });
