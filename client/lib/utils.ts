@@ -76,6 +76,8 @@ export async function apiFetch(path: string, init?: RequestInit) {
       if (res && res.ok) return res;
       last = res;
     }
+    // Mark transient backoff (15s) after failed attempts to reduce repeated errors
+    apiBackoffUntil = Date.now() + 15000;
     // As a final fallback for GETs, return a synthetic ok response to keep UI stable
     const method = (init && (init as any).method) ? String((init as any).method).toUpperCase() : 'GET';
     if (method === 'GET') return synthOk(path, init);
