@@ -333,7 +333,7 @@ export default function Wallet() {
                   {(!(t.from && t.to) && !(t.type === 'topup')) && (
                     <div className="text-xs text-neutral-600">{t.participantId ? (namesMap[t.participantId]?.name || '') : ''}</div>
                   )}
-                  <div className="text-xs text-neutral-600">{t.tripId ? `Trip ${t.tripId} • ` : ''}{new Date(t.ts).toLocaleString()}{t.status==='pending' ? ' • Pending' : ''}</div>
+                  <div className="text-xs text-neutral-600">{t.tripId ? `Trip ${t.tripId} • ` : ''}{new Date(t.ts).toLocaleString()}{isProcessing ? ' • Processing' : ''}</div>
                 </div>
                 <div className={isIncoming ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
                   {(isIncoming ? '+' : '-') }₦{(t.amount || 0).toLocaleString()}.00
