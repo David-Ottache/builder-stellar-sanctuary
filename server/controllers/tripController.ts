@@ -157,10 +157,14 @@ export const endTrip: RequestHandler = async (req, res) => {
     const data = doc.data() as any;
     if (data.status === 'completed') return res.json({ trip: { id: doc.id, ...data } });
 
+    const pmRaw = (req.body && (req.body as any).paymentMethod) ? String((req.body as any).paymentMethod).toLowerCase() : '';
+    const paymentMethod = pmRaw === 'wallet' || pmRaw === 'cash' ? pmRaw : undefined;
+
     const endedAt = new Date().toISOString();
     const updates: any = { status: 'completed', endedAt };
     if (fee > 0) updates.fee = fee;
-    await docRef.update(updates).catch(()=>{});
+    if (paymentMethod) updates.paymentMethod = paymentMethod;
+    await docRef.set(updates, { merge: true }).catch(()=>{});
     const updated = { id: doc.id, ...data, ...updates } as any;
 
     try {
