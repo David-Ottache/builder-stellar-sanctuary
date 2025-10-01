@@ -18,13 +18,13 @@ export default function Login() {
     try {
       const endpoint =
         role === "driver" ? "/api/drivers/login" : "/api/users/login";
-      const res = await fetch(endpoint, {
+      const res = await (await import("@/lib/utils")).apiFetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+      if (!res || !res.ok) {
+        const data = await res?.json().catch(() => ({}));
         // if account exists but no password set, prompt to choose password
         if (data.error === "no_password") {
           const { value: newPassword } = (await Swal.fire({
