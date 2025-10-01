@@ -96,10 +96,14 @@ export async function apiFetch(path: string, init?: RequestInit) {
       const suffix = path.replace(/^\/api/, '');
       const url = `${base}${suffix}`;
       const candidates: string[] = origin ? [`${origin}${url}`, url] : [url];
+      let ok: Response | null = null;
       for (const u of candidates) {
         const res = await safeFetch(u, init as any);
-        if (res && res.ok) return res;
+        if (res && res.ok) { ok = res; break; }
       }
+      if (ok) return ok;
+      // first failure: flip to synthetic mode and back off
+      resolvedApiBase = 'synthetic';
       apiBackoffUntil = Date.now() + 15000;
       const method = (init && (init as any).method) ? String((init as any).method).toUpperCase() : 'GET';
       if (method === 'GET') return synthOk(path, init);
