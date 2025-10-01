@@ -83,6 +83,7 @@ export async function apiFetch(path: string, init?: RequestInit) {
   try {
     const now = Date.now();
     if (now < apiBackoffUntil) return synthOk(path, init);
+    if (resolvedApiBase === 'synthetic') resolvedApiBase = null;
     if (typeof navigator !== 'undefined' && navigator && 'onLine' in navigator && (navigator as any).onLine === false) {
       return synthOk(path, init);
     }
