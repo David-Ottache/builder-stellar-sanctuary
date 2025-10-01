@@ -183,6 +183,11 @@ export const deductFunds: RequestHandler = async (req, res) => {
         if (driverId) comMeta.driverId = driverId;
         t.set(comTxRef, comMeta);
       }
+      // Mark trip as wallet-paid if tripId present
+      if (tripId) {
+        const tripRef = db.collection('trips').doc(String(tripId));
+        try { t.set(tripRef, { paymentMethod: 'wallet', fee: a, paidAt: new Date().toISOString() }, { merge: true }); } catch {}
+      }
     });
     return res.json({ message: 'deducted' });
   } catch (e: any) {
