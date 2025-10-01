@@ -30,7 +30,7 @@ export default function Wallet() {
                 const bal = Number(d?.driver?.walletBalance ?? d?.driver?.balance ?? d?.driver?.wallet ?? 0);
                 setDisplayBalance(bal);
               }
-            } catch(e) { console.warn('failed fetching driver data', e); }
+            } catch(e) { console.warn('failed fetching driver data'); }
           } else {
             setDisplayBalance(Number(appUser.walletBalance ?? (appUser.wallet && (appUser.wallet as any).balance) ?? (appUser as any).balance ?? 0));
           }
@@ -122,7 +122,7 @@ export default function Wallet() {
               } catch(e){}
             }
           }
-        } catch(e){ console.warn('failed fetching tx', e); }
+        } catch(e){ console.warn('failed fetching tx'); }
       };
 
       await load();
@@ -219,7 +219,7 @@ export default function Wallet() {
         }
       }
     } catch (e) {
-      console.error('send error', e);
+      console.warn('send error');
       Swal.fire('Error', 'Transfer failed');
     } finally { setLoading(false); }
   };
@@ -256,7 +256,7 @@ export default function Wallet() {
       addPending({ type: 'request', from: appUser.id, to: toId, amount, participantId: toId });
       Swal.fire('Success', 'Request created');
     } catch (e) {
-      console.error('request error', e);
+      console.warn('request error');
       Swal.fire('Error', 'Request failed');
     } finally { setLoading(false); }
   };
@@ -277,7 +277,7 @@ export default function Wallet() {
       addPending({ type: 'topup', to: appUser.id, amount, participantId: appUser.id });
       Swal.fire('Top up initiated', 'Top up queued (simulate bank integration)');
     } catch (e) {
-      console.error('topup error', e);
+      console.warn('topup error');
       Swal.fire('Error', 'Top up failed');
     } finally { setLoading(false); }
   };
