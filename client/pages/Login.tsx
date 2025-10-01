@@ -44,12 +44,12 @@ export default function Login() {
               role === "driver"
                 ? "/api/drivers/set-password"
                 : "/api/users/set-password";
-            const r = await fetch(pwEndpoint, {
+            const r = await (await import("@/lib/utils")).apiFetch(pwEndpoint, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email, password: newPassword }),
             });
-            if (r.ok) {
+            if (r && r.ok) {
               await Swal.fire({
                 icon: "success",
                 title: "Password set",
