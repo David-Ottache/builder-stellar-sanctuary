@@ -355,12 +355,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     const tripIdForRating = trip.id || null;
     // clear current trip
     setTrip(null);
-    // prompt for rating if driver present
-    if (driverIdForRating) {
-      setRatingPrompt({ open: true, driverId: driverIdForRating, tripId: tripIdForRating });
-    }
 
-    // rider payment choice
+    // rider payment choice — show rating popup only after payment flow completes
     try {
       if (user && user.role === 'user' && amount > 0) {
         try {
@@ -378,7 +374,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
                 if (r && r.ok) {
                   try { setUser({ ...user, walletBalance: Math.max(0, Number(user.walletBalance ?? 0) - amount) }); } catch {}
                   try { await (await import('@/lib/utils')).apiFetch(`/api/trips/${encodeURIComponent(String(tripIdForRating||''))}/end`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fee: amount, paymentMethod: 'wallet' }) }); } catch {}
-                  try { void Swal.fire({ icon: 'success', title: 'Payment successful', text: 'Wallet charged and driver credited.' }); } catch {}
+                  try { await Swal.fire({ icon: 'success', title: 'Payment successful', text: 'Wallet charged and driver credited.' }); } catch {}
+                  if (driverIdForRating) setRatingPrompt({ open: true, driverId: driverIdForRating, tripId: tripIdForRating });
                 } else {
                   const localBal = Number(user.walletBalance ?? 0);
                   if (localBal >= amount) {
@@ -390,22 +387,29 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
                         await (await import('@/lib/utils')).apiFetch('/api/wallet/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: user.id, toId: driverIdForRating, amount, note: 'wallet processing', tripId: tripIdForRating }) });
                       }
                     } catch {}
-                    try { void Swal.fire({ icon: 'success', title: 'Payment processing', text: 'Recorded and marked as processing.' }); } catch {}
+                    try { await Swal.fire({ icon: 'success', title: 'Payment processing', text: 'Recorded and marked as processing.' }); } catch {}
+                    if (driverIdForRating) setRatingPrompt({ open: true, driverId: driverIdForRating, tripId: tripIdForRating });
                   } else {
-                    try { void Swal.fire({ icon: 'error', title: 'Wallet payment failed', text: 'Please pay cash.' }); } catch {}
+                    try { await Swal.fire({ icon: 'error', title: 'Wallet payment failed', text: 'Please pay cash.' }); } catch {}
+                    if (driverIdForRating) setRatingPrompt({ open: true, driverId: driverIdForRating, tripId: tripIdForRating });
                   }
                 }
               } catch {
-                try { void Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not reach server. Please pay cash.' }); } catch {}
+                try { await Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not reach server. Please pay cash.' }); } catch {}
+                if (driverIdForRating) setRatingPrompt({ open: true, driverId: driverIdForRating, tripId: tripIdForRating });
               }
             } else {
               try {
                 await (await import('@/lib/utils')).apiFetch(`/api/trips/${encodeURIComponent(String(tripIdForRating||''))}/end`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fee: amount, paymentMethod: 'cash' }) });
               } catch {}
-              try { void Swal.fire({ icon: 'info', title: 'Pay cash', text: 'Please pay cash to the driver.' }); } catch {}
+              try { await Swal.fire({ icon: 'info', title: 'Pay cash', text: 'Please pay cash to the driver.' }); } catch {}
+              if (driverIdForRating) setRatingPrompt({ open: true, driverId: driverIdForRating, tripId: tripIdForRating });
             }
           });
         } catch {}
+      } else {
+        // No payment required or non-user role: directly show rating if driver exists
+        if (driverIdForRating) setRatingPrompt({ open: true, driverId: driverIdForRating, tripId: tripIdForRating });
       }
     } catch {}
 
