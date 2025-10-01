@@ -154,6 +154,7 @@ export async function createServer() {
   app.post('/api/wallet/transfer', walletController.transferFunds as any);
   app.post('/api/wallet/topup', walletController.topUp as any);
   app.post('/api/wallet/request', walletController.requestFunds as any);
+  app.get('/api/wallet/requests/:userId', walletController.listRequests as any);
   app.post('/api/wallet/deduct', walletController.deductFunds as any);
   app.get('/api/wallet/transactions/:userId', walletController.getTransactions as any);
 
