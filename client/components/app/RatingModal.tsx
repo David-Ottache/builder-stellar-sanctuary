@@ -22,30 +22,56 @@ export default function RatingModal() {
 
   React.useEffect(()=>{
     (async()=>{
-      if (!ratingPrompt.open || !ratingPrompt.driverId) return;
-      const local = drivers.find(d=>d.id === ratingPrompt.driverId) || null;
-      if (local) { setFetchedDriver(local); return; }
+      if (!ratingPrompt.open) return;
+      // Prefer driver from the specific trip to avoid mismatches
+      let driverId = ratingPrompt.driverId || null;
       try {
-        const r = await cachedFetch(`/api/drivers/${encodeURIComponent(String(ratingPrompt.driverId))}`);
+        if (ratingPrompt.tripId) {
+          const tr = await cachedFetch(`/api/trip/${encodeURIComponent(String(ratingPrompt.tripId))}`);
+          if (tr && tr.ok) {
+            const td = await tr.json().catch(()=>null);
+            const trip = td?.trip || null;
+            if (trip && trip.driverId) driverId = trip.driverId;
+          }
+        }
+      } catch {}
+      if (!driverId) return;
+
+      const local = drivers.find(d=>d.id === driverId) || null;
+      if (local) {
+        setFetchedDriver({
+          id: local.id,
+          name: local.name,
+          avatar: local.avatar,
+          rides: local.rides ?? 0,
+          rating: local.rating ?? 0,
+        });
+        return;
+      }
+      try {
+        const r = await cachedFetch(`/api/drivers/${encodeURIComponent(String(driverId))}`);
         if (r && r.ok) {
           const d = await r.json().catch(()=>null);
           const driver = d?.driver || null;
           if (driver) {
-            setFetchedDriver({
-              id: driver.id || ratingPrompt.driverId,
-              name: (`${driver.firstName||''} ${driver.lastName||''}`).trim() || driver.name || 'Driver',
-              avatar: driver.avatar || driver.profilePhoto || 'https://i.pravatar.cc/80',
-              rides: driver.rides ?? 0,
-              rating: driver.rating ?? 0,
-            });
+            const name = (`${driver.firstName||''} ${driver.lastName||''}`).trim() || driver.name || 'Driver';
+            const avatar = driver.avatar || driver.profilePhoto || 'https://i.pravatar.cc/80';
+            const rides = driver.rides ?? 0;
+            const rating = driver.rating ?? 0;
+            const phone = driver.phone || '';
+            const vehicleMake = driver.vehicleMake || driver.vehicleBrand || '';
+            const vehicleModel = driver.vehicleModel || '';
+            const plate = driver.plateNumber || driver.plate || '';
+            const vehicleText = [vehicleMake, vehicleModel].filter(Boolean).join(' ').trim();
+            setFetchedDriver({ id: driver.id || driverId, name, avatar, rides, rating, phone, vehicleText, plate });
           }
         }
       } catch {}
     })();
-  }, [ratingPrompt.open, ratingPrompt.driverId, drivers]);
+  }, [ratingPrompt.open, ratingPrompt.tripId, ratingPrompt.driverId, drivers]);
 
   if (!ratingPrompt.open) return null;
-  const driver = (drivers.find(d=>d.id === ratingPrompt.driverId) as any) || fetchedDriver;
+  const driver = fetchedDriver || (drivers.find(d=>d.id === ratingPrompt.driverId) as any);
 
   const onSubmit = () => {
     if (!ratingPrompt.driverId) return;
@@ -62,6 +88,10 @@ export default function RatingModal() {
           <div>
             <div style={{ fontWeight: 700 }}>{driver?.name || 'Driver'}</div>
             <div style={{ fontSize: 12, color: '#666' }}>{(driver?.rides ?? 0)} trips • {(driver?.rating ?? 0)} avg</div>
+            {driver?.phone ? <div style={{ fontSize: 11, color: '#6b7280' }}>Phone: {driver.phone}</div> : null}
+            {driver?.vehicleText || driver?.plate ? (
+              <div style={{ fontSize: 11, color: '#6b7280' }}>{[driver?.vehicleText, driver?.plate ? `Plate: ${driver.plate}` : ''].filter(Boolean).join(' • ')}</div>
+            ) : null}
             {ratingPrompt.tripId ? (
               <div style={{ fontSize: 11, color: '#6b7280' }}>Trip {ratingPrompt.tripId}</div>
             ) : null}
