@@ -1,21 +1,41 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+// Suppress unhandled AbortError noise from timed-out fetches in dev
+try {
+  if (typeof window !== 'undefined' && !(window as any).__abortNoiseSuppressed) {
+    window.addEventListener('unhandledrejection', (ev: any) => {
+      try {
+        const reason = ev?.reason;
+        if (reason && (reason.name === 'AbortError' || String(reason).includes('AbortError'))) {
+          ev.preventDefault?.();
+        }
+      } catch {}
+    });
+    (window as any).__abortNoiseSuppressed = true;
+  }
+} catch {}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export async function safeFetch(input: RequestInfo, init?: RequestInit) {
+export async function safeFetch(input: RequestInfo, init?: (RequestInit & { timeoutMs?: number })) {
+  const timeoutMs = typeof (init as any)?.timeoutMs === 'number' ? Math.max(1, Number((init as any).timeoutMs)) : 7000;
+  const controller = new AbortController();
+  const id = setTimeout(() => { try { controller.abort(); } catch {} }, timeoutMs);
   try {
-    // Abort after 7s to avoid hanging polls
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 7000);
-    const res = await fetch(input, { ...(init as any), signal: (init as any)?.signal ?? controller.signal } as any);
+    const merged = { ...(init as any), signal: (init as any)?.signal ?? controller.signal } as any;
+    const res = await fetch(input, merged);
     clearTimeout(id);
     return res;
-  } catch (e) {
-    // Swallow fetch errors to avoid noisy console; callers must handle null
-    return null;
+  } catch (e: any) {
+    clearTimeout(id);
+    // Swallow AbortError explicitly to avoid dev overlay interruptions
+    if (e && (e.name === 'AbortError' || String(e).includes('AbortError'))) {
+      return null as any;
+    }
+    return null as any;
   }
 }
 
