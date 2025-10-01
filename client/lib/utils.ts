@@ -7,10 +7,14 @@ export function cn(...inputs: ClassValue[]) {
 
 export async function safeFetch(input: RequestInfo, init?: RequestInit) {
   try {
-    const res = await fetch(input, init);
+    // Abort after 7s to avoid hanging polls
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 7000);
+    const res = await fetch(input, { ...(init as any), signal: (init as any)?.signal ?? controller.signal } as any);
+    clearTimeout(id);
     return res;
   } catch (e) {
-    console.warn('safeFetch failed', input, e);
+    // Swallow fetch errors to avoid noisy console; callers must handle null
     return null;
   }
 }
@@ -18,6 +22,9 @@ export async function safeFetch(input: RequestInfo, init?: RequestInit) {
 // Simple GET cache using sessionStorage. Returns Response-like object with json() method.
 export async function apiFetch(path: string, init?: RequestInit) {
   try {
+    if (typeof navigator !== 'undefined' && navigator && 'onLine' in navigator && (navigator as any).onLine === false) {
+      return null as any;
+    }
     const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
     const isAbs = /^https?:/i.test(path);
     const candidates: string[] = [];
