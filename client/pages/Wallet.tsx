@@ -8,6 +8,11 @@ import { safeFetch, cachedFetch } from '@/lib/utils';
 export default function Wallet() {
   const { user: appUser, setUser } = useAppStore();
   const [transactions, setTransactions] = useState<any[]>([]);
+  const addPending = (tx: any) => {
+    const id = `pending_${Date.now()}`;
+    const now = new Date().toISOString();
+    setTransactions(prev => [{ id, ts: now, status: 'pending', ...tx }, ...prev]);
+  };
   const [loading, setLoading] = useState(false);
   const [displayBalance, setDisplayBalance] = useState<number>(appUser?.walletBalance ?? 0);
   const [namesMap, setNamesMap] = useState<Record<string,{ name: string; avatar?: string }>>({});
@@ -243,6 +248,8 @@ export default function Wallet() {
         const d = res ? await res.json().catch(()=>({})) : {};
         return Swal.fire('Request failed', d.error || '');
       }
+      // Show pending request in recent list
+      addPending({ type: 'request', from: appUser.id, to: toId, amount, participantId: toId });
       Swal.fire('Success', 'Request created');
     } catch (e) {
       console.error('request error', e);
@@ -262,18 +269,9 @@ export default function Wallet() {
         const d = res ? await res.json().catch(()=>({})) : {};
         return Swal.fire('Top up failed', d.error || '');
       }
-      // optimistic update: add amount
-      try { setUser({ ...appUser, walletBalance: Number(appUser.walletBalance ?? 0) + amount }); } catch {}
+      // Show pending top up in recent list (bank processing)
+      addPending({ type: 'topup', to: appUser.id, amount, participantId: appUser.id });
       Swal.fire('Top up initiated', 'Top up queued (simulate bank integration)');
-      // refresh transactions
-      const txRes = await fetch(`/api/wallet/transactions/${appUser.id}`);
-      if (txRes.ok) {
-        const dd = await txRes.json().catch(()=>null);
-        if (dd?.transactions) {
-          const annotated = (dd.transactions || []).map((t:any) => ({ ...t, participantId: t.from || t.to || null }));
-          setTransactions(annotated);
-        }
-      }
     } catch (e) {
       console.error('topup error', e);
       Swal.fire('Error', 'Top up failed');
@@ -328,7 +326,7 @@ export default function Wallet() {
                   {(!(t.from && t.to) && !(t.type === 'topup')) && (
                     <div className="text-xs text-neutral-600">{t.participantId ? (namesMap[t.participantId]?.name || '') : ''}</div>
                   )}
-                  <div className="text-xs text-neutral-600">{t.tripId ? `Trip ${t.tripId} • ` : ''}{new Date(t.ts).toLocaleString()}</div>
+                  <div className="text-xs text-neutral-600">{t.tripId ? `Trip ${t.tripId} • ` : ''}{new Date(t.ts).toLocaleString()}{t.status==='pending' ? ' • Pending' : ''}</div>
                 </div>
                 <div className={isIncoming ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
                   {(isIncoming ? '+' : '-') }₦{(t.amount || 0).toLocaleString()}.00
