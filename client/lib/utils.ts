@@ -18,16 +18,30 @@ export async function safeFetch(input: RequestInfo, init?: RequestInit) {
 // Simple GET cache using sessionStorage. Returns Response-like object with json() method.
 export async function apiFetch(path: string, init?: RequestInit) {
   try {
-    const primary = path;
-    const res1 = await safeFetch(primary, init as any);
-    if (res1 && res1.ok) return res1;
-    const fallback = path.startsWith('/api/') ? (`/.netlify/functions${path}`) : path;
-    if (fallback !== primary) {
-      const res2 = await safeFetch(fallback, init as any);
-      if (res2 && res2.ok) return res2;
-      return res2;
+    const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
+    const isAbs = /^https?:/i.test(path);
+    const candidates: string[] = [];
+    if (isAbs) {
+      candidates.push(path);
+    } else {
+      candidates.push(path);
+      if (origin) candidates.push(`${origin}${path}`);
     }
-    return res1;
+    if (path.startsWith('/api/')) {
+      const netlify = `/.netlify/functions${path}`;
+      candidates.push(netlify);
+      if (origin) candidates.push(`${origin}${netlify}`);
+    }
+    const seen = new Set<string>();
+    let last: Response | null = null;
+    for (const url of candidates) {
+      if (seen.has(url)) continue;
+      seen.add(url);
+      const res = await safeFetch(url, init as any);
+      if (res && res.ok) return res;
+      last = res;
+    }
+    return last as any;
   } catch {
     return null as any;
   }
