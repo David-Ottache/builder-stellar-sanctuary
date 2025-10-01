@@ -20,6 +20,7 @@ export default function DriverDetails() {
     if (!id || !online) { setIncoming(null); return; }
     const poll = async () => {
       try {
+        if (typeof navigator !== 'undefined' && (navigator as any).onLine === false) return;
         const res = await apiFetch(`/api/ride-requests?driverId=${encodeURIComponent(String(id))}&status=pending`);
         if (!res || !res.ok) return;
         const data = await res.json().catch(()=>null);
