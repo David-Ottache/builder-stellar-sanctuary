@@ -10,44 +10,56 @@ export default function Trips() {
 
   useEffect(()=>{
     (async ()=>{
-      try {
-        if (!user) return;
-        // if driver, fetch trips assigned to driver
-        const isDriver = user.role === 'driver' || !!user.vehicleType;
-        const endpoint = isDriver ? `/api/trips/driver/${user.id}` : `/api/trips/${user.id}`;
-        const res = await (await import('@/lib/utils')).apiFetch(endpoint);
-        if (!res || !res.ok) return;
-        const data = await res.json().catch(()=>null);
-        if (data?.trips) {
-          setTrips(data.trips);
-          // synchronize driver rides counts from trip history (aggregate by driverId)
-          try {
-            const counts: Record<string, number> = {};
-            (data.trips || []).forEach((tr:any) => {
-              if (tr && tr.driverId) {
-                counts[String(tr.driverId)] = (counts[String(tr.driverId)] || 0) + 1;
-              }
-            });
-            Object.keys(counts).forEach((did) => {
-              try { upsertDriver({ id: did, rides: counts[did] }); } catch(e){}
-            });
-          } catch(e) { console.warn('sync driver rides failed', e); }
-        }
-        // fetch requester names for driver view
-        if (isDriver && data?.trips?.length) {
-          const ids = Array.from(new Set(data.trips.map((t:any)=> String(t.userId)).filter(Boolean))) as string[];
-          const map: Record<string,string> = {};
-          await Promise.all(ids.map(async (id)=>{
+      if (!user) return;
+      const load = async () => {
+        try {
+          const { apiFetch } = await import('@/lib/utils');
+          const isDriver = user.role === 'driver' || !!(user as any).vehicleType;
+          const endpoint = isDriver ? `/api/trips/driver/${encodeURIComponent(String(user.id))}` : `/api/trips/${encodeURIComponent(String(user.id))}`;
+          const res = await apiFetch(endpoint);
+          if (!res || !res.ok) return;
+          const data = await res.json().catch(()=>null);
+          if (data?.trips) {
             try {
-              const r = await (await import('@/lib/utils')).apiFetch(`/api/users/${encodeURIComponent(id)}`);
-              if (!r || !r.ok) return;
-              const d = await r.json().catch(()=>null);
-              if (d?.user) map[id] = (d.user.firstName ? `${d.user.firstName} ${d.user.lastName || ''}`.trim() : d.user.phone || d.user.email || id);
-            } catch(e){}
-          }));
-          setRequesterNames(map);
-        }
-      } catch (e) { console.warn('failed fetching trips', e); }
+              const sorted = [...data.trips].sort((a:any,b:any)=> {
+                const ta = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+                const tb = b.startedAt ? new Date(b.startedAt).getTime() : 0;
+                return tb - ta;
+              });
+              setTrips(sorted);
+            } catch { setTrips(data.trips); }
+            // synchronize driver rides counts
+            try {
+              const counts: Record<string, number> = {};
+              (data.trips || []).forEach((tr:any) => { if (tr && tr.driverId) { counts[String(tr.driverId)] = (counts[String(tr.driverId)] || 0) + 1; } });
+              Object.keys(counts).forEach((did) => { try { upsertDriver({ id: did, rides: counts[did] }); } catch(e){} });
+            } catch(e) { /* ignore */ }
+          }
+          if (isDriver && data?.trips?.length) {
+            const ids = Array.from(new Set(data.trips.map((t:any)=> String(t.userId)).filter(Boolean))) as string[];
+            const map: Record<string,string> = {};
+            await Promise.all(ids.map(async (id)=>{
+              try {
+                const r = await apiFetch(`/api/users/${encodeURIComponent(id)}`);
+                if (!r || !r.ok) return;
+                const d = await r.json().catch(()=>null);
+                if (d?.user) map[id] = (d.user.firstName ? `${d.user.firstName} ${d.user.lastName || ''}`.trim() : d.user.phone || d.user.email || id);
+              } catch {}
+            }));
+            setRequesterNames(map);
+          }
+        } catch (e) { console.warn('failed fetching trips', e); }
+      };
+
+      await load();
+      let timer: any = null;
+      const isDriver = user.role === 'driver' || !!(user as any).vehicleType;
+      if (isDriver) {
+        timer = setInterval(load, 6000);
+        const onVis = () => { if (document.visibilityState === 'visible') load(); };
+        document.addEventListener('visibilitychange', onVis);
+        return () => { if (timer) clearInterval(timer); document.removeEventListener('visibilitychange', onVis); };
+      }
     })();
   }, [user]);
 
