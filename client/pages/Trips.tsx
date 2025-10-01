@@ -39,8 +39,8 @@ export default function Trips() {
           const map: Record<string,string> = {};
           await Promise.all(ids.map(async (id)=>{
             try {
-              const r = await fetch(`/api/users/${encodeURIComponent(id)}`);
-              if (!r.ok) return;
+              const r = await (await import('@/lib/utils')).apiFetch(`/api/users/${encodeURIComponent(id)}`);
+              if (!r || !r.ok) return;
               const d = await r.json().catch(()=>null);
               if (d?.user) map[id] = (d.user.firstName ? `${d.user.firstName} ${d.user.lastName || ''}`.trim() : d.user.phone || d.user.email || id);
             } catch(e){}
