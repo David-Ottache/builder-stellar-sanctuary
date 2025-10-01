@@ -381,32 +381,18 @@ export default function UserVerify() {
                 <div className="text-xs text-neutral-600">{result.rides} rides • {result.rating} rating</div>
               </div>
             </div>
-            <div className="mt-3 text-sm text-green-700">User verified • ID matched</div>
-            {!waiting ? (
-              <Button className="mt-3 w-full rounded-full" onClick={async ()=>{
-                upsertDriver({ id: result.id, name: result.name, avatar: result.avatar, rides: result.rides, rating: result.rating });
-                selectDriver(result.id);
-                try {
-                  setWaiting(true);
-                  const origin = window.location.origin;
-                  const res = await fetch(`${origin}/api/ride-requests`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ driverId: result.id, riderId: (sessionStorage.getItem('session.user') ? JSON.parse(String(sessionStorage.getItem('session.user'))).id : null), pickup: tripDetails.pickup, destination: tripDetails.destination, pickupCoords: tripDetails.pickupCoords, destinationCoords: tripDetails.destinationCoords, fare }) });
-                  const data = await res.json().catch(()=>null);
-                  const id = data?.id;
-                  if (!res.ok || !id) {
-                    setWaiting(false);
-                    await Swal.fire('Request failed', 'Could not notify driver. Please try again.', 'error');
-                    return;
-                  }
-                  setWaitingId(id);
-                } catch (e) {
-                  setWaiting(false);
-                  await Swal.fire('Network error', 'Could not notify driver. Check your connection.', 'error');
-                  return;
-                }
-              }}>Notify Driver</Button>
-            ) : (
-              <div className="mt-3 text-sm text-neutral-600">Waiting for driver to accept…</div>
-            )}
+            <div className="mt-3 text-sm text-green-700">Driver verified • ID matched</div>
+            <Button className="mt-3 w-full rounded-full" onClick={async ()=>{
+              upsertDriver({ id: result.id, name: result.name, avatar: result.avatar, rides: result.rides, rating: result.rating });
+              selectDriver(result.id);
+              try {
+                startTrip({ pickup: tripDetails.pickup || 'Current location', destination: tripDetails.destination || 'TBD', driverId: result.id, fee: fare || 0 });
+                await Swal.fire('Trip booked', 'Your trip has been booked successfully.', 'success');
+                navigate('/');
+              } catch (e) {
+                await Swal.fire('Error', 'Could not start trip. Please try again.', 'error');
+              }
+            }}>Book Trip</Button>
           </div>
         ) : (
           <div className="mt-4 rounded-2xl border bg-white p-4 text-sm text-red-600">No user found for provided code.</div>
