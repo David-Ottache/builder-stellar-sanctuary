@@ -98,6 +98,9 @@ const App = () => (
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 
+              {/* Public tracking page */}
+              <Route path="/track/:id" element={<TrackPage />} />
+
               {/* catch-all */}
               <Route path="*" element={<AuthGate><NotFound /></AuthGate>} />
             </Routes>
