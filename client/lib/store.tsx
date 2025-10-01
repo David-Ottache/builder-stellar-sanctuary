@@ -377,6 +377,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
                 const r = await (await import('@/lib/utils')).apiFetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, tripId: tripIdForRating, driverId: driverIdForRating || undefined, note: driverIdForRating ? `driver:${driverIdForRating}` : undefined }) });
                 if (r && r.ok) {
                   try { setUser({ ...user, walletBalance: Math.max(0, Number(user.walletBalance ?? 0) - amount) }); } catch {}
+                  try { await (await import('@/lib/utils')).apiFetch(`/api/trips/${encodeURIComponent(String(tripIdForRating||''))}/end`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fee: amount, paymentMethod: 'wallet' }) }); } catch {}
                   try { void Swal.fire({ icon: 'success', title: 'Payment successful', text: 'Wallet charged and driver credited.' }); } catch {}
                 } else {
                   try { void Swal.fire({ icon: 'error', title: 'Wallet payment failed', text: 'Please pay cash.' }); } catch {}
