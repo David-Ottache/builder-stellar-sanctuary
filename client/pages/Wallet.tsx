@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import Swal from 'sweetalert2';
-import { safeFetch, cachedFetch } from '@/lib/utils';
+import { safeFetch, cachedFetch, apiFetch } from '@/lib/utils';
 
 export default function Wallet() {
   const { user: appUser, setUser } = useAppStore();
@@ -24,7 +24,7 @@ export default function Wallet() {
         try {
           if (appUser.role === 'driver') {
             try {
-              const r = await safeFetch(`/api/drivers/${appUser.id}`);
+              const r = await apiFetch(`/api/drivers/${appUser.id}`);
               if (r && r.ok) {
                 const d = await r.json().catch(()=>null);
                 const bal = Number(d?.driver?.walletBalance ?? d?.driver?.balance ?? d?.driver?.wallet ?? 0);
@@ -35,8 +35,8 @@ export default function Wallet() {
             setDisplayBalance(Number(appUser.walletBalance ?? (appUser.wallet && (appUser.wallet as any).balance) ?? (appUser as any).balance ?? 0));
           }
 
-          const res = await safeFetch(`/api/wallet/transactions/${appUser.id}`);
-          const reqRes = await safeFetch(`/api/wallet/requests/${appUser.id}`);
+          const res = await apiFetch(`/api/wallet/transactions/${appUser.id}`);
+          const reqRes = await apiFetch(`/api/wallet/requests/${appUser.id}`);
           const data = await res?.json().catch(()=>null);
           const reqData = await reqRes?.json().catch(()=>null);
           const serverTx = Array.isArray(data?.transactions) ? data.transactions : [];
@@ -52,7 +52,7 @@ export default function Wallet() {
             const mapUpdates: Record<string,{ name: string; avatar?: string }> = {};
             await Promise.all(missing.map(async (id)=>{
               try {
-                const r1 = await safeFetch(`/api/users/${encodeURIComponent(id)}`);
+                const r1 = await apiFetch(`/api/users/${encodeURIComponent(id)}`);
                 if (r1 && r1.ok) {
                   const dd = await r1.json().catch(()=>null);
                   if (dd && (dd.user || dd.firstName || dd.name)) {
@@ -65,7 +65,7 @@ export default function Wallet() {
                 }
               } catch(e){}
               try {
-                const r2 = await safeFetch(`/api/drivers/${encodeURIComponent(id)}`);
+                const r2 = await apiFetch(`/api/drivers/${encodeURIComponent(id)}`);
                 if (r2 && r2.ok) {
                   const dd = await r2.json().catch(()=>null);
                   if (dd && dd.driver) {
@@ -85,7 +85,7 @@ export default function Wallet() {
           for (const t of annotated) {
             if (t.tripId) {
               try {
-                const r = await safeFetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
+                const r = await apiFetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
                 if (r && r.ok) {
                   const td = await r.json().catch(()=>null);
                   const trip = td?.trip;
@@ -96,7 +96,7 @@ export default function Wallet() {
                     if (uid) {
                       if (!namesMap[uid]) {
                         try {
-                          const ru = await safeFetch(`/api/users/${encodeURIComponent(uid)}`);
+                          const ru = await apiFetch(`/api/users/${encodeURIComponent(uid)}`);
                           if (ru && ru.ok) {
                             const ud = await ru.json().catch(()=>null);
                             const user = ud?.user || ud;
@@ -104,7 +104,7 @@ export default function Wallet() {
                             const avatar = (user && (user.profilePhoto || user.avatar || user.photoUrl)) || undefined;
                             setNamesMap(prev => ({ ...prev, [uid]: { name: name || uid, avatar } }));
                           } else {
-                            const rd = await safeFetch(`/api/drivers/${encodeURIComponent(uid)}`);
+                            const rd = await apiFetch(`/api/drivers/${encodeURIComponent(uid)}`);
                             if (rd && rd.ok) {
                               const dd = await rd.json().catch(()=>null);
                               const driver = dd?.driver;
@@ -200,7 +200,7 @@ export default function Wallet() {
     if (!toId || !amount || amount <= 0) return Swal.fire('Invalid input');
     try {
       setLoading(true);
-      const res = await safeFetch('/api/wallet/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: appUser.id, toId, amount }) });
+      const res = await apiFetch('/api/wallet/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: appUser.id, toId, amount }) });
       if (!res || !res.ok) {
         const d = res ? await res.json().catch(()=>({})) : {};
         if (d.error === 'insufficient_funds') return Swal.fire('Insufficient funds');
@@ -210,7 +210,7 @@ export default function Wallet() {
       try { setUser({ ...appUser, walletBalance: Number(appUser.walletBalance ?? 0) - amount }); } catch {}
       Swal.fire('Success', 'Transfer completed');
       // refresh transactions
-      const txRes = await fetch(`/api/wallet/transactions/${appUser.id}`);
+      const txRes = await apiFetch(`/api/wallet/transactions/${appUser.id}`);
       if (txRes.ok) {
         const dd = await txRes.json().catch(()=>null);
         if (dd?.transactions) {
@@ -247,7 +247,7 @@ export default function Wallet() {
     if (!toId || !amount || amount <= 0) return Swal.fire('Invalid input');
     try {
       setLoading(true);
-      const res = await safeFetch('/api/wallet/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: appUser.id, toId, amount, note }) });
+      const res = await apiFetch('/api/wallet/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromId: appUser.id, toId, amount, note }) });
       if (!res || !res.ok) {
         const d = res ? await res.json().catch(()=>({})) : {};
         return Swal.fire('Request failed', d.error || '');
@@ -268,7 +268,7 @@ export default function Wallet() {
     if (!amount || amount <= 0) return;
     try {
       setLoading(true);
-      const res = await safeFetch('/api/wallet/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: appUser.id, amount }) });
+      const res = await apiFetch('/api/wallet/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: appUser.id, amount }) });
       if (!res || !res.ok) {
         const d = res ? await res.json().catch(()=>({})) : {};
         return Swal.fire('Top up failed', d.error || '');
