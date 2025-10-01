@@ -16,6 +16,14 @@ try {
         }
       } catch {}
     });
+    window.addEventListener('error', (ev: any) => {
+      try {
+        const msg = String(ev?.message || ev?.error || '').toString();
+        if (/Failed to fetch/i.test(msg)) {
+          ev.preventDefault?.();
+        }
+      } catch {}
+    }, true);
     (window as any).__abortNoiseSuppressed = true;
   }
 } catch {}
