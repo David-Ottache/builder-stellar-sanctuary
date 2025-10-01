@@ -63,8 +63,8 @@ export default function Trips() {
     });
     if (!isConfirmed) return;
     try {
-      const res = await fetch(`/api/trips/${tripId}/end`, { method: 'POST' });
-      if (!res.ok) {
+      const res = await (await import('@/lib/utils')).apiFetch(`/api/trips/${tripId}/end`, { method: 'POST' });
+      if (!res || !res.ok) {
         const d = await res.json().catch(()=>({}));
         await Swal.fire({ icon: 'error', title: 'Error', text: d.error || 'Failed ending trip' });
         return;
