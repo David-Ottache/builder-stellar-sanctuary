@@ -311,6 +311,7 @@ export default function Wallet() {
             else if (t.participantId && isIncoming) title = `From ${(namesMap[t.participantId] && namesMap[t.participantId].name) || t.participantId || ''}`;
             else if (t.participantId && isOutgoing) title = `To ${(namesMap[t.participantId] && namesMap[t.participantId].name) || t.participantId || ''}`;
             else title = t.type || 'Transaction';
+            const isProcessing = t.status === 'pending' || (t.type === 'request' && (t.tripId || (typeof t.note === 'string' && t.note.toLowerCase().includes('wallet'))));
             return (
               <div key={t.id} className="flex items-center gap-3 rounded-xl p-2">
                 <div className="h-9 w-9 rounded-full bg-neutral-100 overflow-hidden flex items-center justify-center">
