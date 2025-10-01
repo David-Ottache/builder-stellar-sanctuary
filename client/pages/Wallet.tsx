@@ -20,46 +20,39 @@ export default function Wallet() {
   useEffect(()=>{
     (async ()=>{
       if (!appUser) return;
-      try {
-        // If driver, fetch driver document to get driver wallet balance
-        if (appUser.role === 'driver') {
-          try {
-            const r = await cachedFetch(`/api/drivers/${appUser.id}`);
-            if (r && r.ok) {
-              const d = await r.json().catch(()=>null);
-              const bal = Number(d?.driver?.walletBalance ?? d?.driver?.balance ?? d?.driver?.wallet ?? 0);
-              setDisplayBalance(bal);
-            }
-          } catch(e) { console.warn('failed fetching driver data', e); }
-        } else {
-          setDisplayBalance(Number(appUser.walletBalance ?? (appUser.wallet && (appUser.wallet as any).balance) ?? (appUser as any).balance ?? 0));
-        }
+      const load = async () => {
+        try {
+          if (appUser.role === 'driver') {
+            try {
+              const r = await safeFetch(`/api/drivers/${appUser.id}`);
+              if (r && r.ok) {
+                const d = await r.json().catch(()=>null);
+                const bal = Number(d?.driver?.walletBalance ?? d?.driver?.balance ?? d?.driver?.wallet ?? 0);
+                setDisplayBalance(bal);
+              }
+            } catch(e) { console.warn('failed fetching driver data', e); }
+          } else {
+            setDisplayBalance(Number(appUser.walletBalance ?? (appUser.wallet && (appUser.wallet as any).balance) ?? (appUser as any).balance ?? 0));
+          }
 
-        const res = await cachedFetch(`/api/wallet/transactions/${appUser.id}`);
-        const reqRes = await safeFetch(`/api/wallet/requests/${appUser.id}`);
-        const data = await res?.json().catch(()=>null);
-        const reqData = await reqRes?.json().catch(()=>null);
-        const serverTx = Array.isArray(data?.transactions) ? data.transactions : [];
-        const serverReq = Array.isArray(reqData?.requests) ? reqData.requests : [];
-        // map requests to pending tx entries
-        const mappedReq = serverReq.map((r:any)=> ({ id: `req_${r.id}`, ts: r.ts, status: r.status || 'pending', type: 'request', from: r.from, to: r.to, amount: r.amount, participantId: r.from === appUser.id ? r.to : r.from, tripId: r.tripId || (typeof r.note === 'string' && r.note.startsWith('trip:') ? r.note.split(':')[1] : undefined), note: r.note || undefined }));
-        if (serverTx.length || mappedReq.length) {
-          // annotate transactions with a participantId (from or to) to simplify UI
+          const res = await safeFetch(`/api/wallet/transactions/${appUser.id}`);
+          const reqRes = await safeFetch(`/api/wallet/requests/${appUser.id}`);
+          const data = await res?.json().catch(()=>null);
+          const reqData = await reqRes?.json().catch(()=>null);
+          const serverTx = Array.isArray(data?.transactions) ? data.transactions : [];
+          const serverReq = Array.isArray(reqData?.requests) ? reqData.requests : [];
+          const mappedReq = serverReq.map((r:any)=> ({ id: `req_${r.id}`, ts: r.ts, status: r.status || 'pending', type: 'request', from: r.from, to: r.to, amount: r.amount, participantId: r.from === appUser.id ? r.to : r.from, tripId: r.tripId || (typeof r.note === 'string' && r.note.startsWith('trip:') ? r.note.split(':')[1] : undefined), note: r.note || undefined }));
           const annotated = [...mappedReq, ...serverTx].map((t:any) => ({ ...t, participantId: t.participantId || t.from || t.to || null }));
           setTransactions(annotated);
-          // prefetch participant names for transactions
+
           const ids = new Set<string>();
-          for (const t of annotated) {
-            if (t.participantId) ids.add(t.participantId);
-          }
+          for (const t of annotated) { if (t.participantId) ids.add(t.participantId); }
           const missing = Array.from(ids).filter(id => id && !namesMap[id]);
           if (missing.length) {
             const mapUpdates: Record<string,{ name: string; avatar?: string }> = {};
             await Promise.all(missing.map(async (id)=>{
-              // if id looks like 'trip:<tripId>' skip — we'll handle per-transaction below
               try {
-                // try user endpoint
-                const r1 = await cachedFetch(`/api/users/${encodeURIComponent(id)}`);
+                const r1 = await safeFetch(`/api/users/${encodeURIComponent(id)}`);
                 if (r1 && r1.ok) {
                   const dd = await r1.json().catch(()=>null);
                   if (dd && (dd.user || dd.firstName || dd.name)) {
@@ -72,7 +65,7 @@ export default function Wallet() {
                 }
               } catch(e){}
               try {
-                const r2 = await cachedFetch(`/api/drivers/${encodeURIComponent(id)}`);
+                const r2 = await safeFetch(`/api/drivers/${encodeURIComponent(id)}`);
                 if (r2 && r2.ok) {
                   const dd = await r2.json().catch(()=>null);
                   if (dd && dd.driver) {
@@ -84,29 +77,25 @@ export default function Wallet() {
                   }
                 }
               } catch(e){}
-              // fallback to id
               mapUpdates[id] = { name: id, avatar: undefined };
             }));
             setNamesMap((prev)=> ({ ...prev, ...mapUpdates }));
           }
 
-          // For trip-linked transactions, resolve participant from trip. Prefer driver for deductions (payments to driver), else prefer counterpart.
           for (const t of annotated) {
             if (t.tripId) {
               try {
-                const r = await cachedFetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
+                const r = await safeFetch(`/api/trip/${encodeURIComponent(t.tripId)}`);
                 if (r && r.ok) {
                   const td = await r.json().catch(()=>null);
                   const trip = td?.trip;
                   if (trip) {
                     const driverId: string | null = trip.driverId || null;
                     const userId: string | null = trip.userId || null;
-                    // If this is a deduction (payment) from the current user, show driver as participant
                     const uid = (t.type === 'deduct' || t.from === appUser?.id) ? (driverId || userId) : (userId || driverId);
                     if (uid) {
                       if (!namesMap[uid]) {
                         try {
-                          // Try user first
                           const ru = await safeFetch(`/api/users/${encodeURIComponent(uid)}`);
                           if (ru && ru.ok) {
                             const ud = await ru.json().catch(()=>null);
@@ -133,8 +122,18 @@ export default function Wallet() {
               } catch(e){}
             }
           }
-        }
-      } catch(e){ console.warn('failed fetching tx', e); }
+        } catch(e){ console.warn('failed fetching tx', e); }
+      };
+
+      await load();
+
+      let timer: any = null;
+      if (appUser.role === 'driver') {
+        timer = setInterval(load, 6000);
+        const onVis = () => { if (document.visibilityState === 'visible') load(); };
+        document.addEventListener('visibilitychange', onVis);
+        return () => { if (timer) clearInterval(timer); document.removeEventListener('visibilitychange', onVis); };
+      }
     })();
   }, [appUser]);
 
