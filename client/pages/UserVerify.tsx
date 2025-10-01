@@ -321,7 +321,7 @@ export default function UserVerify() {
             <div className="text-neutral-700">Pickup: {tripDetails.pickup} {tripDetails.pickupCoords ? `(${tripDetails.pickupCoords.lat.toFixed(4)}, ${tripDetails.pickupCoords.lng.toFixed(4)})` : ''}</div>
             <div className="text-neutral-700">Destination: {tripDetails.destination} {tripDetails.destinationCoords ? `(${tripDetails.destinationCoords.lat.toFixed(4)}, ${tripDetails.destinationCoords.lng.toFixed(4)})` : ''}</div>
             <div className="text-neutral-700">Vehicle: {tripDetails.vehicle ?? 'go'}</div>
-            <div className="text-neutral-700">Estimated Fare: {fare != null ? `₦${Number(fare).toLocaleString()}` : '—'}</div>
+            <div className="text-neutral-700">Estimated Fare: {fare != null ? `₦${Number(fare).toLocaleString()}` : '��'}</div>
           </div>
         )}
 
@@ -395,7 +395,7 @@ export default function UserVerify() {
             }}>Book Trip</Button>
           </div>
         ) : (
-          <div className="mt-4 rounded-2xl border bg-white p-4 text-sm text-red-600">No user found for provided code.</div>
+          <div className="mt-4 rounded-2xl border bg-white p-4 text-sm text-red-600">No driver found for provided code.</div>
         )}
       </div>
     </Layout>
