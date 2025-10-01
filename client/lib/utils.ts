@@ -7,7 +7,11 @@ try {
     window.addEventListener('unhandledrejection', (ev: any) => {
       try {
         const reason = ev?.reason;
-        if (reason && (reason.name === 'AbortError' || String(reason).includes('AbortError'))) {
+        const msg = reason && (reason.message || String(reason)) || '';
+        if (
+          (reason && (reason.name === 'AbortError' || String(reason).includes('AbortError'))) ||
+          (reason instanceof TypeError && /Failed to fetch/i.test(msg))
+        ) {
           ev.preventDefault?.();
         }
       } catch {}
