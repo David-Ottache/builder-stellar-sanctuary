@@ -59,28 +59,6 @@ export default function BottomNav({ className }: Props) {
           </NavLink>
         );
       })}
-      {trip && (
-        <button
-          onClick={async () => {
-            try {
-              const { isConfirmed, value } = await Swal.fire({
-                title: 'Enter trip price (₦)',
-                input: 'number',
-                inputLabel: 'Price',
-                inputValue: '0',
-                inputAttributes: { min: '0', step: '1' },
-                showCancelButton: true,
-                confirmButtonText: 'End Trip',
-              }) as any;
-              if (!isConfirmed) return;
-              const n = Math.round(Number(value));
-              if (!Number.isFinite(n) || n < 0) { await Swal.fire('Invalid amount', 'Please enter a valid non-negative number', 'warning'); return; }
-              endTrip(n);
-            } catch (e) { console.warn('failed ending trip from nav', e); }
-          }}
-          className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-red-600 text-white px-3 py-2 text-sm"
-        >End Trip</button>
-      )}
     </nav>
   );
 }
