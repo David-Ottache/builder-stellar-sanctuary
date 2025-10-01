@@ -44,8 +44,12 @@ export async function safeFetch(input: RequestInfo, init?: (RequestInit & { time
 }
 
 // Simple GET cache using sessionStorage. Returns Response-like object with json() method.
+let apiBackoffUntil = 0;
+
 export async function apiFetch(path: string, init?: RequestInit) {
   try {
+    const now = Date.now();
+    if (now < apiBackoffUntil) return synthOk(path, init);
     if (typeof navigator !== 'undefined' && navigator && 'onLine' in navigator && (navigator as any).onLine === false) {
       return synthOk(path, init);
     }
