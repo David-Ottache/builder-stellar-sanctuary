@@ -371,21 +371,31 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             showCancelButton: true,
             confirmButtonText: 'Pay with wallet',
             cancelButtonText: 'Pay cash',
-          }).then((res) => {
+          }).then(async (res) => {
             if (res.isConfirmed) {
-              (async () => {
-                try {
-                  const res2 = await fetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, tripId: tripIdForRating, driverId: driverIdForRating || undefined, note: driverIdForRating ? `driver:${driverIdForRating}` : undefined }) });
-                  if (res2 && res2.ok) {
-                    try { setUser({ ...user, walletBalance: Math.max(0, Number(user.walletBalance ?? 0) - amount) }); } catch {}
-                    try { void Swal.fire({ icon: 'success', title: 'Payment successful', text: 'Wallet charged.' }); } catch {}
-                  } else {
-                    try { void Swal.fire({ icon: 'error', title: 'Wallet payment failed', text: 'Please pay cash.' }); } catch {}
-                  }
-                } catch {
-                  try { void Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not reach server. Please pay cash.' }); } catch {}
+              const { value: amt } = await Swal.fire({
+                title: 'Enter amount to pay',
+                input: 'number',
+                inputLabel: 'Amount (₦)',
+                inputValue: amount,
+                inputAttributes: { min: '0', step: '1' },
+                showCancelButton: true,
+                confirmButtonText: 'Pay',
+              }) as any;
+              if (amt === undefined || amt === null) return;
+              const payAmount = Math.max(0, Math.floor(Number(amt)) || 0);
+              if (payAmount <= 0) { try { void Swal.fire({ icon: 'error', title: 'Invalid amount' }); } catch {}; return; }
+              try {
+                const res2 = await fetch('/api/wallet/deduct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount: payAmount, tripId: tripIdForRating, driverId: driverIdForRating || undefined, note: driverIdForRating ? `driver:${driverIdForRating}` : undefined }) });
+                if (res2 && res2.ok) {
+                  try { setUser({ ...user, walletBalance: Math.max(0, Number(user.walletBalance ?? 0) - payAmount) }); } catch {}
+                  try { void Swal.fire({ icon: 'success', title: 'Payment successful', text: 'Wallet charged and driver credited.' }); } catch {}
+                } else {
+                  try { void Swal.fire({ icon: 'error', title: 'Wallet payment failed', text: 'Please pay cash.' }); } catch {}
                 }
-              })();
+              } catch {
+                try { void Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not reach server. Please pay cash.' }); } catch {}
+              }
             } else {
               try { void Swal.fire({ icon: 'info', title: 'Pay cash', text: 'Please pay cash to the driver.' }); } catch {}
             }

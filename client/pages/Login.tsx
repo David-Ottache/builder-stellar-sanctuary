@@ -10,7 +10,7 @@ export default function Login() {
   const [role, setRole] = useState<'driver'|'user'>('driver');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { setUser } = useAppStore();
+  const { setUser, setPendingTrip } = useAppStore();
   const navigate = useNavigate();
   const [remember, setRemember] = useState(false);
 
@@ -50,6 +50,15 @@ export default function Login() {
       await Swal.fire({ icon: 'success', title: `Welcome ${user.firstName || ''}`, text: 'You are now logged in.' });
       setUser(user);
       try { if (remember) localStorage.setItem('session.remember','1'); else localStorage.removeItem('session.remember'); } catch {}
+      // If rider, prefill pickup with current location
+      if (user.role === 'user' && navigator.geolocation) {
+        try {
+          navigator.geolocation.getCurrentPosition((pos)=>{
+            const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            try { setPendingTrip({ pickup: 'Current location', destination: '', pickupCoords: c, destinationCoords: null, vehicle: 'go' }); } catch {}
+          }, ()=>{}, { enableHighAccuracy: false, timeout: 3000 });
+        } catch {}
+      }
       // navigate to appropriate home by role
       if (user.role === 'driver') navigate(`/driver/${encodeURIComponent(String(user.id || 'me'))}`);
       else if (user.role === 'admin') navigate('/admin');
