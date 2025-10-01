@@ -35,6 +35,7 @@ import UserVerify from "./pages/UserVerify";
 import UserDetails from "./pages/UserDetails";
 import Safety from "./pages/Safety";
 import Admin from "./pages/Admin";
+import TrackPage from "./pages/Track";
 import AdminOverview from "./pages/admin/Overview";
 import AdminUsers from "./pages/admin/Users";
 import AdminDrivers from "./pages/admin/Drivers";
