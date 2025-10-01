@@ -307,6 +307,7 @@ export default function Wallet() {
             let title = '';
             if (isTopUp) title = 'Top Up';
             else if (t.type === 'deduct') title = t.participantId ? `Payment to ${(namesMap[t.participantId]?.name || t.participantId)}` : 'Payment';
+            else if (t.type === 'request' && (t.tripId || (typeof t.note === 'string' && t.note.toLowerCase().includes('wallet')))) title = 'Payment processing';
             else if (t.from && t.to) title = `Transfer (${(namesMap[t.from] && namesMap[t.from].name) || t.from} → ${(namesMap[t.to] && namesMap[t.to].name) || t.to})`;
             else if (t.participantId && isIncoming) title = `From ${(namesMap[t.participantId] && namesMap[t.participantId].name) || t.participantId || ''}`;
             else if (t.participantId && isOutgoing) title = `To ${(namesMap[t.participantId] && namesMap[t.participantId].name) || t.participantId || ''}`;
