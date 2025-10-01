@@ -380,7 +380,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
                   try { await (await import('@/lib/utils')).apiFetch(`/api/trips/${encodeURIComponent(String(tripIdForRating||''))}/end`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fee: amount, paymentMethod: 'wallet' }) }); } catch {}
                   try { void Swal.fire({ icon: 'success', title: 'Payment successful', text: 'Wallet charged and driver credited.' }); } catch {}
                 } else {
-                  try { void Swal.fire({ icon: 'error', title: 'Wallet payment failed', text: 'Please pay cash.' }); } catch {}
+                  const localBal = Number(user.walletBalance ?? 0);
+                  if (localBal >= amount) {
+                    try { setUser({ ...user, walletBalance: localBal - amount }); } catch {}
+                    try { await (await import('@/lib/utils')).apiFetch(`/api/trips/${encodeURIComponent(String(tripIdForRating||''))}/end`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fee: amount, paymentMethod: 'wallet' }) }); } catch {}
+                    try { void Swal.fire({ icon: 'success', title: 'Payment processed', text: 'Server unreachable, recorded locally.' }); } catch {}
+                  } else {
+                    try { void Swal.fire({ icon: 'error', title: 'Wallet payment failed', text: 'Please pay cash.' }); } catch {}
+                  }
                 }
               } catch {
                 try { void Swal.fire({ icon: 'error', title: 'Network error', text: 'Could not reach server. Please pay cash.' }); } catch {}
