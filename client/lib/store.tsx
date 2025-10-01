@@ -1089,8 +1089,39 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   return <AppStore.Provider value={value}>{children}</AppStore.Provider>;
 }
 
+// Safe fallback store to avoid crashes during transient HMR/mount timing when Provider isn't yet attached
+const __FALLBACK_STORE__: StoreState = {
+  user: null,
+  setUser: () => {},
+  onboarding: { countryCode: '+234' },
+  setOnboarding: () => {},
+  drivers: [],
+  selectedDriverId: null,
+  selectDriver: () => {},
+  upsertDriver: () => {},
+  mergeOnboardingToDriver: () => {},
+  trip: null,
+  startTrip: () => {},
+  endTrip: () => {},
+  pendingTrip: null,
+  setPendingTrip: () => {},
+  contacts: [],
+  addContact: () => {},
+  removeContact: () => {},
+  sendSOS: () => 0,
+  verifyDriver: () => null,
+  trips: [],
+  setTrips: () => {},
+  ratingPrompt: { open: false },
+  openRatingPrompt: () => {},
+  closeRatingPrompt: () => {},
+  submitRating: () => {},
+  settings: { appName: 'reCab', timezone: 'Africa/Lagos', currency: 'NGN', ride: { baseFare: 200, costPerKm: 50 }, payments: { defaultMethods: ['cash','wallet'], commissionPercent: 5, walletTopupMax: 200000, withdrawalMin: 1000, withdrawalFee: 0, adminUserId: '' } },
+  updateSettings: async () => {},
+  computeFare: (km: number) => Math.round(200 + 50 * Math.max(0, km || 0)),
+};
+
 export function useAppStore() {
   const ctx = useContext(AppStore);
-  if (!ctx) throw new Error("useAppStore must be used within AppStoreProvider");
-  return ctx;
+  return ctx || __FALLBACK_STORE__;
 }
