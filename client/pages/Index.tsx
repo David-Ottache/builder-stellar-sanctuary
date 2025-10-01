@@ -17,29 +17,40 @@ export default function Index() {
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [pickMode, setPickMode] = useState<'pickup' | 'destination' | null>(null);
   const navigate = useNavigate();
-  const { setPendingTrip, user, computeFare } = useAppStore();
+  const { setPendingTrip, user, computeFare, pendingTrip } = useAppStore();
 
-  // auto-select current location for pickup on load
+  // seed pickup either from pendingTrip or device location
   useEffect(()=>{
+    if (pendingTrip?.pickupCoords) {
+      setPickupCoords(pendingTrip.pickupCoords);
+      setPickup(pendingTrip.pickup || 'Current location');
+      return;
+    }
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition((pos)=>{
       setPickupCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       setPickup('Current location');
     }, ()=>{}, { enableHighAccuracy: false, timeout: 3000 });
-  }, []);
+  }, [pendingTrip]);
 
   const distanceKm = (pickupCoords && destinationCoords) ? haversineKm(pickupCoords, destinationCoords) : null;
   const estimatedFare = distanceKm != null ? computeFare(distanceKm) : null;
 
   // if user picks a destination but pickup is unknown, try to fetch current location to enable estimate
   useEffect(() => {
-    if (destinationCoords && !pickupCoords && navigator.geolocation) {
+    if (!destinationCoords || pickupCoords) return;
+    if (pendingTrip?.pickupCoords) {
+      setPickupCoords(pendingTrip.pickupCoords);
+      if (!pickup) setPickup(pendingTrip.pickup || 'Current location');
+      return;
+    }
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
         setPickupCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         if (!pickup) setPickup('Current location');
       }, () => { /* ignore */ }, { enableHighAccuracy: false, timeout: 3000 });
     }
-  }, [destinationCoords, pickupCoords]);
+  }, [destinationCoords, pickupCoords, pendingTrip, pickup]);
 
   // geocode destination text into coordinates
   useEffect(() => {

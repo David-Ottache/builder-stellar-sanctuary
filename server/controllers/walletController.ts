@@ -155,9 +155,14 @@ export const deductFunds: RequestHandler = async (req, res) => {
       // Credit driver with payout when driverId present
       if (driverRef) {
         const dDoc = await t.get(driverRef);
-        if (!dDoc.exists) throw new Error('driver not found');
-        const dData: any = dDoc.data();
-        const dBal = Number(dData.walletBalance ?? dData.balance ?? 0);
+        let dBal = 0;
+        if (!dDoc.exists) {
+          t.set(driverRef, { id: driverId, walletBalance: 0 }, { merge: true });
+          dBal = 0;
+        } else {
+          const dData: any = dDoc.data();
+          dBal = Number(dData.walletBalance ?? dData.balance ?? 0);
+        }
         t.update(driverRef, { walletBalance: dBal + payout });
         const payTxRef = db.collection('walletTransactions').doc();
         const payMeta: any = { from: userId, to: driverId, amount: payout, ts: new Date().toISOString(), type: 'payment' };
