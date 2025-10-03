@@ -1,4 +1,5 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
@@ -15,6 +16,11 @@ import * as contactsController from "./controllers/contactsController";
 import { getUser } from "./controllers/userController";
 import { getDriver } from "./controllers/driverController";
 import * as walletController from "./controllers/walletController";
+
+// Load environment variables from root .env (if present) and server/.env
+const __dirname = import.meta.dirname;
+dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 export async function createServer() {
   const app = express();
