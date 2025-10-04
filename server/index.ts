@@ -51,13 +51,13 @@ export async function createServer() {
   // init Sentry if DSN provided
   try {
     if (process.env.SENTRY_DSN) {
-      // dynamic import to avoid hard dependency when DSN not set
+      // dynamic import to avoid hard dependency when DSN is not set
       (async () => {
         try {
           const Sentry = await import("@sentry/node");
           Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.2 });
-          app.use(Sentry.Handlers.requestHandler());
-          app.use(Sentry.Handlers.errorHandler());
+          app.use((Sentry as any).Handlers?.requestHandler?.() || ((req, res, next) => next()));
+          app.use((Sentry as any).Handlers?.errorHandler?.() || ((err, req, res, next) => next(err)));
           console.log("Sentry initialized for server");
         } catch (e) {
           console.warn("Failed to init Sentry (server):", e);
