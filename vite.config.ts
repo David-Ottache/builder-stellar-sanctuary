@@ -9,13 +9,28 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     fs: {
-      allow: ["./client", "./shared"],
+      allow: ["./client", "./shared", path.resolve(__dirname) ],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
   },
   build: {
     outDir: "dist/spa",
+
+    rollupOptions: {
+    output: {
+      manualChunks(id) {
+        if (id.includes('node_modules')) {
+          return 'vendor';
+        }
+      }
+    }
   },
+  chunkSizeWarningLimit: 1000 // optional: raise limit
+
+
+  },
+
+  
   plugins: [react(), expressPlugin()],
   resolve: {
     alias: {

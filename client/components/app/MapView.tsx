@@ -22,7 +22,9 @@ export default function MapView({ className, pickupCoords, destinationCoords, on
   const markersRef = React.useRef<any[]>([]);
 
   // center map around pickup if available, otherwise default to Abuja
-  const center = pickupCoords ?? { lat: 9.0765, lng: 7.3986 };
+const center = { lat: 9.8965, lng: 8.8583 }; // Jos
+
+
 
   React.useEffect(() => {
     if (!googleKey) return;
